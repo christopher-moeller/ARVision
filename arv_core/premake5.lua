@@ -1,20 +1,14 @@
-project "sandbox"
-    kind "ConsoleApp"
+project "arv_core"
+    kind "StaticLib"
     language "C++"
     cppdialect "C++17"
-    targetdir "bin/%{cfg.buildcfg}"
 
-    systemversion "10.15"
+    targetdir "bin/%{cfg.buildcfg}" 
+    objdir "obj/%{cfg.buildcfg}"
 
     files { "src/**.cpp", "src/**.h" }
 
     includedirs { "../arv_core_interfaces/src" }
-    includedirs { "../arv_core/src" }
-
-    libdirs { "../arv_core/bin/Debug",
-              "../arv_core/bin/Release" }
-
-    links { "arv_core" }
 
     filter "configurations:Debug"
         symbols "On"

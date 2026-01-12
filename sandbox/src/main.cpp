@@ -1,7 +1,10 @@
 #include <iostream>
+#include "ARVApplication.h"
 
 int main()
 {
-    std::cout << "Hello from sandbox" << std::endl;
+    arv::ARVCoreProvider coreProvider;
+    arv::ARVApplication app(coreProvider);
+    app.Initialize();
     return 0;
 }
