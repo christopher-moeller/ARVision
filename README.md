@@ -29,7 +29,8 @@ Another important feature of the ARV-Core library is it’s possible to override
 ### Providers
 As already described in the ARV Core section, providers are mandatory platform specific implementations for the Core library. This folder is a collection of some already implemented providers which are free to use in real applications. Of course they are not needed in case it is not matching to the selected platform.
 
-<img width="452" height="452" alt="arv_module_logic_detail drawio" src="https://github.com/user-attachments/assets/8254b751-358e-428b-93b5-da45358de1d8" />
+
+<img width="451" height="451" alt="arv_module_logic_detail drawio" src="https://github.com/user-attachments/assets/1181dd99-e6a4-473f-827e-31fcb4903c38" />
 
 
 ### Sandbox
