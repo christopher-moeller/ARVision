@@ -1,15 +1,15 @@
 #pragma once
 
-#include "ARVCoreProvider.h"
+#include "ARVCoreConfiguration.h"
 
 namespace arv
 {
     class ARVApplication
     {
     public:
-        explicit ARVApplication(ARVCoreProvider& coreProvider);
+        explicit ARVApplication(ARVCoreConfiguration* coreConfiguration);
         void Initialize();
     private:
-        ARVCoreProvider& m_coreProvider;
+        ARVCoreConfiguration* m_coreConfiguration;
     };
 }
