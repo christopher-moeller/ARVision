@@ -1,0 +1,53 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# Premake generated files
+build/
+bin/
+obj/
+*.make
+
+# Xcode
+DerivedData/
+xcuserdata/
+*.xcworkspace/xcuserdata
+*.xcuserstate
+*.xcodeproj/project.xcworkspace/xcuserdata
+*.xcodeproj/xcuserdata
+*.xcodeproj/*.mode1v3
+*.xcodeproj/*.pbxuser
+*.xcodeproj/*.perspectivev3
+
+# Xcode intermediate/outputs
+*.o
+*.lo
+*.la
+*.al
+*.libs
+*.dylib
+*.so
+*.a
+*.exe
+
+# C++ build artifacts
+*.obj
+*.pdb
+*.ilk
+*.dll
+*.lib
+*.out
+
+# Logs
+*.log
+
+# Backup/temporary files
+*.swp
+*.tmp
+*.bak
+*~
