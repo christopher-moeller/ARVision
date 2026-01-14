@@ -3,7 +3,6 @@
 #include "plattform/MacosPlattformProvider.h"
 #include "plattform/Canvas.h"
 #include "rendering/RenderingAPI.h"
-#include <glm/glm.hpp>
 
 int main()
 {
@@ -21,9 +20,8 @@ int main()
     while (!canvas->ShouldClose())
     {
         canvas->PollEvents();
-        renderingAPI->SetClearColor(glm::vec4(0.2f, 0.3f, 0.3f, 1.0f));
-        renderingAPI->Clear();
-        renderingAPI->Draw();
+        app->GetRenderer()->Draw();
+    
         canvas->SwapBuffers();
     }
 
