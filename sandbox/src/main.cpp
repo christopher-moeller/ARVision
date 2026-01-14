@@ -1,18 +1,15 @@
 #include <iostream>
 #include "ARVApplication.h"
-#include "TestCanvas.h"
+#include "MacosPlattformProvider.h"
 
 int main()
 {
-    arv::TestCanvas* testCanvas = new arv::TestCanvas();
-    
-    arv::ARVCoreConfiguration* coreConfiguration = new arv::ARVCoreConfiguration(testCanvas);
-    arv::ARVApplication* app = new arv::ARVApplication(coreConfiguration);
+    arv::MacosPlattformProvider* plattformProvider = new arv::MacosPlattformProvider();
+    arv::ARVApplication* app = new arv::ARVApplication(plattformProvider);
     
     app->Initialize();
     
     delete app;
-    delete coreConfiguration;
     
     return 0;
 }
