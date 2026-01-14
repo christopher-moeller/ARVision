@@ -1,5 +1,5 @@
 #include "MacosOpenGlGlfwCanvas.h"
-#include "GLFW/glfw3.h"
+#include <GLFW/glfw3.h>
 #include <iostream>
 
 namespace arv
