@@ -1,4 +1,5 @@
 #include "MacosOpenGlGlfwCanvas.h"
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 
@@ -36,7 +37,14 @@ namespace arv
 
         glfwMakeContextCurrent(m_window);
 
+        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+        {
+            std::cerr << "Failed to initialize GLAD" << std::endl;
+            return;
+        }
+
         std::cout << "MacosOpenGlGlfwCanvas::Init() - Window created successfully" << std::endl;
+        std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
     }
 
     void MacosOpenGlGlfwCanvas::PollEvents()

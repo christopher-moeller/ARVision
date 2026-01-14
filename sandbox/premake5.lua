@@ -24,13 +24,16 @@ project "sandbox"
         "../providers/macos_opengl_provider/bin/Debug",
         "../providers/macos_opengl_provider/bin/Release",
         "../providers/macos_opengl_provider/vendor/GLFW/bin/Debug",
-        "../providers/macos_opengl_provider/vendor/GLFW/bin/Release"
+        "../providers/macos_opengl_provider/vendor/GLFW/bin/Release",
+        "../providers/macos_opengl_provider/vendor/glad/bin/Debug",
+        "../providers/macos_opengl_provider/vendor/glad/bin/Release"
     }
 
     links {
         "arv_core",
         "arv_macos_opengl_provider",
         "GLFW",
+        "glad",
         "Cocoa.framework",
         "OpenGL.framework",
         "IOKit.framework",

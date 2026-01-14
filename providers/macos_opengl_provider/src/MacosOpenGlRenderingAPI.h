@@ -14,5 +14,10 @@ namespace arv
 
         void SetClearColor(const glm::vec4& color) override;
         void Clear() override;
+
+    private:
+        unsigned int m_shaderProgram = 0;
+        unsigned int m_VAO = 0;
+        unsigned int m_VBO = 0;
     };
 }

@@ -1,4 +1,5 @@
 include "vendor/GLFW"
+include "vendor/glad"
 
 project "arv_macos_opengl_provider"
     kind "StaticLib"
@@ -16,10 +17,11 @@ project "arv_macos_opengl_provider"
 
     sysincludedirs {
         "vendor/GLFW/src/include",
+        "vendor/glad/include",
         GLM_INCLUDE_DIR
     }
 
-    dependson { "GLFW" }
+    dependson { "GLFW", "glad" }
 
     filter "configurations:Debug"
         symbols "On"
