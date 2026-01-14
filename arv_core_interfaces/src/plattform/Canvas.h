@@ -12,5 +12,6 @@ namespace arv
         virtual void PollEvents() = 0;
         virtual void SwapBuffers() = 0;
         virtual void Destroy() = 0;
+        virtual bool ShouldClose() = 0;
     };
 }

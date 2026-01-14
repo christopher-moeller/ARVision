@@ -12,12 +12,26 @@ project "sandbox"
     includedirs { "../providers/macos_opengl_provider/src" }
     includedirs { "../arv_core/src" }
 
-    libdirs { "../arv_core/bin/Debug",
-              "../arv_core/bin/Release",
-              "../providers/macos_opengl_provider/bin/Debug",
-              "../providers/macos_opengl_provider/bin/Release" }
+    libdirs {
+        "../arv_core/bin/Debug",
+        "../arv_core/bin/Release",
+        "../providers/macos_opengl_provider/bin/Debug",
+        "../providers/macos_opengl_provider/bin/Release",
+        "../providers/macos_opengl_provider/vendor/GLFW/bin/Debug",
+        "../providers/macos_opengl_provider/vendor/GLFW/bin/Release"
+    }
 
-    links { "arv_core", "arv_macos_opengl_provider" }
+    links {
+        "arv_core",
+        "arv_macos_opengl_provider",
+        "GLFW",
+        "Cocoa.framework",
+        "OpenGL.framework",
+        "IOKit.framework",
+        "CoreVideo.framework",
+        "CoreFoundation.framework",
+        "QuartzCore.framework"
+    }
 
     filter "configurations:Debug"
         symbols "On"
