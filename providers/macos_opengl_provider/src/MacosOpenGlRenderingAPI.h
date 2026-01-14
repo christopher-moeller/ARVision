@@ -11,5 +11,8 @@ namespace arv
 
         void Init() override;
         void Draw() override;
+
+        void SetClearColor(const glm::vec4& color) override;
+        void Clear() override;
     };
 }

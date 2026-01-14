@@ -10,6 +10,10 @@ project "arv_core"
 
     includedirs { "../arv_core_interfaces/src" }
 
+    sysincludedirs {
+        GLM_INCLUDE_DIR
+    }
+
     filter "configurations:Debug"
         symbols "On"
 

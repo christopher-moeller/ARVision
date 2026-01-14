@@ -8,9 +8,15 @@ project "sandbox"
 
     files { "src/**.cpp", "src/**.h" }
 
-    includedirs { "../arv_core_interfaces/src" }
-    includedirs { "../providers/macos_opengl_provider/src" }
-    includedirs { "../arv_core/src" }
+    includedirs {
+        "../arv_core_interfaces/src",
+        "../providers/macos_opengl_provider/src",
+        "../arv_core/src"
+    }
+
+    sysincludedirs {
+        GLM_INCLUDE_DIR
+    }
 
     libdirs {
         "../arv_core/bin/Debug",
