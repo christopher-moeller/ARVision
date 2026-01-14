@@ -4,6 +4,22 @@
 
 namespace arv
 {
+
+    ARVApplication* ARVApplication::s_Instance = nullptr;
+
+    ARVApplication* ARVApplication::Get() {
+        return s_Instance;
+    }
+
+    ARVApplication* ARVApplication::Create(PlattformProvider* plattformProvider) {
+        s_Instance = new ARVApplication(plattformProvider);
+        return s_Instance;
+    }
+
+    void ARVApplication::Destroy() {
+        delete s_Instance;
+    }
+
     ARVApplication::ARVApplication(PlattformProvider* plattformProvider)
         : m_plattformProvider(plattformProvider)
     {

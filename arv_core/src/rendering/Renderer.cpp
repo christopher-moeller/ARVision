@@ -15,4 +15,39 @@ namespace arv {
         m_RenderingAPI->Draw();
     }
 
+    void Renderer::Init()
+    {
+        m_RenderingAPI->Init();
+    }
+
+    void Renderer::OnTargetResize(uint32_t width, uint32_t height)
+    {
+        // Todo
+    }
+
+    VertexBuffer* Renderer::CreateVertexBuffer(float* vertices, unsigned int size)
+    {
+        return m_RenderingAPI->CreateVertexBuffer(vertices, size);
+    }
+
+    IndexBuffer* Renderer::CreateIndexBuffer(unsigned int* indices, unsigned int size)
+    {
+        return m_RenderingAPI->CreateIndexBuffer(indices, size);
+    }
+
+    VertexArray* Renderer::CreateVertexArray()
+    {
+        return m_RenderingAPI->CreateVertexArray();
+    }
+
+    Shader* Renderer::CreateShader(const std::string& vertexShaderSource, const std::string& fragmentShaderSource)
+    {
+        return m_RenderingAPI->CreateShader(vertexShaderSource, fragmentShaderSource);
+    }
+
+    Shader* Renderer::CreateShader(const ShaderSource& shaderSource)
+    {
+        return m_RenderingAPI->CreateShader(shaderSource);
+    }
+
 }

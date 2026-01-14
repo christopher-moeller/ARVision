@@ -119,4 +119,36 @@ namespace arv
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
+
+    VertexBuffer* MacosOpenGlRenderingAPI::CreateVertexBuffer(float* vertices, unsigned int size)
+    {
+        // Todo
+        return nullptr;
+    }
+
+    IndexBuffer* MacosOpenGlRenderingAPI::CreateIndexBuffer(unsigned int* indices, unsigned int size)
+    {
+        // Todo
+        return nullptr;
+    }
+
+    VertexArray* MacosOpenGlRenderingAPI::CreateVertexArray()
+    {
+        // Todo
+        return nullptr;
+    }
+
+    Shader* MacosOpenGlRenderingAPI::CreateShader(const std::string& vertexShaderSource, const std::string& fragmentShaderSource)
+    {
+        // Todo
+        return nullptr;
+    }
+
+    Shader* MacosOpenGlRenderingAPI::CreateShader(const ShaderSource& shaderSource)
+    {
+        ShaderSourceData sourceData = shaderSource.GetOpenGLShader();
+        return CreateShader(sourceData.vertexShaderSource, sourceData.fragmentShaderSource);
+    }
+
+    
 }

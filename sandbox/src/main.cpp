@@ -8,8 +8,9 @@ int main()
 {
     
     arv::MacosPlattformProvider* plattformProvider = new arv::MacosPlattformProvider();
-    arv::ARVApplication* app = new arv::ARVApplication(plattformProvider);
-
+    arv::ARVApplication::Create(plattformProvider);
+    arv::ARVApplication* app = arv::ARVApplication::Get();
+    
     app->Initialize();
 
     arv::Canvas* canvas = plattformProvider->GetCanvas();
