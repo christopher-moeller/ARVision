@@ -51,3 +51,5 @@ xcuserdata/
 *.tmp
 *.bak
 *~
+
+.claude

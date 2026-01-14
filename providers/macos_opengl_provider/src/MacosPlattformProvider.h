@@ -7,6 +7,8 @@ namespace arv
     {
     public:
         MacosPlattformProvider();
+        ~MacosPlattformProvider() override;
+
         void Init() override;
     };
 }
