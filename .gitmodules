@@ -1,0 +1,3 @@
+[submodule "providers/macos_opengl_provider/vendor/GLFW/src"]
+	path = providers/macos_opengl_provider/vendor/GLFW/src
+	url = https://github.com/glfw/glfw.git
