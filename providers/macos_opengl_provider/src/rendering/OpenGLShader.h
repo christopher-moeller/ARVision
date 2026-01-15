@@ -1,13 +1,14 @@
 #pragma once
 #include "rendering/Shader.h"
+#include "rendering/ShaderSource.h"
 #include <glad/glad.h>
 
 namespace arv {
 
     class OpenGLShader : public Shader {
-        
+
     public:
-        OpenGLShader(const std::string& vertexShaderSource, const std::string& fragmentShaderSource) : Shader(vertexShaderSource, fragmentShaderSource) {}
+        OpenGLShader(const ShaderSource& shaderSource) : Shader(shaderSource) {}
         
         ~OpenGLShader();
         

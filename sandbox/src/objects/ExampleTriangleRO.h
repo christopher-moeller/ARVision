@@ -1,21 +1,25 @@
 #pragma once
 
 #include "rendering/RenderingObject.h"
+#include <glm/glm.hpp>
 
 namespace arv {
 
     class ExampleTriangleRO : public RenderingObject {
-        
+
     public:
         ExampleTriangleRO();
-        
+
         std::shared_ptr<Shader>& GetShader() override;
         std::shared_ptr<VertexArray>& GetVertexArray() override;
-        
+
+        void SetColor(const glm::vec4& color);
+        const glm::vec4& GetColor() const { return m_Color; }
+
     private:
         std::shared_ptr<Shader> m_Shader;
         std::shared_ptr<VertexArray> m_VertexArray;
-        
+        glm::vec4 m_Color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     };
 
 }

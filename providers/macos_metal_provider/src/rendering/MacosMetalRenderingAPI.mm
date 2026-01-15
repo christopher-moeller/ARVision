@@ -115,6 +115,21 @@ namespace arv
                 }
             }
 
+            // Bind fragment uniforms
+            const auto& float4Uniforms = shader->GetFloat4Uniforms();
+            if (!float4Uniforms.empty())
+            {
+                // For now, we pack all float4 uniforms into a single buffer
+                // The shader expects them in order at buffer index 0
+                // Currently only supporting u_Color uniform
+                auto it = float4Uniforms.find("u_Color");
+                if (it != float4Uniforms.end())
+                {
+                    float uniformData[4] = { it->second.x, it->second.y, it->second.z, it->second.w };
+                    [renderEncoder setFragmentBytes:uniformData length:sizeof(uniformData) atIndex:0];
+                }
+            }
+
             // Get index buffer
             const auto& indexBuffer = metalVA->GetIndexBuffer();
             if (indexBuffer)
@@ -165,8 +180,8 @@ namespace arv
         return new MetalVertexArray();
     }
 
-    Shader* MacosMetalRenderingAPI::CreateShader(const std::string& vertexShaderSource, const std::string& fragmentShaderSource)
+    Shader* MacosMetalRenderingAPI::CreateShader(const ShaderSource& shaderSource)
     {
-        return new MetalShader(m_device, vertexShaderSource, fragmentShaderSource);
+        return new MetalShader(m_device, shaderSource);
     }
 }

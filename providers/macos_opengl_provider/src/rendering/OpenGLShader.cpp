@@ -9,9 +9,9 @@ namespace arv {
     }
 
     void OpenGLShader::Compile() {
-        
-        GLuint vertexShader = CompileShader(m_VertexShaderSource.c_str(), GL_VERTEX_SHADER);
-        GLuint fragmentShader = CompileShader(m_FragmentShaderSource.c_str(), GL_FRAGMENT_SHADER);
+
+        GLuint vertexShader = CompileShader(m_ShaderSource.glslVertexSource.c_str(), GL_VERTEX_SHADER);
+        GLuint fragmentShader = CompileShader(m_ShaderSource.glslFragmentSource.c_str(), GL_FRAGMENT_SHADER);
                 
         GLuint shaderProgram = glCreateProgram();
         glAttachShader(shaderProgram, vertexShader);
@@ -40,6 +40,13 @@ namespace arv {
 
     void OpenGLShader::Use() {
         glUseProgram(m_ProgramId);
+
+        // Apply stored uniforms after binding the program
+        for (const auto& [name, value] : m_Float4Uniforms)
+        {
+            GLint location = glGetUniformLocation(m_ProgramId, name.c_str());
+            glUniform4f(location, value.x, value.y, value.z, value.w);
+        }
     }
 
     GLuint OpenGLShader::CompileShader(const char *source, GLint shaderType) {
@@ -85,8 +92,8 @@ namespace arv {
 
     void OpenGLShader::UploadUniformFloat4(const std::string& name, const glm::vec4& value)
     {
-        GLint location = glGetUniformLocation(m_ProgramId, name.c_str());
-        glUniform4f(location, value.x, value.y, value.z, value.w);
+        // Store the uniform value - will be applied during Use()
+        m_Float4Uniforms[name] = value;
     }
 
     void OpenGLShader::UploadUniformMat3(const std::string& name, const glm::mat3& matrix)

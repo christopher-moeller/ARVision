@@ -1,22 +1,24 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 #include <glm/glm.hpp>
+#include "ShaderSource.h"
 
 namespace arv {
 
     class Shader {
     public:
-        Shader(const std::string& vertexShaderSource, const std::string& fragmentShaderSource) : m_VertexShaderSource(vertexShaderSource), m_FragmentShaderSource(fragmentShaderSource) {}
-        
+        Shader(const ShaderSource& shaderSource) : m_ShaderSource(shaderSource) {}
+
         virtual ~Shader() = default;
-        
+
         virtual void Compile() = 0;
         virtual bool IsCompiled() = 0;
-        
+
         virtual void Destroy() = 0;
         virtual void Use() = 0;
-        
+
         virtual void UploadUniformInt(const std::string& name, int value) = 0;
 
         virtual void UploadUniformFloat(const std::string& name, float value) = 0;
@@ -26,10 +28,13 @@ namespace arv {
 
         virtual void UploadUniformMat3(const std::string& name, const glm::mat3& matrix) = 0;
         virtual void UploadUniformMat4(const std::string& name, const glm::mat4& matrix) = 0;
-        
+
+        // Accessors for stored uniforms (used by Metal rendering)
+        const std::unordered_map<std::string, glm::vec4>& GetFloat4Uniforms() const { return m_Float4Uniforms; }
+
     protected:
-        std::string m_VertexShaderSource;
-        std::string m_FragmentShaderSource;
+        ShaderSource m_ShaderSource;
+        std::unordered_map<std::string, glm::vec4> m_Float4Uniforms;
     };
 
 }

@@ -62,9 +62,9 @@ namespace arv
         return new OpenGLVertexArray();
     }
 
-    Shader* MacosOpenGlRenderingAPI::CreateShader(const std::string& vertexShaderSource, const std::string& fragmentShaderSource)
+    Shader* MacosOpenGlRenderingAPI::CreateShader(const ShaderSource& shaderSource)
     {
-       return new OpenGLShader(vertexShaderSource, fragmentShaderSource);
+       return new OpenGLShader(shaderSource);
     }
     
 }

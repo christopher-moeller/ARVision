@@ -6,8 +6,8 @@
 
 namespace arv {
 
-    MetalShader::MetalShader(id<MTLDevice> device, const std::string& vertexShaderSource, const std::string& fragmentShaderSource)
-        : Shader(vertexShaderSource, fragmentShaderSource), m_device(device)
+    MetalShader::MetalShader(id<MTLDevice> device, const ShaderSource& shaderSource)
+        : Shader(shaderSource), m_device(device)
     {
     }
 
@@ -21,12 +21,8 @@ namespace arv {
         @autoreleasepool {
             NSError* error = nil;
 
-            // Combine vertex and fragment shader sources into a single Metal library source
-            // The vertex shader source should contain the vertex function
-            // The fragment shader source should contain the fragment function
-            // We combine them into a single source file
-            std::string combinedSource = m_VertexShaderSource + "\n" + m_FragmentShaderSource;
-            NSString* sourceNS = [NSString stringWithUTF8String:combinedSource.c_str()];
+            // Use the MSL source directly from ShaderSource
+            NSString* sourceNS = [NSString stringWithUTF8String:m_ShaderSource.mslSource.c_str()];
 
             // Compile the shader library from source
             m_library = [m_device newLibraryWithSource:sourceNS
@@ -134,7 +130,8 @@ namespace arv {
 
     void MetalShader::UploadUniformFloat4(const std::string& name, const glm::vec4& value)
     {
-        // Metal uses buffer bindings for uniforms
+        // Store the uniform value - will be applied during Draw()
+        m_Float4Uniforms[name] = value;
     }
 
     void MetalShader::UploadUniformMat3(const std::string& name, const glm::mat3& matrix)

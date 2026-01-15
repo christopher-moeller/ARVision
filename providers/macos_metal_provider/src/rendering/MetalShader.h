@@ -1,5 +1,6 @@
 #pragma once
 #include "rendering/Shader.h"
+#include "rendering/ShaderSource.h"
 
 #ifdef __OBJC__
 @protocol MTLDevice;
@@ -19,9 +20,9 @@ namespace arv {
 
     public:
 #ifdef __OBJC__
-        MetalShader(id<MTLDevice> device, const std::string& vertexShaderSource, const std::string& fragmentShaderSource);
+        MetalShader(id<MTLDevice> device, const ShaderSource& shaderSource);
 #else
-        MetalShader(void* device, const std::string& vertexShaderSource, const std::string& fragmentShaderSource);
+        MetalShader(void* device, const ShaderSource& shaderSource);
 #endif
 
         ~MetalShader();
