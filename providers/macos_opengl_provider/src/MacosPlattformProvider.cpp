@@ -1,6 +1,6 @@
 #include "MacosPlattformProvider.h"
-#include "MacosOpenGlGlfwCanvas.h"
-#include "MacosOpenGlRenderingAPI.h"
+#include "plattform/MacosOpenGlGlfwCanvas.h"
+#include "rendering/MacosOpenGlRenderingAPI.h"
 #include <iostream>
 
 namespace arv

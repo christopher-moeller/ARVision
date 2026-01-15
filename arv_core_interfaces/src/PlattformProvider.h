@@ -17,7 +17,7 @@ namespace arv
         RenderingAPI* GetRenderingAPI() const { return m_renderingAPI; }
 
     protected:
-        Canvas* m_canvas = nullptr;
-        RenderingAPI* m_renderingAPI = nullptr;
+        Canvas* m_canvas;
+        RenderingAPI* m_renderingAPI;
     };
 }

@@ -2,9 +2,9 @@
 #include <glad/glad.h>
 #include <iostream>
 
-#include "rendering/OpenGLBuffer.h"
-#include "rendering/OpenGLShader.h"
-#include "rendering/OpenGLVertexArray.h"
+#include "OpenGLBuffer.h"
+#include "OpenGLShader.h"
+#include "OpenGLVertexArray.h"
 
 namespace arv
 {

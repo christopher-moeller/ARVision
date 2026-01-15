@@ -1,6 +1,6 @@
 #include <iostream>
 #include "ARVApplication.h"
-#include "plattform/MacosPlattformProvider.h"
+#include "MacosPlattformProvider.h"
 #include "plattform/Canvas.h"
 #include "rendering/RenderingAPI.h"
 #include "objects/ExampleTriangleRO.h"
@@ -9,8 +9,7 @@ int main()
 {
     
     arv::MacosPlattformProvider* plattformProvider = new arv::MacosPlattformProvider();
-    arv::ARVApplication::Create(plattformProvider);
-    arv::ARVApplication* app = arv::ARVApplication::Get();
+    arv::ARVApplication* app = arv::ARVApplication::Create(plattformProvider);
     
     app->Initialize();
 
@@ -25,12 +24,11 @@ int main()
     {
         canvas->PollEvents();
         app->GetRenderer()->DrawObject(triangle);
-        
-    
         canvas->SwapBuffers();
     }
 
     delete app;
+    delete plattformProvider;
 
     return 0;
 }
