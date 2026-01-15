@@ -1,6 +1,6 @@
 #include "ExampleTriangleRO.h"
-#include "../shaders/ExampleShaderSource.h"
-#include "../../ARVApplication.h"
+#include "ARVApplication.h"
+#include <string>
 
 namespace arv {
 
@@ -8,8 +8,31 @@ namespace arv {
         
         
         ARVApplication* app = ARVApplication::Get();
-            
-        m_Shader.reset(app->GetRenderer()->CreateShader(ExampleShaderSource()));
+        
+        std::string vertexShaderSource = R"(
+            #version 330 core
+
+            layout (location = 0) in vec3 aPos;
+        
+            void main()
+            {
+                gl_Position = vec4(aPos, 1.0);
+            }
+        )";
+
+        std::string fragmentShaderSource = R"(
+            #version 330 core
+        
+            out vec4 FragColor;
+
+            void main()
+            {
+                FragColor = vec4(1.0, 0.5, 0.2, 1.0);
+            }
+        )";
+        
+
+        m_Shader.reset(app->GetRenderer()->CreateShader(vertexShaderSource, fragmentShaderSource));
         m_Shader->Compile();
         
         m_VertexArray.reset(app->GetRenderer()->CreateVertexArray());

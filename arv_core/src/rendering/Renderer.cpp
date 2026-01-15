@@ -8,11 +8,11 @@ namespace arv {
         m_RenderingAPI.reset(renderingAPI);
     }
 
-    void Renderer::Draw()
+    void Renderer::DrawObject(RenderingObject& object)
     {
         m_RenderingAPI->SetClearColor(glm::vec4(0.2f, 0.3f, 0.3f, 1.0f));
         m_RenderingAPI->Clear();
-        m_RenderingAPI->Draw();
+        m_RenderingAPI->Draw(object.GetShader(), object.GetVertexArray());
     }
 
     void Renderer::Init()

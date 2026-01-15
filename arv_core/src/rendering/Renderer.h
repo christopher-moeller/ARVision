@@ -6,13 +6,14 @@
 #include "rendering/VertexArray.h"
 #include "rendering/Shader.h"
 #include "rendering/shaders/ShaderSource.h"
+#include "RenderingObject.h"
 
 namespace arv {
 
     class Renderer {
     public:
         Renderer(RenderingAPI* renderingAPI);
-        void Draw(); // Todo only tmp
+        void DrawObject(RenderingObject& object); 
 
 
         void Init();

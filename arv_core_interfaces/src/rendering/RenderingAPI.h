@@ -15,7 +15,9 @@ namespace arv
         virtual ~RenderingAPI() = default;
 
         virtual void Init() = 0;
-        virtual void Draw() = 0;
+        virtual void DrawExample() = 0;
+
+        virtual void Draw(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray) = 0;
         
         virtual void SetClearColor(const glm::vec4& color) = 0;
         virtual void Clear() = 0;

@@ -3,6 +3,7 @@
 #include "plattform/MacosPlattformProvider.h"
 #include "plattform/Canvas.h"
 #include "rendering/RenderingAPI.h"
+#include "objects/ExampleTriangleRO.h"
 
 int main()
 {
@@ -17,11 +18,14 @@ int main()
     arv::RenderingAPI* renderingAPI = plattformProvider->GetRenderingAPI();
 
     renderingAPI->Init();
+    
+    arv::ExampleTriangleRO triangle;
 
     while (!canvas->ShouldClose())
     {
         canvas->PollEvents();
-        app->GetRenderer()->Draw();
+        app->GetRenderer()->DrawObject(triangle);
+        
     
         canvas->SwapBuffers();
     }

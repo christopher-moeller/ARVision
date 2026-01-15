@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RenderingObject.h"
+#include "rendering/RenderingObject.h"
 
 namespace arv {
 

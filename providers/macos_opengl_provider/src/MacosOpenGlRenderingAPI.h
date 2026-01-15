@@ -10,7 +10,9 @@ namespace arv
         ~MacosOpenGlRenderingAPI() override;
 
         void Init() override;
-        void Draw() override;
+        void DrawExample() override;
+
+        void Draw(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray) override;
 
         void SetClearColor(const glm::vec4& color) override;
         void Clear() override;
@@ -20,10 +22,6 @@ namespace arv
         VertexArray* CreateVertexArray() override;
         Shader* CreateShader(const std::string& vertexShaderSource, const std::string& fragmentShaderSource) override;
         Shader* CreateShader(const ShaderSource& shaderSource) override;
-
-    private:
-        unsigned int m_shaderProgram = 0;
-        unsigned int m_VAO = 0;
-        unsigned int m_VBO = 0;
+        
     };
 }
