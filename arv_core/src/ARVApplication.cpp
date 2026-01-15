@@ -2,6 +2,8 @@
 #include "rendering/Renderer.h"
 #include <iostream>
 
+#include "utils/StdLogger.h"
+
 namespace arv
 {
 
@@ -23,12 +25,19 @@ namespace arv
     ARVApplication::ARVApplication(PlattformProvider* plattformProvider)
         : m_plattformProvider(plattformProvider)
     {
+        m_Logger = std::make_unique<StdLogger>();
     }
 
     void ARVApplication::Initialize()
     {
         m_plattformProvider->Init();
         m_renderer = new Renderer(m_plattformProvider->GetRenderingAPI());
+
+        Logger* customLogger = m_plattformProvider->CreateCustomLogger();
+        if(customLogger) {
+            m_Logger.reset(customLogger);
+        }
+        
         std::cout << "ARVApplication Initialized." << std::endl;
     }
 

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+#include "utils/Logger.h"
+
 #include "PlattformProvider.h"
 #include "rendering/Renderer.h"
 
@@ -18,8 +21,12 @@ namespace arv
         PlattformProvider* GetPlattformProvider() const;
         Renderer* GetRenderer() const;
 
+        inline std::unique_ptr<Logger>& GetLogger() { return m_Logger; }
+
     protected:
         ARVApplication(PlattformProvider* plattformProvider);
+        
+        std::unique_ptr<Logger> m_Logger;
 
     private:
         PlattformProvider* m_plattformProvider;

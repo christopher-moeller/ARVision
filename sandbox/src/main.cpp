@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <chrono>
-#include "ARVApplication.h"
+#include "ARVBase.h"
 #include "MacosMetalPlattformProvider.h"
 #include "MacosOpenGlPlattformProvider.h"
 #include "plattform/Canvas.h"
@@ -22,15 +22,14 @@ int main()
     }
 
     arv::ARVApplication* app = arv::ARVApplication::Create(plattformProvider);
+    ARV_LOG_INFO("ARV Application created");
 
     app->Initialize();
 
     arv::Canvas* canvas = plattformProvider->GetCanvas();
 
-    // Unified RenderingObject works with both OpenGL and Metal
     arv::ExampleTriangleRO* renderingObject = new arv::ExampleTriangleRO();
 
-    // Set an initial color (white = no tint, shows original vertex colors)
     renderingObject->SetColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
     auto startTime = std::chrono::high_resolution_clock::now();

@@ -23,4 +23,5 @@ namespace arv
         m_canvas->Init();
         m_renderingAPI->Init();
     }
+    
 }
