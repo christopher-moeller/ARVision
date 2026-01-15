@@ -1,6 +1,6 @@
 #include <iostream>
 #include "ARVApplication.h"
-#include "MacosPlattformProvider.h"
+#include "MacosOpenGlPlattformProvider.h"
 #include "plattform/Canvas.h"
 #include "rendering/RenderingAPI.h"
 #include "objects/ExampleTriangleRO.h"
@@ -8,7 +8,7 @@
 int main()
 {
     
-    arv::MacosPlattformProvider* plattformProvider = new arv::MacosPlattformProvider();
+    arv::MacosOpenGlPlattformProvider* plattformProvider = new arv::MacosOpenGlPlattformProvider();
     arv::ARVApplication* app = arv::ARVApplication::Create(plattformProvider);
     
     app->Initialize();
