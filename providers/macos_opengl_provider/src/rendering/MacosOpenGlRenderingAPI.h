@@ -21,7 +21,6 @@ namespace arv
         IndexBuffer* CreateIndexBuffer(unsigned int* indices, unsigned int size) override;
         VertexArray* CreateVertexArray() override;
         Shader* CreateShader(const std::string& vertexShaderSource, const std::string& fragmentShaderSource) override;
-        Shader* CreateShader(const ShaderSource& shaderSource) override;
         
     };
 }

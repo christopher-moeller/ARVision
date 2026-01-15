@@ -66,12 +66,5 @@ namespace arv
     {
        return new OpenGLShader(vertexShaderSource, fragmentShaderSource);
     }
-
-    Shader* MacosOpenGlRenderingAPI::CreateShader(const ShaderSource& shaderSource)
-    {
-        ShaderSourceData sourceData = shaderSource.GetOpenGLShader();
-        return CreateShader(sourceData.vertexShaderSource, sourceData.fragmentShaderSource);
-    }
-
     
 }

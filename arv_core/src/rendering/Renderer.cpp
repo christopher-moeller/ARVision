@@ -45,9 +45,4 @@ namespace arv {
         return m_RenderingAPI->CreateShader(vertexShaderSource, fragmentShaderSource);
     }
 
-    Shader* Renderer::CreateShader(const ShaderSource& shaderSource)
-    {
-        return m_RenderingAPI->CreateShader(shaderSource);
-    }
-
 }

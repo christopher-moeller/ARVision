@@ -5,7 +5,6 @@
 #include "rendering/Buffer.h"
 #include "rendering/VertexArray.h"
 #include "rendering/Shader.h"
-#include "rendering/shaders/ShaderSource.h"
 #include "RenderingObject.h"
 
 namespace arv {
@@ -23,7 +22,6 @@ namespace arv {
         IndexBuffer* CreateIndexBuffer(unsigned int* indices, unsigned int size);
         VertexArray* CreateVertexArray();
         Shader* CreateShader(const std::string& vertexShaderSource, const std::string& fragmentShaderSource);
-        Shader* CreateShader(const ShaderSource& shaderSource);
 
     private:
         std::shared_ptr<RenderingAPI> m_RenderingAPI;
