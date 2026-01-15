@@ -26,7 +26,7 @@ namespace arv
         m_metalLayer = layer;
     }
 
-    void MacosMetalRenderingAPI::Init()
+    void MacosMetalRenderingAPI::Init(PlattformApplicationContext* context)
     {
         if (!m_metalLayer)
         {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "utils/Logger.h"
+#include "plattform/PlattformApplicationContext.h"
 
 namespace arv
 {
@@ -13,7 +14,7 @@ namespace arv
         PlattformProvider() = default;
         virtual ~PlattformProvider() = default;
 
-        virtual void Init() = 0;
+        virtual void Init(PlattformApplicationContext* context) = 0;
 
         Canvas* GetCanvas() const { return m_canvas; }
         RenderingAPI* GetRenderingAPI() const { return m_renderingAPI; }

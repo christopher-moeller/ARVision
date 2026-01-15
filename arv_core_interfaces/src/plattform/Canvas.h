@@ -1,5 +1,7 @@
 #pragma once
 
+#include "plattform/PlattformApplicationContext.h"
+
 namespace arv
 {
     class Canvas
@@ -8,7 +10,7 @@ namespace arv
         Canvas() = default;
         virtual ~Canvas() = default;
 
-        virtual void Init() = 0;
+        virtual void Init(PlattformApplicationContext* context) = 0;
         virtual void PollEvents() = 0;
         virtual void SwapBuffers() = 0;
         virtual void Destroy() = 0;

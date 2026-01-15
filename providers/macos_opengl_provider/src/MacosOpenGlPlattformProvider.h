@@ -9,6 +9,6 @@ namespace arv
         MacosOpenGlPlattformProvider();
         ~MacosOpenGlPlattformProvider() override;
 
-        void Init() override;
+        void Init(PlattformApplicationContext* context) override;
     };
 }

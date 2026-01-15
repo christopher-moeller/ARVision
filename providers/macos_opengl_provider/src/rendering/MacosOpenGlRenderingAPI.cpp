@@ -19,7 +19,7 @@ namespace arv
         
     }
 
-    void MacosOpenGlRenderingAPI::Init()
+    void MacosOpenGlRenderingAPI::Init(PlattformApplicationContext* context)
     {
         
     }

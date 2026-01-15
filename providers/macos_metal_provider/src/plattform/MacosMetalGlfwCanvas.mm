@@ -22,7 +22,7 @@ namespace arv
         Destroy();
     }
 
-    void MacosMetalGlfwCanvas::Init()
+    void MacosMetalGlfwCanvas::Init(PlattformApplicationContext* context)
     {
         if (!glfwInit())
         {

@@ -9,6 +9,6 @@ namespace arv
         MacosMetalPlattformProvider();
         ~MacosMetalPlattformProvider() override;
 
-        void Init() override;
+        void Init(PlattformApplicationContext* context) override;
     };
 }

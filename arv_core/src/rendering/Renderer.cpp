@@ -17,12 +17,12 @@ namespace arv {
 
     void Renderer::Init()
     {
-        m_RenderingAPI->Init();
+        //m_RenderingAPI->Init();
     }
 
     void Renderer::OnTargetResize(uint32_t width, uint32_t height)
     {
-        // Todo
+        
     }
 
     VertexBuffer* Renderer::CreateVertexBuffer(float* vertices, unsigned int size)

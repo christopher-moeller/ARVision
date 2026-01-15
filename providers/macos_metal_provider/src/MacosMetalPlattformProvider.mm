@@ -17,16 +17,16 @@ namespace arv
         delete m_renderingAPI;
     }
 
-    void MacosMetalPlattformProvider::Init()
+    void MacosMetalPlattformProvider::Init(PlattformApplicationContext* context)
     {
         std::cout << "MacosMetalPlattformProvider::Init()" << std::endl;
-        m_canvas->Init();
+        m_canvas->Init(context);
 
         // Pass the Metal layer from the canvas to the rendering API
         MacosMetalGlfwCanvas* metalCanvas = static_cast<MacosMetalGlfwCanvas*>(m_canvas);
         MacosMetalRenderingAPI* metalAPI = static_cast<MacosMetalRenderingAPI*>(m_renderingAPI);
         metalAPI->SetMetalLayer(metalCanvas->GetMetalLayer());
 
-        m_renderingAPI->Init();
+        m_renderingAPI->Init(context);
     }
 }

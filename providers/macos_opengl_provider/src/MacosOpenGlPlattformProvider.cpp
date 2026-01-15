@@ -17,11 +17,11 @@ namespace arv
         delete m_renderingAPI;
     }
 
-    void MacosOpenGlPlattformProvider::Init()
+    void MacosOpenGlPlattformProvider::Init(PlattformApplicationContext* context)
     {
         std::cout << "MacosOpenGlPlattformProvider::Init()" << std::endl;
-        m_canvas->Init();
-        m_renderingAPI->Init();
+        m_canvas->Init(context);
+        m_renderingAPI->Init(context);
     }
-    
+
 }

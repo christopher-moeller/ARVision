@@ -17,7 +17,7 @@ namespace arv
         MacosMetalGlfwCanvas();
         ~MacosMetalGlfwCanvas() override;
 
-        void Init() override;
+        void Init(PlattformApplicationContext* context) override;
         void PollEvents() override;
         void SwapBuffers() override;
         void Destroy() override;

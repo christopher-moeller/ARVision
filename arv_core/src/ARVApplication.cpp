@@ -4,6 +4,7 @@
 
 #include "utils/StdLogger.h"
 #include "events/CoreEventManager.h"
+#include "plattform/CorePlattformApplicationContext.h"
 
 namespace arv
 {
@@ -32,13 +33,13 @@ namespace arv
 
     void ARVApplication::Initialize()
     {
-        m_plattformProvider->Init();
-        m_renderer = new Renderer(m_plattformProvider->GetRenderingAPI());
-
         Logger* customLogger = m_plattformProvider->CreateCustomLogger();
         if(customLogger) {
             m_Logger.reset(customLogger);
         }
+
+        m_plattformProvider->Init(new CorePlattformApplicationContext(m_Logger.get(), m_EventManager.get()));
+        m_renderer = new Renderer(m_plattformProvider->GetRenderingAPI());
 
         m_EventManager->AddListener(EventType::ApplicationResizeEvent, [this](arv::Event& event) {
             ApplicationResizeEvent* resizeEvent = static_cast<ApplicationResizeEvent*>(&event);

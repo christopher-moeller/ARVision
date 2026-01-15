@@ -15,7 +15,7 @@ namespace arv
         Destroy();
     }
 
-    void MacosOpenGlGlfwCanvas::Init()
+    void MacosOpenGlGlfwCanvas::Init(PlattformApplicationContext* context)
     {
         if (!glfwInit())
         {
@@ -44,8 +44,9 @@ namespace arv
             return;
         }
 
-        /*
-        glfwSetWindowUserPointer(m_window, ARVApplication::Get()->GetEventManager().get());
+    
+    
+        glfwSetWindowUserPointer(m_window, context->GetEventManager());
 
         // Register events
         glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* window, int width, int height) {
@@ -54,7 +55,7 @@ namespace arv
             ApplicationResizeEvent event(width, height);
             eventManager->PushEvent(event);
         });
-        */
+        
 
 
         std::cout << "MacosOpenGlGlfwCanvas::Init() - Window created successfully" << std::endl;
