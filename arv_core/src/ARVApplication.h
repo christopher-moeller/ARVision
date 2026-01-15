@@ -2,6 +2,7 @@
 
 #include <memory>
 #include "utils/Logger.h"
+#include "events/EventManager.h"
 
 #include "PlattformProvider.h"
 #include "rendering/Renderer.h"
@@ -22,11 +23,15 @@ namespace arv
         Renderer* GetRenderer() const;
 
         inline std::unique_ptr<Logger>& GetLogger() { return m_Logger; }
+        inline std::unique_ptr<EventManager>& GetEventManager() { return m_EventManager; }
 
     protected:
         ARVApplication(PlattformProvider* plattformProvider);
         
         std::unique_ptr<Logger> m_Logger;
+        std::unique_ptr<EventManager> m_EventManager;
+
+        int m_Width, m_Height;
 
     private:
         PlattformProvider* m_plattformProvider;

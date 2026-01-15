@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
+
 namespace arv
 {
     MacosOpenGlGlfwCanvas::MacosOpenGlGlfwCanvas()
@@ -42,6 +43,19 @@ namespace arv
             std::cerr << "Failed to initialize GLAD" << std::endl;
             return;
         }
+
+        /*
+        glfwSetWindowUserPointer(m_window, ARVApplication::Get()->GetEventManager().get());
+
+        // Register events
+        glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* window, int width, int height) {
+            EventManager* eventManager = (EventManager*) glfwGetWindowUserPointer(window);
+            
+            ApplicationResizeEvent event(width, height);
+            eventManager->PushEvent(event);
+        });
+        */
+
 
         std::cout << "MacosOpenGlGlfwCanvas::Init() - Window created successfully" << std::endl;
         std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
