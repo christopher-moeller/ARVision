@@ -1,6 +1,7 @@
 #pragma once
 #include "rendering/Shader.h"
 #include "rendering/ShaderSource.h"
+#include <vector>
 
 #ifdef __OBJC__
 @protocol MTLDevice;
@@ -15,6 +16,12 @@ typedef void MTLFunction;
 #endif
 
 namespace arv {
+
+    // Stores the order of uniform fields as defined in the shader structs
+    struct UniformLayout {
+        std::vector<std::string> vertexUniformNames;   // Field names from VertexUniforms struct
+        std::vector<std::string> fragmentUniformNames; // Field names from FragmentUniforms struct
+    };
 
     class MetalShader : public Shader {
 
@@ -50,7 +57,14 @@ namespace arv {
         void* GetPipelineState() const { return m_pipelineState; }
 #endif
 
+        // Get the uniform layout parsed from the shader source
+        const UniformLayout& GetUniformLayout() const { return m_uniformLayout; }
+
     private:
+        void ParseUniformLayout(const std::string& mslSource);
+        static std::vector<std::string> ParseStructFields(const std::string& source, const std::string& structName);
+
+        UniformLayout m_uniformLayout;
 #ifdef __OBJC__
         id<MTLDevice> m_device = nullptr;
         id<MTLLibrary> m_library = nullptr;

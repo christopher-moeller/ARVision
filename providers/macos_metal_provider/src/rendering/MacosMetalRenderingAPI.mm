@@ -8,6 +8,7 @@
 #include "MetalVertexArray.h"
 
 #include <iostream>
+#include <vector>
 #include <glm/gtc/type_ptr.hpp>
 
 namespace arv
@@ -116,31 +117,58 @@ namespace arv
                 }
             }
 
-            // Bind vertex uniforms (MVP matrix)
+            // Get the uniform layout parsed from the shader source
+            const auto& uniformLayout = metalShader->GetUniformLayout();
             const auto& mat4Uniforms = shader->GetMat4Uniforms();
-            if (!mat4Uniforms.empty())
+            const auto& float4Uniforms = shader->GetFloat4Uniforms();
+
+            // Bind vertex uniforms in the order defined by the shader's VertexUniforms struct
+            if (!uniformLayout.vertexUniformNames.empty())
             {
-                auto it = mat4Uniforms.find("u_mvp");
-                if (it != mat4Uniforms.end())
+                std::vector<float> vertexUniformData;
+                vertexUniformData.reserve(uniformLayout.vertexUniformNames.size() * 16);
+
+                for (const auto& fieldName : uniformLayout.vertexUniformNames)
                 {
-                    [renderEncoder setVertexBytes:glm::value_ptr(it->second)
-                                           length:sizeof(glm::mat4)
+                    auto it = mat4Uniforms.find(fieldName);
+                    if (it != mat4Uniforms.end())
+                    {
+                        const float* ptr = glm::value_ptr(it->second);
+                        vertexUniformData.insert(vertexUniformData.end(), ptr, ptr + 16);
+                    }
+                }
+
+                if (!vertexUniformData.empty())
+                {
+                    [renderEncoder setVertexBytes:vertexUniformData.data()
+                                           length:vertexUniformData.size() * sizeof(float)
                                           atIndex:1];
                 }
             }
 
-            // Bind fragment uniforms
-            const auto& float4Uniforms = shader->GetFloat4Uniforms();
-            if (!float4Uniforms.empty())
+            // Bind fragment uniforms in the order defined by the shader's FragmentUniforms struct
+            if (!uniformLayout.fragmentUniformNames.empty())
             {
-                // For now, we pack all float4 uniforms into a single buffer
-                // The shader expects them in order at buffer index 0
-                // Currently only supporting u_Color uniform
-                auto it = float4Uniforms.find("u_Color");
-                if (it != float4Uniforms.end())
+                std::vector<float> fragmentUniformData;
+                fragmentUniformData.reserve(uniformLayout.fragmentUniformNames.size() * 4);
+
+                for (const auto& fieldName : uniformLayout.fragmentUniformNames)
                 {
-                    float uniformData[4] = { it->second.x, it->second.y, it->second.z, it->second.w };
-                    [renderEncoder setFragmentBytes:uniformData length:sizeof(uniformData) atIndex:0];
+                    auto it = float4Uniforms.find(fieldName);
+                    if (it != float4Uniforms.end())
+                    {
+                        fragmentUniformData.push_back(it->second.x);
+                        fragmentUniformData.push_back(it->second.y);
+                        fragmentUniformData.push_back(it->second.z);
+                        fragmentUniformData.push_back(it->second.w);
+                    }
+                }
+
+                if (!fragmentUniformData.empty())
+                {
+                    [renderEncoder setFragmentBytes:fragmentUniformData.data()
+                                             length:fragmentUniformData.size() * sizeof(float)
+                                            atIndex:0];
                 }
             }
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <glm/glm.hpp>
 #include "ShaderSource.h"
 
@@ -29,14 +29,15 @@ namespace arv {
         virtual void UploadUniformMat3(const std::string& name, const glm::mat3& matrix) = 0;
         virtual void UploadUniformMat4(const std::string& name, const glm::mat4& matrix) = 0;
 
-        // Accessors for stored uniforms (used by Metal rendering)
-        const std::unordered_map<std::string, glm::vec4>& GetFloat4Uniforms() const { return m_Float4Uniforms; }
-        const std::unordered_map<std::string, glm::mat4>& GetMat4Uniforms() const { return m_Mat4Uniforms; }
+        // Accessors for stored uniforms (used by rendering backends)
+        // Maps are ordered alphabetically by name for deterministic buffer packing
+        const std::map<std::string, glm::vec4>& GetFloat4Uniforms() const { return m_Float4Uniforms; }
+        const std::map<std::string, glm::mat4>& GetMat4Uniforms() const { return m_Mat4Uniforms; }
 
     protected:
         ShaderSource* m_ShaderSource;
-        std::unordered_map<std::string, glm::vec4> m_Float4Uniforms;
-        std::unordered_map<std::string, glm::mat4> m_Mat4Uniforms;
+        std::map<std::string, glm::vec4> m_Float4Uniforms;
+        std::map<std::string, glm::mat4> m_Mat4Uniforms;
     };
 
 }

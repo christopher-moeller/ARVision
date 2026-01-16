@@ -3,6 +3,7 @@
 #import <Metal/Metal.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#include <regex>
 
 namespace arv {
 
@@ -23,6 +24,10 @@ namespace arv {
 
             // Use the MSL source from ShaderSource via GetSource()
             std::string mslSource = m_ShaderSource->GetSource("MSL_SHADER");
+
+            // Parse the uniform layout from the shader source
+            ParseUniformLayout(mslSource);
+
             NSString* sourceNS = [NSString stringWithUTF8String:mslSource.c_str()];
 
             // Compile the shader library from source
@@ -144,6 +149,61 @@ namespace arv {
     {
         // Store the uniform value - will be applied during Draw()s
         m_Mat4Uniforms[name] = matrix;
+    }
+
+    void MetalShader::ParseUniformLayout(const std::string& mslSource)
+    {
+        // Parse VertexUniforms struct for vertex shader uniforms
+        m_uniformLayout.vertexUniformNames = ParseStructFields(mslSource, "VertexUniforms");
+
+        // Parse FragmentUniforms struct for fragment shader uniforms
+        m_uniformLayout.fragmentUniformNames = ParseStructFields(mslSource, "FragmentUniforms");
+    }
+
+    std::vector<std::string> MetalShader::ParseStructFields(const std::string& source, const std::string& structName)
+    {
+        std::vector<std::string> fieldNames;
+
+        // Find the struct definition: "struct StructName {"
+        std::string structPattern = "struct\\s+" + structName + "\\s*\\{";
+        std::regex structRegex(structPattern);
+        std::smatch structMatch;
+
+        if (!std::regex_search(source, structMatch, structRegex))
+        {
+            return fieldNames; // Struct not found
+        }
+
+        // Find the position after the opening brace
+        size_t structStart = structMatch.position() + structMatch.length();
+
+        // Find the closing brace
+        size_t braceCount = 1;
+        size_t structEnd = structStart;
+        while (structEnd < source.length() && braceCount > 0)
+        {
+            if (source[structEnd] == '{') braceCount++;
+            else if (source[structEnd] == '}') braceCount--;
+            structEnd++;
+        }
+
+        // Extract the struct body
+        std::string structBody = source.substr(structStart, structEnd - structStart - 1);
+
+        // Parse each field: "type fieldName;" or "type fieldName [[attribute]];"
+        // Match pattern: type (with optional template like float4x4) followed by field name
+        std::regex fieldRegex(R"(\b(?:float4x4|float4|float3|float2|float|int|uint)\s+(\w+)\s*(?:\[\[|;))");
+        std::sregex_iterator it(structBody.begin(), structBody.end(), fieldRegex);
+        std::sregex_iterator end;
+
+        while (it != end)
+        {
+            std::smatch match = *it;
+            fieldNames.push_back(match[1].str());
+            ++it;
+        }
+
+        return fieldNames;
     }
 
 }
