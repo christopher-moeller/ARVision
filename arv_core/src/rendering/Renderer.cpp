@@ -45,4 +45,8 @@ namespace arv {
         return m_RenderingAPI->CreateShader(shaderSource);
     }
 
+    Scene Renderer::NewScene(Camera* camera) {
+        return Scene(m_RenderingAPI, camera);
+    }
+
 }

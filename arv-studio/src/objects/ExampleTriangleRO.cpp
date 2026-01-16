@@ -15,30 +15,35 @@ namespace arv {
             ### GLSL_VERTEX_SHADER ###
 
             #version 330 core
+                            
+            layout(location = 0) in vec3 a_Position;
+            layout(location = 1) in vec4 a_Color;
 
-            layout (location = 0) in vec3 aPos;
-            layout (location = 1) in vec4 aColor;
+            uniform mat4 u_mvp;
 
-            out vec4 vertexColor;
+            out vec3 v_Position;
+            out vec4 v_Color;
 
             void main()
             {
-                gl_Position = vec4(aPos, 1.0);
-                vertexColor = aColor;
+                v_Position = a_Position;
+                v_Color = a_Color;
+                gl_Position = u_mvp * vec4(a_Position, 1.0);   
             }
 
             ### GLSL_FRAGMENT_SHADER ###
 
             #version 330 core
+                            
+            layout(location = 0) out vec4 color;
 
-            uniform vec4 u_Color;
-
-            in vec4 vertexColor;
-            out vec4 FragColor;
+            in vec3 v_Position;
+            in vec4 v_Color;
 
             void main()
             {
-                FragColor = vertexColor * u_Color;
+                color = vec4(v_Position * 0.5 + 0.5, 1.0);
+                color = v_Color;
             }
 
             ### MSL_SHADER ###

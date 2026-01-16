@@ -7,6 +7,7 @@
 #include "rendering/Shader.h"
 #include "rendering/ShaderSource.h"
 #include "RenderingObject.h"
+#include "Scene.h"
 
 namespace arv {
 
@@ -23,6 +24,8 @@ namespace arv {
         IndexBuffer* CreateIndexBuffer(unsigned int* indices, unsigned int size);
         VertexArray* CreateVertexArray();
         Shader* CreateShader(ShaderSource* shaderSource);
+
+        Scene NewScene(Camera* camera);
 
     private:
         std::shared_ptr<RenderingAPI> m_RenderingAPI;

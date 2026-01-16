@@ -142,7 +142,8 @@ namespace arv {
 
     void MetalShader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix)
     {
-        // Metal uses buffer bindings for uniforms
+        // Store the uniform value - will be applied during Draw()s
+        m_Mat4Uniforms[name] = matrix;
     }
 
 }

@@ -35,6 +35,7 @@ namespace arv {
     protected:
         ShaderSource* m_ShaderSource;
         std::unordered_map<std::string, glm::vec4> m_Float4Uniforms;
+        std::unordered_map<std::string, glm::mat4> m_Mat4Uniforms;
     };
 
 }

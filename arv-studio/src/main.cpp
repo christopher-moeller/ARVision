@@ -14,7 +14,7 @@
 int main()
 {
     // Toggle between Metal and OpenGL rendering backends
-    bool useMetal = true;
+    bool useMetal = false;
 
     arv::PlattformProvider* plattformProvider;
     if(useMetal) {
@@ -28,7 +28,7 @@ int main()
 
     app->Initialize();
     
-    arv::StandardCamera* standardCamera = new arv::StandardCamera(app->GetWidth(), app->GetHeight());
+    arv::StandardCamera* standardCamera = new arv::StandardCamera(800, 600);
 
     arv::StandardCameraController cameraController(standardCamera, arv::DeviceType::DESKTOP_COMPUTER);
     cameraController.Init();
@@ -47,7 +47,11 @@ int main()
         arv::CameraControllerAppContext context(app->GetEventManager().get(), timestep);
         cameraController.UpdateOnStep(context);
         
-        canvas->PollEvents();
+        arv::Scene scene = app->GetRenderer()->NewScene(standardCamera);
+        scene.ClearColor({1.0f, 0.0f, 0.0f, 1.0f});
+        scene.Submit(*renderingObject);
+        scene.Render();
+        
 
         // Animate the color over time (pulsing effect)
         auto currentTime = std::chrono::high_resolution_clock::now();
@@ -57,8 +61,10 @@ int main()
         float b = (std::sin(time * 2.0f + 4.0f) + 1.0f) / 2.0f;
         renderingObject->SetColor(glm::vec4(r, g, b, 1.0f));
 
-        app->GetRenderer()->DrawObject(*renderingObject);
+        //app->GetRenderer()->DrawObject(*renderingObject);
 
+        // Step
+        canvas->PollEvents();
         canvas->SwapBuffers();
     }
 
