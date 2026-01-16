@@ -14,7 +14,7 @@
 int main()
 {
     // Toggle between Metal and OpenGL rendering backends
-    bool useMetal = false;
+    bool useMetal = true;
 
     arv::PlattformProvider* plattformProvider;
     if(useMetal) {
@@ -37,22 +37,11 @@ int main()
 
     arv::ExampleTriangleRO* renderingObject = new arv::ExampleTriangleRO();
 
-    renderingObject->SetColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-
     auto startTime = std::chrono::high_resolution_clock::now();
 
     while (!canvas->ShouldClose())
     {
-        arv::Timestep timestep = app->CalculateNextTimestep();
-        arv::CameraControllerAppContext context(app->GetEventManager().get(), timestep);
-        cameraController.UpdateOnStep(context);
         
-        arv::Scene scene = app->GetRenderer()->NewScene(standardCamera);
-        scene.ClearColor({1.0f, 0.0f, 0.0f, 1.0f});
-        scene.Submit(*renderingObject);
-        scene.Render();
-        
-
         // Animate the color over time (pulsing effect)
         auto currentTime = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration<float>(currentTime - startTime).count();
@@ -60,8 +49,15 @@ int main()
         float g = (std::sin(time * 2.0f + 2.0f) + 1.0f) / 2.0f;
         float b = (std::sin(time * 2.0f + 4.0f) + 1.0f) / 2.0f;
         renderingObject->SetColor(glm::vec4(r, g, b, 1.0f));
-
-        //app->GetRenderer()->DrawObject(*renderingObject);
+        
+        arv::Timestep timestep = app->CalculateNextTimestep();
+        arv::CameraControllerAppContext context(app->GetEventManager().get(), timestep);
+        cameraController.UpdateOnStep(context);
+        
+        arv::Scene scene = app->GetRenderer()->NewScene(standardCamera);
+        scene.ClearColor({0.2f, 0.3f, 0.3f, 1.0f});
+        scene.Submit(*renderingObject);
+        scene.Render();
 
         // Step
         canvas->PollEvents();
