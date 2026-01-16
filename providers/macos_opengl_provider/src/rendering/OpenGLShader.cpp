@@ -10,8 +10,11 @@ namespace arv {
 
     void OpenGLShader::Compile() {
 
-        GLuint vertexShader = CompileShader(m_ShaderSource.glslVertexSource.c_str(), GL_VERTEX_SHADER);
-        GLuint fragmentShader = CompileShader(m_ShaderSource.glslFragmentSource.c_str(), GL_FRAGMENT_SHADER);
+        std::string vertexSource = m_ShaderSource->GetSource("GLSL_VERTEX_SHADER");
+        std::string fragmentSource = m_ShaderSource->GetSource("GLSL_FRAGMENT_SHADER");
+
+        GLuint vertexShader = CompileShader(vertexSource.c_str(), GL_VERTEX_SHADER);
+        GLuint fragmentShader = CompileShader(fragmentSource.c_str(), GL_FRAGMENT_SHADER);
                 
         GLuint shaderProgram = glCreateProgram();
         glAttachShader(shaderProgram, vertexShader);

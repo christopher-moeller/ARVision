@@ -22,7 +22,7 @@ namespace arv {
         VertexBuffer* CreateVertexBuffer(float* vertices, unsigned int size);
         IndexBuffer* CreateIndexBuffer(unsigned int* indices, unsigned int size);
         VertexArray* CreateVertexArray();
-        Shader* CreateShader(const ShaderSource& shaderSource);
+        Shader* CreateShader(ShaderSource* shaderSource);
 
     private:
         std::shared_ptr<RenderingAPI> m_RenderingAPI;

@@ -1,6 +1,7 @@
 #include "ExampleTriangleRO.h"
 #include "ARVApplication.h"
 #include "rendering/ShaderSource.h"
+#include "rendering/CoreShaderSource.h"
 #include <string>
 
 namespace arv {
@@ -9,8 +10,10 @@ namespace arv {
 
         ARVApplication* app = ARVApplication::Get();
 
-        // GLSL shaders for OpenGL
-        std::string glslVertexSource = R"(
+        std::string fullSource = R"(
+
+            ### GLSL_VERTEX_SHADER ###
+
             #version 330 core
 
             layout (location = 0) in vec3 aPos;
@@ -23,9 +26,9 @@ namespace arv {
                 gl_Position = vec4(aPos, 1.0);
                 vertexColor = aColor;
             }
-        )";
 
-        std::string glslFragmentSource = R"(
+            ### GLSL_FRAGMENT_SHADER ###
+
             #version 330 core
 
             uniform vec4 u_Color;
@@ -37,10 +40,9 @@ namespace arv {
             {
                 FragColor = vertexColor * u_Color;
             }
-        )";
 
-        // MSL shader for Metal
-        std::string mslSource = R"(
+            ### MSL_SHADER ###
+
             #include <metal_stdlib>
             using namespace metal;
 
@@ -66,13 +68,13 @@ namespace arv {
             }
 
             fragment float4 fragmentMain(VertexOut in [[stage_in]],
-                                         constant Uniforms& uniforms [[buffer(0)]]) {
+                                            constant Uniforms& uniforms [[buffer(0)]]) {
                 return in.color * uniforms.color;
             }
         )";
 
-        ShaderSource shaderSource(glslVertexSource, glslFragmentSource, mslSource);
-        m_Shader.reset(app->GetRenderer()->CreateShader(shaderSource));
+        m_ShaderSource = std::make_unique<CoreShaderSource>(fullSource);
+        m_Shader.reset(app->GetRenderer()->CreateShader(m_ShaderSource.get()));
         m_Shader->Compile();
         
         m_VertexArray.reset(app->GetRenderer()->CreateVertexArray());

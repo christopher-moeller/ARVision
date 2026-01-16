@@ -30,7 +30,7 @@ namespace arv
         VertexBuffer* CreateVertexBuffer(float* vertices, unsigned int size) override;
         IndexBuffer* CreateIndexBuffer(unsigned int* indices, unsigned int size) override;
         VertexArray* CreateVertexArray() override;
-        Shader* CreateShader(const ShaderSource& shaderSource) override;
+        Shader* CreateShader(ShaderSource* shaderSource) override;
 
         void SetMetalLayer(CAMetalLayer* layer);
 

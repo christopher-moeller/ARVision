@@ -40,7 +40,7 @@ namespace arv {
         return m_RenderingAPI->CreateVertexArray();
     }
 
-    Shader* Renderer::CreateShader(const ShaderSource& shaderSource)
+    Shader* Renderer::CreateShader(ShaderSource* shaderSource)
     {
         return m_RenderingAPI->CreateShader(shaderSource);
     }

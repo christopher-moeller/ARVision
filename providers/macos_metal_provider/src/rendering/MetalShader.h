@@ -20,9 +20,9 @@ namespace arv {
 
     public:
 #ifdef __OBJC__
-        MetalShader(id<MTLDevice> device, const ShaderSource& shaderSource);
+        MetalShader(id<MTLDevice> device, ShaderSource* shaderSource);
 #else
-        MetalShader(void* device, const ShaderSource& shaderSource);
+        MetalShader(void* device, ShaderSource* shaderSource);
 #endif
 
         ~MetalShader();

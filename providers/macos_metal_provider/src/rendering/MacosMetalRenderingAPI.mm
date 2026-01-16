@@ -180,7 +180,7 @@ namespace arv
         return new MetalVertexArray();
     }
 
-    Shader* MacosMetalRenderingAPI::CreateShader(const ShaderSource& shaderSource)
+    Shader* MacosMetalRenderingAPI::CreateShader(ShaderSource* shaderSource)
     {
         return new MetalShader(m_device, shaderSource);
     }

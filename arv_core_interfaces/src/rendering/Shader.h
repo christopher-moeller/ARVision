@@ -9,7 +9,7 @@ namespace arv {
 
     class Shader {
     public:
-        Shader(const ShaderSource& shaderSource) : m_ShaderSource(shaderSource) {}
+        Shader(ShaderSource* shaderSource) : m_ShaderSource(shaderSource) {}
 
         virtual ~Shader() = default;
 
@@ -33,7 +33,7 @@ namespace arv {
         const std::unordered_map<std::string, glm::vec4>& GetFloat4Uniforms() const { return m_Float4Uniforms; }
 
     protected:
-        ShaderSource m_ShaderSource;
+        ShaderSource* m_ShaderSource;
         std::unordered_map<std::string, glm::vec4> m_Float4Uniforms;
     };
 

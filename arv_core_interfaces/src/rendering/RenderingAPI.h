@@ -26,6 +26,6 @@ namespace arv
         virtual VertexBuffer* CreateVertexBuffer(float* vertices, unsigned int size) = 0;
         virtual IndexBuffer* CreateIndexBuffer(unsigned int* indices, unsigned int size) = 0;
         virtual VertexArray* CreateVertexArray() = 0;
-        virtual Shader* CreateShader(const ShaderSource& shaderSource) = 0;
+        virtual Shader* CreateShader(ShaderSource* shaderSource) = 0;
     };
 }

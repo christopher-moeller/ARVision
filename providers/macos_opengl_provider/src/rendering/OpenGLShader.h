@@ -8,7 +8,7 @@ namespace arv {
     class OpenGLShader : public Shader {
 
     public:
-        OpenGLShader(const ShaderSource& shaderSource) : Shader(shaderSource) {}
+        OpenGLShader(ShaderSource* shaderSource) : Shader(shaderSource) {}
         
         ~OpenGLShader();
         

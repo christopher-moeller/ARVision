@@ -6,7 +6,7 @@
 
 namespace arv {
 
-    MetalShader::MetalShader(id<MTLDevice> device, const ShaderSource& shaderSource)
+    MetalShader::MetalShader(id<MTLDevice> device, ShaderSource* shaderSource)
         : Shader(shaderSource), m_device(device)
     {
     }
@@ -21,8 +21,9 @@ namespace arv {
         @autoreleasepool {
             NSError* error = nil;
 
-            // Use the MSL source directly from ShaderSource
-            NSString* sourceNS = [NSString stringWithUTF8String:m_ShaderSource.mslSource.c_str()];
+            // Use the MSL source from ShaderSource via GetSource()
+            std::string mslSource = m_ShaderSource->GetSource("MSL_SHADER");
+            NSString* sourceNS = [NSString stringWithUTF8String:mslSource.c_str()];
 
             // Compile the shader library from source
             m_library = [m_device newLibraryWithSource:sourceNS

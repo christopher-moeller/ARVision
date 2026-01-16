@@ -5,23 +5,18 @@
 namespace arv {
 
     /**
-     * ShaderSource holds shader source code for multiple rendering APIs.
-     * This allows RenderingObjects to provide both GLSL (OpenGL) and MSL (Metal)
-     * shaders, enabling the abstraction layer to select the appropriate shader
-     * at runtime based on the active rendering backend.
+     * ShaderSource is an abstract class for providing shader source code.
+     * Implementations (like CoreShaderSource) parse and provide shaders
+     * for multiple rendering APIs (OpenGL GLSL and Metal MSL).
+     * Each rendering backend uses GetSource() with the appropriate key
+     * to retrieve its shader code at runtime.
      */
-    struct ShaderSource {
-        // OpenGL GLSL shaders
-        std::string glslVertexSource;
-        std::string glslFragmentSource;
+    class ShaderSource {
+    public:
+        ShaderSource(const std::string& rawSource) {}
+        virtual ~ShaderSource() = default;
 
-        // Metal MSL shader (vertex and fragment combined as per Metal convention)
-        std::string mslSource;
-
-        ShaderSource() = default;
-
-        ShaderSource(const std::string& glslVertex, const std::string& glslFragment, const std::string& msl)
-            : glslVertexSource(glslVertex), glslFragmentSource(glslFragment), mslSource(msl) {}
+        virtual std::string GetSource(const std::string& key) = 0;
     };
 
 }
