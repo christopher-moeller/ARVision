@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <glm/glm.hpp>
 #include "rendering/Buffer.h"
 #include "rendering/VertexArray.h"
@@ -23,9 +24,9 @@ namespace arv
         virtual void SetClearColor(const glm::vec4& color) = 0;
         virtual void Clear() = 0;
 
-        virtual VertexBuffer* CreateVertexBuffer(float* vertices, unsigned int size) = 0;
-        virtual IndexBuffer* CreateIndexBuffer(unsigned int* indices, unsigned int size) = 0;
-        virtual VertexArray* CreateVertexArray() = 0;
-        virtual Shader* CreateShader(ShaderSource* shaderSource) = 0;
+        virtual std::shared_ptr<VertexBuffer> CreateVertexBuffer(float* vertices, unsigned int size) = 0;
+        virtual std::shared_ptr<IndexBuffer> CreateIndexBuffer(unsigned int* indices, unsigned int size) = 0;
+        virtual std::shared_ptr<VertexArray> CreateVertexArray() = 0;
+        virtual std::shared_ptr<Shader> CreateShader(ShaderSource* shaderSource) = 0;
     };
 }

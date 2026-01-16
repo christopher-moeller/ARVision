@@ -47,24 +47,24 @@ namespace arv
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
-    VertexBuffer* MacosOpenGlRenderingAPI::CreateVertexBuffer(float* vertices, unsigned int size)
+    std::shared_ptr<VertexBuffer> MacosOpenGlRenderingAPI::CreateVertexBuffer(float* vertices, unsigned int size)
     {
-        return new OpenGLVertexBuffer(vertices, size);
+        return std::make_shared<OpenGLVertexBuffer>(vertices, size);
     }
 
-    IndexBuffer* MacosOpenGlRenderingAPI::CreateIndexBuffer(unsigned int* indices, unsigned int size)
+    std::shared_ptr<IndexBuffer> MacosOpenGlRenderingAPI::CreateIndexBuffer(unsigned int* indices, unsigned int size)
     {
-        return new OpenGLIndexBuffer(indices, size);
+        return std::make_shared<OpenGLIndexBuffer>(indices, size);
     }
 
-    VertexArray* MacosOpenGlRenderingAPI::CreateVertexArray()
+    std::shared_ptr<VertexArray> MacosOpenGlRenderingAPI::CreateVertexArray()
     {
-        return new OpenGLVertexArray();
+        return std::make_shared<OpenGLVertexArray>();
     }
 
-    Shader* MacosOpenGlRenderingAPI::CreateShader(ShaderSource* shaderSource)
+    std::shared_ptr<Shader> MacosOpenGlRenderingAPI::CreateShader(ShaderSource* shaderSource)
     {
-       return new OpenGLShader(shaderSource);
+       return std::make_shared<OpenGLShader>(shaderSource);
     }
     
 }

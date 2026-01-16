@@ -207,23 +207,23 @@ namespace arv
         // This is a no-op to avoid consuming a drawable before Draw() is called
     }
 
-    VertexBuffer* MacosMetalRenderingAPI::CreateVertexBuffer(float* vertices, unsigned int size)
+    std::shared_ptr<VertexBuffer> MacosMetalRenderingAPI::CreateVertexBuffer(float* vertices, unsigned int size)
     {
-        return new MetalVertexBuffer(m_device, vertices, size);
+        return std::make_shared<MetalVertexBuffer>(m_device, vertices, size);
     }
 
-    IndexBuffer* MacosMetalRenderingAPI::CreateIndexBuffer(unsigned int* indices, unsigned int size)
+    std::shared_ptr<IndexBuffer> MacosMetalRenderingAPI::CreateIndexBuffer(unsigned int* indices, unsigned int size)
     {
-        return new MetalIndexBuffer(m_device, indices, size);
+        return std::make_shared<MetalIndexBuffer>(m_device, indices, size);
     }
 
-    VertexArray* MacosMetalRenderingAPI::CreateVertexArray()
+    std::shared_ptr<VertexArray> MacosMetalRenderingAPI::CreateVertexArray()
     {
-        return new MetalVertexArray();
+        return std::make_shared<MetalVertexArray>();
     }
 
-    Shader* MacosMetalRenderingAPI::CreateShader(ShaderSource* shaderSource)
+    std::shared_ptr<Shader> MacosMetalRenderingAPI::CreateShader(ShaderSource* shaderSource)
     {
-        return new MetalShader(m_device, shaderSource);
+        return std::make_shared<MetalShader>(m_device, shaderSource);
     }
 }

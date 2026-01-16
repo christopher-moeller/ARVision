@@ -25,22 +25,22 @@ namespace arv {
         
     }
 
-    VertexBuffer* Renderer::CreateVertexBuffer(float* vertices, unsigned int size)
+    std::shared_ptr<VertexBuffer> Renderer::CreateVertexBuffer(float* vertices, unsigned int size)
     {
         return m_RenderingAPI->CreateVertexBuffer(vertices, size);
     }
 
-    IndexBuffer* Renderer::CreateIndexBuffer(unsigned int* indices, unsigned int size)
+    std::shared_ptr<IndexBuffer> Renderer::CreateIndexBuffer(unsigned int* indices, unsigned int size)
     {
         return m_RenderingAPI->CreateIndexBuffer(indices, size);
     }
 
-    VertexArray* Renderer::CreateVertexArray()
+    std::shared_ptr<VertexArray> Renderer::CreateVertexArray()
     {
         return m_RenderingAPI->CreateVertexArray();
     }
 
-    Shader* Renderer::CreateShader(ShaderSource* shaderSource)
+    std::shared_ptr<Shader> Renderer::CreateShader(ShaderSource* shaderSource)
     {
         return m_RenderingAPI->CreateShader(shaderSource);
     }

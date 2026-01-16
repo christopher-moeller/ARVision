@@ -27,10 +27,10 @@ namespace arv
         void SetClearColor(const glm::vec4& color) override;
         void Clear() override;
 
-        VertexBuffer* CreateVertexBuffer(float* vertices, unsigned int size) override;
-        IndexBuffer* CreateIndexBuffer(unsigned int* indices, unsigned int size) override;
-        VertexArray* CreateVertexArray() override;
-        Shader* CreateShader(ShaderSource* shaderSource) override;
+        std::shared_ptr<VertexBuffer> CreateVertexBuffer(float* vertices, unsigned int size) override;
+        std::shared_ptr<IndexBuffer> CreateIndexBuffer(unsigned int* indices, unsigned int size) override;
+        std::shared_ptr<VertexArray> CreateVertexArray() override;
+        std::shared_ptr<Shader> CreateShader(ShaderSource* shaderSource) override;
 
         void SetMetalLayer(CAMetalLayer* layer);
 

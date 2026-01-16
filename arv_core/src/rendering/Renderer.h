@@ -20,10 +20,10 @@ namespace arv {
         void Init();
         void OnTargetResize(uint32_t width, uint32_t height);
 
-        VertexBuffer* CreateVertexBuffer(float* vertices, unsigned int size);
-        IndexBuffer* CreateIndexBuffer(unsigned int* indices, unsigned int size);
-        VertexArray* CreateVertexArray();
-        Shader* CreateShader(ShaderSource* shaderSource);
+        std::shared_ptr<VertexBuffer> CreateVertexBuffer(float* vertices, unsigned int size);
+        std::shared_ptr<IndexBuffer> CreateIndexBuffer(unsigned int* indices, unsigned int size);
+        std::shared_ptr<VertexArray> CreateVertexArray();
+        std::shared_ptr<Shader> CreateShader(ShaderSource* shaderSource);
 
         Scene NewScene(Camera* camera);
 
