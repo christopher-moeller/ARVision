@@ -1,6 +1,7 @@
 #include "ARVApplication.h"
 #include "rendering/Renderer.h"
 #include <iostream>
+#include <chrono>
 
 #include "utils/StdLogger.h"
 #include "events/CoreEventManager.h"
@@ -61,5 +62,19 @@ namespace arv
     Renderer* ARVApplication::GetRenderer() const
     {
         return m_renderer;
+    }
+
+    Timestep ARVApplication::CalculateNextTimestep() {
+        float time = GetTime();
+        Timestep timestep = time - m_LastFrameTime;
+        m_LastFrameTime = time;
+        return timestep;
+    }
+
+    float ARVApplication::GetTime() {
+        using namespace std::chrono;
+        static auto start = steady_clock::now();
+        auto now = steady_clock::now();
+        return duration<float>(now - start).count();
     }
 }

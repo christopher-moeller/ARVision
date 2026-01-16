@@ -8,6 +8,8 @@
 #include "rendering/RenderingAPI.h"
 #include "objects/ExampleTriangleRO.h"
 #include <glm/glm.hpp>
+#include "camera/StandardCamera.h"
+#include "camera/StandardCameraController.h"
 
 int main()
 {
@@ -25,6 +27,11 @@ int main()
     ARV_LOG_INFO("ARV Application created");
 
     app->Initialize();
+    
+    arv::StandardCamera* standardCamera = new arv::StandardCamera(app->GetWidth(), app->GetHeight());
+
+    arv::StandardCameraController cameraController(standardCamera, arv::DeviceType::DESKTOP_COMPUTER);
+    cameraController.Init();
 
     arv::Canvas* canvas = plattformProvider->GetCanvas();
 
@@ -36,6 +43,10 @@ int main()
 
     while (!canvas->ShouldClose())
     {
+        arv::Timestep timestep = app->CalculateNextTimestep();
+        arv::CameraControllerAppContext context(app->GetEventManager().get(), timestep);
+        cameraController.UpdateOnStep(context);
+        
         canvas->PollEvents();
 
         // Animate the color over time (pulsing effect)
