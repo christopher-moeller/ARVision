@@ -31,12 +31,22 @@ namespace arv {
 
         // Accessors for stored uniforms (used by rendering backends)
         // Maps are ordered alphabetically by name for deterministic buffer packing
+        const std::map<std::string, int>& GetIntUniforms() const { return m_IntUniforms; }
+        const std::map<std::string, float>& GetFloatUniforms() const { return m_FloatUniforms; }
+        const std::map<std::string, glm::vec2>& GetFloat2Uniforms() const { return m_Float2Uniforms; }
+        const std::map<std::string, glm::vec3>& GetFloat3Uniforms() const { return m_Float3Uniforms; }
         const std::map<std::string, glm::vec4>& GetFloat4Uniforms() const { return m_Float4Uniforms; }
+        const std::map<std::string, glm::mat3>& GetMat3Uniforms() const { return m_Mat3Uniforms; }
         const std::map<std::string, glm::mat4>& GetMat4Uniforms() const { return m_Mat4Uniforms; }
 
     protected:
         ShaderSource* m_ShaderSource;
+        std::map<std::string, int> m_IntUniforms;
+        std::map<std::string, float> m_FloatUniforms;
+        std::map<std::string, glm::vec2> m_Float2Uniforms;
+        std::map<std::string, glm::vec3> m_Float3Uniforms;
         std::map<std::string, glm::vec4> m_Float4Uniforms;
+        std::map<std::string, glm::mat3> m_Mat3Uniforms;
         std::map<std::string, glm::mat4> m_Mat4Uniforms;
     };
 

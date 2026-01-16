@@ -119,55 +119,130 @@ namespace arv
 
             // Get the uniform layout parsed from the shader source
             const auto& uniformLayout = metalShader->GetUniformLayout();
-            const auto& mat4Uniforms = shader->GetMat4Uniforms();
-            const auto& float4Uniforms = shader->GetFloat4Uniforms();
 
-            // Bind vertex uniforms in the order defined by the shader's VertexUniforms struct
-            if (!uniformLayout.vertexUniformNames.empty())
-            {
-                std::vector<float> vertexUniformData;
-                vertexUniformData.reserve(uniformLayout.vertexUniformNames.size() * 16);
+            // Helper lambda to pack uniform data based on field type
+            auto packUniformData = [&shader](const std::vector<UniformField>& fields) -> std::vector<uint8_t> {
+                std::vector<uint8_t> data;
 
-                for (const auto& fieldName : uniformLayout.vertexUniformNames)
+                const auto& intUniforms = shader->GetIntUniforms();
+                const auto& floatUniforms = shader->GetFloatUniforms();
+                const auto& float2Uniforms = shader->GetFloat2Uniforms();
+                const auto& float3Uniforms = shader->GetFloat3Uniforms();
+                const auto& float4Uniforms = shader->GetFloat4Uniforms();
+                const auto& mat3Uniforms = shader->GetMat3Uniforms();
+                const auto& mat4Uniforms = shader->GetMat4Uniforms();
+
+                for (const auto& field : fields)
                 {
-                    auto it = mat4Uniforms.find(fieldName);
-                    if (it != mat4Uniforms.end())
+                    switch (field.type)
                     {
-                        const float* ptr = glm::value_ptr(it->second);
-                        vertexUniformData.insert(vertexUniformData.end(), ptr, ptr + 16);
+                        case MetalUniformType::Int:
+                        {
+                            auto it = intUniforms.find(field.name);
+                            if (it != intUniforms.end())
+                            {
+                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(&it->second);
+                                data.insert(data.end(), ptr, ptr + sizeof(int));
+                            }
+                            break;
+                        }
+                        case MetalUniformType::Float:
+                        {
+                            auto it = floatUniforms.find(field.name);
+                            if (it != floatUniforms.end())
+                            {
+                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(&it->second);
+                                data.insert(data.end(), ptr, ptr + sizeof(float));
+                            }
+                            break;
+                        }
+                        case MetalUniformType::Float2:
+                        {
+                            auto it = float2Uniforms.find(field.name);
+                            if (it != float2Uniforms.end())
+                            {
+                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(it->second));
+                                data.insert(data.end(), ptr, ptr + sizeof(glm::vec2));
+                            }
+                            break;
+                        }
+                        case MetalUniformType::Float3:
+                        {
+                            auto it = float3Uniforms.find(field.name);
+                            if (it != float3Uniforms.end())
+                            {
+                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(it->second));
+                                data.insert(data.end(), ptr, ptr + sizeof(glm::vec3));
+                                // Add padding to align to 16 bytes (Metal requires float3 to be padded)
+                                data.insert(data.end(), sizeof(float), 0);
+                            }
+                            break;
+                        }
+                        case MetalUniformType::Float4:
+                        {
+                            auto it = float4Uniforms.find(field.name);
+                            if (it != float4Uniforms.end())
+                            {
+                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(it->second));
+                                data.insert(data.end(), ptr, ptr + sizeof(glm::vec4));
+                            }
+                            break;
+                        }
+                        case MetalUniformType::Mat3:
+                        {
+                            auto it = mat3Uniforms.find(field.name);
+                            if (it != mat3Uniforms.end())
+                            {
+                                // Metal float3x3 is stored as 3 float4 columns (padded)
+                                const glm::mat3& mat = it->second;
+                                for (int col = 0; col < 3; ++col)
+                                {
+                                    const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(mat[col]));
+                                    data.insert(data.end(), ptr, ptr + sizeof(glm::vec3));
+                                    // Pad each column to 16 bytes
+                                    data.insert(data.end(), sizeof(float), 0);
+                                }
+                            }
+                            break;
+                        }
+                        case MetalUniformType::Mat4:
+                        {
+                            auto it = mat4Uniforms.find(field.name);
+                            if (it != mat4Uniforms.end())
+                            {
+                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(it->second));
+                                data.insert(data.end(), ptr, ptr + sizeof(glm::mat4));
+                            }
+                            break;
+                        }
                     }
                 }
+
+                return data;
+            };
+
+            // Bind vertex uniforms in the order defined by the shader's VertexUniforms struct
+            if (!uniformLayout.vertexUniforms.empty())
+            {
+                std::vector<uint8_t> vertexUniformData = packUniformData(uniformLayout.vertexUniforms);
 
                 if (!vertexUniformData.empty())
                 {
                     [renderEncoder setVertexBytes:vertexUniformData.data()
-                                           length:vertexUniformData.size() * sizeof(float)
+                                           length:vertexUniformData.size()
                                           atIndex:1];
                 }
             }
 
             // Bind fragment uniforms in the order defined by the shader's FragmentUniforms struct
-            if (!uniformLayout.fragmentUniformNames.empty())
+            if (!uniformLayout.fragmentUniforms.empty())
             {
-                std::vector<float> fragmentUniformData;
-                fragmentUniformData.reserve(uniformLayout.fragmentUniformNames.size() * 4);
-
-                for (const auto& fieldName : uniformLayout.fragmentUniformNames)
-                {
-                    auto it = float4Uniforms.find(fieldName);
-                    if (it != float4Uniforms.end())
-                    {
-                        fragmentUniformData.push_back(it->second.x);
-                        fragmentUniformData.push_back(it->second.y);
-                        fragmentUniformData.push_back(it->second.z);
-                        fragmentUniformData.push_back(it->second.w);
-                    }
-                }
+                std::vector<uint8_t> fragmentUniformData = packUniformData(uniformLayout.fragmentUniforms);
 
                 if (!fragmentUniformData.empty())
                 {
                     [renderEncoder setFragmentBytes:fragmentUniformData.data()
-                                             length:fragmentUniformData.size() * sizeof(float)
+                                             length:fragmentUniformData.size()
                                             atIndex:0];
                 }
             }

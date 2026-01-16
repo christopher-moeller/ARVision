@@ -114,55 +114,51 @@ namespace arv {
 
     void MetalShader::UploadUniformInt(const std::string& name, int value)
     {
-        // Metal uses buffer bindings for uniforms
-        // This would require maintaining a uniform buffer
-        // For now, this is a placeholder
+        m_IntUniforms[name] = value;
     }
 
     void MetalShader::UploadUniformFloat(const std::string& name, float value)
     {
-        // Metal uses buffer bindings for uniforms
+        m_FloatUniforms[name] = value;
     }
 
     void MetalShader::UploadUniformFloat2(const std::string& name, const glm::vec2& value)
     {
-        // Metal uses buffer bindings for uniforms
+        m_Float2Uniforms[name] = value;
     }
 
     void MetalShader::UploadUniformFloat3(const std::string& name, const glm::vec3& value)
     {
-        // Metal uses buffer bindings for uniforms
+        m_Float3Uniforms[name] = value;
     }
 
     void MetalShader::UploadUniformFloat4(const std::string& name, const glm::vec4& value)
     {
-        // Store the uniform value - will be applied during Draw()
         m_Float4Uniforms[name] = value;
     }
 
     void MetalShader::UploadUniformMat3(const std::string& name, const glm::mat3& matrix)
     {
-        // Metal uses buffer bindings for uniforms
+        m_Mat3Uniforms[name] = matrix;
     }
 
     void MetalShader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix)
     {
-        // Store the uniform value - will be applied during Draw()s
         m_Mat4Uniforms[name] = matrix;
     }
 
     void MetalShader::ParseUniformLayout(const std::string& mslSource)
     {
         // Parse VertexUniforms struct for vertex shader uniforms
-        m_uniformLayout.vertexUniformNames = ParseStructFields(mslSource, "VertexUniforms");
+        m_uniformLayout.vertexUniforms = ParseStructFields(mslSource, "VertexUniforms");
 
         // Parse FragmentUniforms struct for fragment shader uniforms
-        m_uniformLayout.fragmentUniformNames = ParseStructFields(mslSource, "FragmentUniforms");
+        m_uniformLayout.fragmentUniforms = ParseStructFields(mslSource, "FragmentUniforms");
     }
 
-    std::vector<std::string> MetalShader::ParseStructFields(const std::string& source, const std::string& structName)
+    std::vector<UniformField> MetalShader::ParseStructFields(const std::string& source, const std::string& structName)
     {
-        std::vector<std::string> fieldNames;
+        std::vector<UniformField> fields;
 
         // Find the struct definition: "struct StructName {"
         std::string structPattern = "struct\\s+" + structName + "\\s*\\{";
@@ -171,7 +167,7 @@ namespace arv {
 
         if (!std::regex_search(source, structMatch, structRegex))
         {
-            return fieldNames; // Struct not found
+            return fields; // Struct not found
         }
 
         // Find the position after the opening brace
@@ -191,19 +187,43 @@ namespace arv {
         std::string structBody = source.substr(structStart, structEnd - structStart - 1);
 
         // Parse each field: "type fieldName;" or "type fieldName [[attribute]];"
-        // Match pattern: type (with optional template like float4x4) followed by field name
-        std::regex fieldRegex(R"(\b(?:float4x4|float4|float3|float2|float|int|uint)\s+(\w+)\s*(?:\[\[|;))");
+        // Match pattern: capture type and field name
+        std::regex fieldRegex(R"(\b(float4x4|float3x3|float4|float3|float2|float|int|uint)\s+(\w+)\s*(?:\[\[|;))");
         std::sregex_iterator it(structBody.begin(), structBody.end(), fieldRegex);
         std::sregex_iterator end;
 
         while (it != end)
         {
             std::smatch match = *it;
-            fieldNames.push_back(match[1].str());
+            std::string typeStr = match[1].str();
+            std::string fieldName = match[2].str();
+
+            UniformField field;
+            field.name = fieldName;
+
+            // Map MSL type string to MetalUniformType
+            if (typeStr == "int" || typeStr == "uint")
+                field.type = MetalUniformType::Int;
+            else if (typeStr == "float")
+                field.type = MetalUniformType::Float;
+            else if (typeStr == "float2")
+                field.type = MetalUniformType::Float2;
+            else if (typeStr == "float3")
+                field.type = MetalUniformType::Float3;
+            else if (typeStr == "float4")
+                field.type = MetalUniformType::Float4;
+            else if (typeStr == "float3x3")
+                field.type = MetalUniformType::Mat3;
+            else if (typeStr == "float4x4")
+                field.type = MetalUniformType::Mat4;
+            else
+                field.type = MetalUniformType::Float4; // Default fallback
+
+            fields.push_back(field);
             ++it;
         }
 
-        return fieldNames;
+        return fields;
     }
 
 }

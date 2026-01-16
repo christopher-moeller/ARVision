@@ -17,10 +17,27 @@ typedef void MTLFunction;
 
 namespace arv {
 
-    // Stores the order of uniform fields as defined in the shader structs
+    // Represents the type of a uniform field in Metal shaders
+    enum class MetalUniformType {
+        Int,
+        Float,
+        Float2,
+        Float3,
+        Float4,
+        Mat3,
+        Mat4
+    };
+
+    // Represents a single uniform field with its name and type
+    struct UniformField {
+        std::string name;
+        MetalUniformType type;
+    };
+
+    // Stores the order and types of uniform fields as defined in the shader structs
     struct UniformLayout {
-        std::vector<std::string> vertexUniformNames;   // Field names from VertexUniforms struct
-        std::vector<std::string> fragmentUniformNames; // Field names from FragmentUniforms struct
+        std::vector<UniformField> vertexUniforms;   // Fields from VertexUniforms struct
+        std::vector<UniformField> fragmentUniforms; // Fields from FragmentUniforms struct
     };
 
     class MetalShader : public Shader {
@@ -62,7 +79,7 @@ namespace arv {
 
     private:
         void ParseUniformLayout(const std::string& mslSource);
-        static std::vector<std::string> ParseStructFields(const std::string& source, const std::string& structName);
+        static std::vector<UniformField> ParseStructFields(const std::string& source, const std::string& structName);
 
         UniformLayout m_uniformLayout;
 #ifdef __OBJC__
