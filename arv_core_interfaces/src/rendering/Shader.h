@@ -31,6 +31,7 @@ namespace arv {
 
         // Accessors for stored uniforms (used by Metal rendering)
         const std::unordered_map<std::string, glm::vec4>& GetFloat4Uniforms() const { return m_Float4Uniforms; }
+        const std::unordered_map<std::string, glm::mat4>& GetMat4Uniforms() const { return m_Mat4Uniforms; }
 
     protected:
         ShaderSource* m_ShaderSource;

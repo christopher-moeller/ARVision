@@ -51,7 +51,11 @@ namespace arv {
             #include <metal_stdlib>
             using namespace metal;
 
-            struct Uniforms {
+            struct VertexUniforms {
+                float4x4 mvp;
+            };
+
+            struct FragmentUniforms {
                 float4 color;
             };
 
@@ -65,15 +69,16 @@ namespace arv {
                 float4 color;
             };
 
-            vertex VertexOut vertexMain(VertexIn in [[stage_in]]) {
+            vertex VertexOut vertexMain(VertexIn in [[stage_in]],
+                                        constant VertexUniforms& uniforms [[buffer(1)]]) {
                 VertexOut out;
-                out.position = float4(in.position, 1.0);
+                out.position = uniforms.mvp * float4(in.position, 1.0);
                 out.color = in.color;
                 return out;
             }
 
             fragment float4 fragmentMain(VertexOut in [[stage_in]],
-                                            constant Uniforms& uniforms [[buffer(0)]]) {
+                                         constant FragmentUniforms& uniforms [[buffer(0)]]) {
                 return in.color * uniforms.color;
             }
         )";

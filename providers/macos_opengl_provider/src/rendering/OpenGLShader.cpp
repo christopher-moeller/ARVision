@@ -50,6 +50,13 @@ namespace arv {
             GLint location = glGetUniformLocation(m_ProgramId, name.c_str());
             glUniform4f(location, value.x, value.y, value.z, value.w);
         }
+
+        // Apply stored Mat4 uniforms
+        for (const auto& [name, value] : m_Mat4Uniforms)
+        {
+            GLint location = glGetUniformLocation(m_ProgramId, name.c_str());
+            glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
+        }
     }
 
     GLuint OpenGLShader::CompileShader(const char *source, GLint shaderType) {
@@ -107,8 +114,8 @@ namespace arv {
 
     void OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix)
     {
-        GLint location = glGetUniformLocation(m_ProgramId, name.c_str());
-        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+        // Store the uniform value - will be applied during Use()
+        m_Mat4Uniforms[name] = matrix;
     }
 
 }

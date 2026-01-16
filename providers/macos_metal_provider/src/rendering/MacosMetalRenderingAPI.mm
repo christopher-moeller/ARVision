@@ -8,6 +8,7 @@
 #include "MetalVertexArray.h"
 
 #include <iostream>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace arv
 {
@@ -112,6 +113,19 @@ namespace arv
                 if (metalVB && metalVB->GetMetalBuffer())
                 {
                     [renderEncoder setVertexBuffer:metalVB->GetMetalBuffer() offset:0 atIndex:i];
+                }
+            }
+
+            // Bind vertex uniforms (MVP matrix)
+            const auto& mat4Uniforms = shader->GetMat4Uniforms();
+            if (!mat4Uniforms.empty())
+            {
+                auto it = mat4Uniforms.find("u_mvp");
+                if (it != mat4Uniforms.end())
+                {
+                    [renderEncoder setVertexBytes:glm::value_ptr(it->second)
+                                           length:sizeof(glm::mat4)
+                                          atIndex:1];
                 }
             }
 
