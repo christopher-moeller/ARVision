@@ -1,4 +1,4 @@
-project "sandbox"
+project "arv-studio"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
