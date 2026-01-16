@@ -74,6 +74,83 @@ namespace arv
         drawableSize.height *= contentView.window.backingScaleFactor;
         m_metalLayer.drawableSize = drawableSize;
 
+        glfwSetWindowUserPointer(m_window, context->GetEventManager());
+        GLFWwindow* glfwwindow = m_window;
+
+        context->GetEventManager()->SetKeyPressedPollCallback([glfwwindow](int keycode) {
+            auto state = glfwGetKey(glfwwindow, static_cast<int32_t>(keycode));
+            return state == GLFW_PRESS;
+        });
+
+
+        glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int button, int action, int mods) {
+            
+            EventManager* eventManager = (EventManager*) glfwGetWindowUserPointer(window);
+            
+            double xpos, ypos;
+            glfwGetCursorPos(window, &xpos, &ypos);
+            
+            switch (action) {
+                case GLFW_PRESS:
+                {
+                    //eventManager->Test();
+                    MouseButtonPressedEvent event(xpos, ypos, button);
+                    eventManager->PushEvent(event);
+                    break;
+                }
+                case GLFW_RELEASE:
+                {
+                    
+                    break;
+                }
+            }
+            
+        });
+        
+        glfwSetWindowCloseCallback(m_window, [](GLFWwindow* window) {
+            EventManager* eventManager = (EventManager*) glfwGetWindowUserPointer(window);
+            WindowCloseEvent event;
+            eventManager->PushEvent(event);
+        });
+        
+        glfwSetKeyCallback(m_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+            EventManager* eventManager = (EventManager*) glfwGetWindowUserPointer(window);
+            
+            
+            switch (action) {
+                case GLFW_PRESS:
+                {
+                    KeyPressedEvent event(key, 0);
+                    eventManager->PushEvent(event);
+                    break;
+                }
+                case GLFW_RELEASE:
+                {
+                    KeyReleasedEvent event(key);
+                    eventManager->PushEvent(event);
+                    break;
+                }
+                case GLFW_REPEAT:
+                {
+                    KeyPressedEvent event(key, 1);
+                    eventManager->PushEvent(event);
+                    break;
+                }
+                    
+            }
+        });
+        
+        glfwSetWindowSizeCallback(m_window, [](GLFWwindow* window, int width, int height) {
+            
+        });
+        
+        glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* window, int width, int height) {
+            EventManager* eventManager = (EventManager*) glfwGetWindowUserPointer(window);
+            
+            ApplicationResizeEvent event(width, height);
+            eventManager->PushEvent(event);
+        });
+
         std::cout << "MacosMetalGlfwCanvas::Init() - Window created successfully" << std::endl;
         std::cout << "Metal Device: " << [[device name] UTF8String] << std::endl;
     }
