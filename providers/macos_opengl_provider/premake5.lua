@@ -18,7 +18,8 @@ project "arv_macos_opengl_provider"
     sysincludedirs {
         "vendor/GLFW/src/include",
         "vendor/glad/include",
-        GLM_INCLUDE_DIR
+        GLM_INCLUDE_DIR,
+        STB_INCLUDE_DIR
     }
 
     dependson { "GLFW", "glad" }

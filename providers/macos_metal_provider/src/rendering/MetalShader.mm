@@ -4,6 +4,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <regex>
+#include <algorithm>
 
 namespace arv {
 
@@ -17,6 +18,35 @@ namespace arv {
         Destroy();
     }
 
+    // Helper function to convert MetalDataType to MTLVertexFormat
+    static MTLVertexFormat MetalDataTypeToVertexFormat(MetalDataType type)
+    {
+        switch (type)
+        {
+            case MetalDataType::Float:  return MTLVertexFormatFloat;
+            case MetalDataType::Float2: return MTLVertexFormatFloat2;
+            case MetalDataType::Float3: return MTLVertexFormatFloat3;
+            case MetalDataType::Float4: return MTLVertexFormatFloat4;
+            default: return MTLVertexFormatFloat4;
+        }
+    }
+
+    // Helper function to get size in bytes for MetalDataType
+    static unsigned int MetalDataTypeSize(MetalDataType type)
+    {
+        switch (type)
+        {
+            case MetalDataType::Float:  return 4;
+            case MetalDataType::Float2: return 8;
+            case MetalDataType::Float3: return 12;
+            case MetalDataType::Float4: return 16;
+            case MetalDataType::Mat3:   return 36;
+            case MetalDataType::Mat4:   return 64;
+            case MetalDataType::Int:    return 4;
+            default: return 16;
+        }
+    }
+
     void MetalShader::Compile()
     {
         @autoreleasepool {
@@ -27,6 +57,9 @@ namespace arv {
 
             // Parse the uniform layout from the shader source
             ParseUniformLayout(mslSource);
+
+            // Parse the vertex layout from the shader source
+            ParseVertexLayout(mslSource);
 
             NSString* sourceNS = [NSString stringWithUTF8String:mslSource.c_str()];
 
@@ -64,21 +97,28 @@ namespace arv {
             pipelineDescriptor.fragmentFunction = m_fragmentFunction;
             pipelineDescriptor.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
 
-            // Configure vertex descriptor for Float3 position + Float4 color layout
+            // Enable alpha blending for transparent textures
+            pipelineDescriptor.colorAttachments[0].blendingEnabled = YES;
+            pipelineDescriptor.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+            pipelineDescriptor.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+            pipelineDescriptor.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorSourceAlpha;
+            pipelineDescriptor.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+
+            // Build vertex descriptor dynamically from parsed vertex layout
             MTLVertexDescriptor* vertexDescriptor = [[MTLVertexDescriptor alloc] init];
+            unsigned int currentOffset = 0;
 
-            // Attribute 0: position (Float3)
-            vertexDescriptor.attributes[0].format = MTLVertexFormatFloat3;
-            vertexDescriptor.attributes[0].offset = 0;
-            vertexDescriptor.attributes[0].bufferIndex = 0;
+            for (const auto& attr : m_vertexLayout.attributes)
+            {
+                vertexDescriptor.attributes[attr.attributeIndex].format = MetalDataTypeToVertexFormat(attr.type);
+                vertexDescriptor.attributes[attr.attributeIndex].offset = currentOffset;
+                vertexDescriptor.attributes[attr.attributeIndex].bufferIndex = 0;
 
-            // Attribute 1: color (Float4)
-            vertexDescriptor.attributes[1].format = MTLVertexFormatFloat4;
-            vertexDescriptor.attributes[1].offset = sizeof(float) * 3;  // After position
-            vertexDescriptor.attributes[1].bufferIndex = 0;
+                currentOffset += MetalDataTypeSize(attr.type);
+            }
 
-            // Buffer layout: stride = 7 floats (3 for position + 4 for color)
-            vertexDescriptor.layouts[0].stride = sizeof(float) * 7;
+            // Buffer layout: stride = total size of all attributes
+            vertexDescriptor.layouts[0].stride = currentOffset;
             vertexDescriptor.layouts[0].stepRate = 1;
             vertexDescriptor.layouts[0].stepFunction = MTLVertexStepFunctionPerVertex;
 
@@ -201,29 +241,108 @@ namespace arv {
             UniformField field;
             field.name = fieldName;
 
-            // Map MSL type string to MetalUniformType
+            // Map MSL type string to MetalDataType
             if (typeStr == "int" || typeStr == "uint")
-                field.type = MetalUniformType::Int;
+                field.type = MetalDataType::Int;
             else if (typeStr == "float")
-                field.type = MetalUniformType::Float;
+                field.type = MetalDataType::Float;
             else if (typeStr == "float2")
-                field.type = MetalUniformType::Float2;
+                field.type = MetalDataType::Float2;
             else if (typeStr == "float3")
-                field.type = MetalUniformType::Float3;
+                field.type = MetalDataType::Float3;
             else if (typeStr == "float4")
-                field.type = MetalUniformType::Float4;
+                field.type = MetalDataType::Float4;
             else if (typeStr == "float3x3")
-                field.type = MetalUniformType::Mat3;
+                field.type = MetalDataType::Mat3;
             else if (typeStr == "float4x4")
-                field.type = MetalUniformType::Mat4;
+                field.type = MetalDataType::Mat4;
             else
-                field.type = MetalUniformType::Float4; // Default fallback
+                field.type = MetalDataType::Float4; // Default fallback
 
             fields.push_back(field);
             ++it;
         }
 
         return fields;
+    }
+
+    void MetalShader::ParseVertexLayout(const std::string& mslSource)
+    {
+        m_vertexLayout.attributes = ParseVertexInFields(mslSource);
+    }
+
+    std::vector<VertexAttribute> MetalShader::ParseVertexInFields(const std::string& source)
+    {
+        std::vector<VertexAttribute> attributes;
+
+        // Find the VertexIn struct definition
+        std::string structPattern = "struct\\s+VertexIn\\s*\\{";
+        std::regex structRegex(structPattern);
+        std::smatch structMatch;
+
+        if (!std::regex_search(source, structMatch, structRegex))
+        {
+            return attributes; // VertexIn struct not found
+        }
+
+        // Find the position after the opening brace
+        size_t structStart = structMatch.position() + structMatch.length();
+
+        // Find the closing brace
+        size_t braceCount = 1;
+        size_t structEnd = structStart;
+        while (structEnd < source.length() && braceCount > 0)
+        {
+            if (source[structEnd] == '{') braceCount++;
+            else if (source[structEnd] == '}') braceCount--;
+            structEnd++;
+        }
+
+        // Extract the struct body
+        std::string structBody = source.substr(structStart, structEnd - structStart - 1);
+
+        // Parse each field with attribute index: "type fieldName [[attribute(N)]];"
+        // Match pattern: capture type, field name, and attribute index
+        std::regex fieldRegex(R"(\b(float4|float3|float2|float|int|uint)\s+(\w+)\s*\[\[attribute\((\d+)\)\]\])");
+        std::sregex_iterator it(structBody.begin(), structBody.end(), fieldRegex);
+        std::sregex_iterator end;
+
+        while (it != end)
+        {
+            std::smatch match = *it;
+            std::string typeStr = match[1].str();
+            std::string fieldName = match[2].str();
+            unsigned int attrIndex = std::stoul(match[3].str());
+
+            VertexAttribute attr;
+            attr.name = fieldName;
+            attr.attributeIndex = attrIndex;
+
+            // Map MSL type string to MetalDataType
+            if (typeStr == "int" || typeStr == "uint")
+                attr.type = MetalDataType::Int;
+            else if (typeStr == "float")
+                attr.type = MetalDataType::Float;
+            else if (typeStr == "float2")
+                attr.type = MetalDataType::Float2;
+            else if (typeStr == "float3")
+                attr.type = MetalDataType::Float3;
+            else if (typeStr == "float4")
+                attr.type = MetalDataType::Float4;
+            else
+                attr.type = MetalDataType::Float4; // Default fallback
+
+            attributes.push_back(attr);
+            ++it;
+        }
+
+        // Sort by attribute index to ensure correct offset calculation
+        std::sort(attributes.begin(), attributes.end(),
+            [](const VertexAttribute& a, const VertexAttribute& b) {
+                return a.attributeIndex < b.attributeIndex;
+            });
+
+        return attributes;
     }
 
 }

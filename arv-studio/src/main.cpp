@@ -7,6 +7,7 @@
 #include "plattform/Canvas.h"
 #include "rendering/RenderingAPI.h"
 #include "objects/ExampleTriangleRO.h"
+#include "objects/ImageTextureRO.h"
 #include <glm/glm.hpp>
 #include "camera/StandardCamera.h"
 #include "camera/StandardCameraController.h"
@@ -14,7 +15,7 @@
 int main()
 {
     // Toggle between Metal and OpenGL rendering backends
-    bool useMetal = true;
+    bool useMetal = false;
 
     arv::PlattformProvider* plattformProvider;
     if(useMetal) {
@@ -35,28 +36,30 @@ int main()
 
     arv::Canvas* canvas = plattformProvider->GetCanvas();
 
-    arv::ExampleTriangleRO* renderingObject = new arv::ExampleTriangleRO();
+    arv::ExampleTriangleRO* triangleObject = new arv::ExampleTriangleRO();
+    arv::ImageTextureRO* imageObject = new arv::ImageTextureRO("/Users/cmoeller/dev/projects/ARVision/arv-studio/assets/fc-logo.png");
 
     auto startTime = std::chrono::high_resolution_clock::now();
 
     while (!canvas->ShouldClose())
     {
-        
+
         // Animate the color over time (pulsing effect)
         auto currentTime = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration<float>(currentTime - startTime).count();
         float r = (std::sin(time * 2.0f) + 1.0f) / 2.0f;
         float g = (std::sin(time * 2.0f + 2.0f) + 1.0f) / 2.0f;
         float b = (std::sin(time * 2.0f + 4.0f) + 1.0f) / 2.0f;
-        renderingObject->SetColor(glm::vec4(r, g, b, 1.0f));
-        
+        triangleObject->SetColor(glm::vec4(r, g, b, 1.0f));
+
         arv::Timestep timestep = app->CalculateNextTimestep();
         arv::CameraControllerAppContext context(app->GetEventManager().get(), timestep);
         cameraController.UpdateOnStep(context);
-        
+
         arv::Scene scene = app->GetRenderer()->NewScene(standardCamera);
         scene.ClearColor({0.2f, 0.3f, 0.3f, 1.0f});
-        scene.Submit(*renderingObject);
+        scene.Submit(*triangleObject);
+        scene.Submit(imageObject->GetShader(), imageObject->GetVertexArray(), imageObject->GetTexture());
         scene.Render();
 
         // Step
@@ -64,7 +67,8 @@ int main()
         canvas->SwapBuffers();
     }
 
-    delete renderingObject;
+    delete imageObject;
+    delete triangleObject;
     delete app;
     delete plattformProvider;
 

@@ -23,6 +23,7 @@ namespace arv
         void DrawExample() override;
 
         void Draw(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray) override;
+        void Draw(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray, const std::shared_ptr<Texture2D>& texture) override;
 
         void SetClearColor(const glm::vec4& color) override;
         void Clear() override;
@@ -31,6 +32,7 @@ namespace arv
         std::shared_ptr<IndexBuffer> CreateIndexBuffer(unsigned int* indices, unsigned int size) override;
         std::shared_ptr<VertexArray> CreateVertexArray() override;
         std::shared_ptr<Shader> CreateShader(ShaderSource* shaderSource) override;
+        std::shared_ptr<Texture2D> CreateTexture2D(const std::string& path) override;
 
         void SetMetalLayer(CAMetalLayer* layer);
 

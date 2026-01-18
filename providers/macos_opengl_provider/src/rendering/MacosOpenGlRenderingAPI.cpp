@@ -5,6 +5,7 @@
 #include "OpenGLBuffer.h"
 #include "OpenGLShader.h"
 #include "OpenGLVertexArray.h"
+#include "OpenGLTexture.h"
 
 namespace arv
 {
@@ -33,8 +34,31 @@ namespace arv
     {
         shader->Use();
         vertexArray->Bind();
-        
+
         glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+    }
+
+    void MacosOpenGlRenderingAPI::Draw(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray, const std::shared_ptr<Texture2D>& texture)
+    {
+        // Enable blending for alpha transparency
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        shader->Use();
+
+        // Bind texture to slot 0
+        if (texture)
+        {
+            texture->Bind(0);
+        }
+
+        vertexArray->Bind();
+        glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+
+        if (texture)
+        {
+            texture->Unbind();
+        }
     }
 
     void MacosOpenGlRenderingAPI::SetClearColor(const glm::vec4& color)
@@ -66,5 +90,10 @@ namespace arv
     {
        return std::make_shared<OpenGLShader>(shaderSource);
     }
-    
+
+    std::shared_ptr<Texture2D> MacosOpenGlRenderingAPI::CreateTexture2D(const std::string& path)
+    {
+        return std::make_shared<OpenGLTexture2D>(path);
+    }
+
 }

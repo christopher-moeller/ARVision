@@ -24,6 +24,7 @@ namespace arv {
         std::shared_ptr<IndexBuffer> CreateIndexBuffer(unsigned int* indices, unsigned int size);
         std::shared_ptr<VertexArray> CreateVertexArray();
         std::shared_ptr<Shader> CreateShader(ShaderSource* shaderSource);
+        std::shared_ptr<Texture2D> CreateTexture2D(const std::string& path);
 
         Scene NewScene(Camera* camera);
 

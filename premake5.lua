@@ -6,6 +6,7 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 -- Vendor libraries (header-only)
 include "vendor/GLM"
+include "vendor/stb"
 
 include "arv_core_interfaces"
 include "arv_core"

@@ -16,7 +16,8 @@ project "arv_macos_metal_provider"
 
     sysincludedirs {
         "vendor/GLFW/src/include",
-        GLM_INCLUDE_DIR
+        GLM_INCLUDE_DIR,
+        STB_INCLUDE_DIR
     }
 
     links {

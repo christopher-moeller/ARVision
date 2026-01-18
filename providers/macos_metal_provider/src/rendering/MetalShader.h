@@ -17,8 +17,8 @@ typedef void MTLFunction;
 
 namespace arv {
 
-    // Represents the type of a uniform field in Metal shaders
-    enum class MetalUniformType {
+    // Represents the type of a uniform/vertex field in Metal shaders
+    enum class MetalDataType {
         Int,
         Float,
         Float2,
@@ -31,13 +31,25 @@ namespace arv {
     // Represents a single uniform field with its name and type
     struct UniformField {
         std::string name;
-        MetalUniformType type;
+        MetalDataType type;
     };
 
     // Stores the order and types of uniform fields as defined in the shader structs
     struct UniformLayout {
         std::vector<UniformField> vertexUniforms;   // Fields from VertexUniforms struct
         std::vector<UniformField> fragmentUniforms; // Fields from FragmentUniforms struct
+    };
+
+    // Represents a single vertex attribute parsed from VertexIn struct
+    struct VertexAttribute {
+        std::string name;
+        MetalDataType type;
+        unsigned int attributeIndex;
+    };
+
+    // Stores the vertex input layout as defined in the VertexIn struct
+    struct VertexLayout {
+        std::vector<VertexAttribute> attributes;
     };
 
     class MetalShader : public Shader {
@@ -77,11 +89,17 @@ namespace arv {
         // Get the uniform layout parsed from the shader source
         const UniformLayout& GetUniformLayout() const { return m_uniformLayout; }
 
+        // Get the vertex layout parsed from the shader source
+        const VertexLayout& GetVertexLayout() const { return m_vertexLayout; }
+
     private:
         void ParseUniformLayout(const std::string& mslSource);
+        void ParseVertexLayout(const std::string& mslSource);
         static std::vector<UniformField> ParseStructFields(const std::string& source, const std::string& structName);
+        static std::vector<VertexAttribute> ParseVertexInFields(const std::string& source);
 
         UniformLayout m_uniformLayout;
+        VertexLayout m_vertexLayout;
 #ifdef __OBJC__
         id<MTLDevice> m_device = nullptr;
         id<MTLLibrary> m_library = nullptr;

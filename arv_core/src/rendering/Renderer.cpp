@@ -45,6 +45,11 @@ namespace arv {
         return m_RenderingAPI->CreateShader(shaderSource);
     }
 
+    std::shared_ptr<Texture2D> Renderer::CreateTexture2D(const std::string& path)
+    {
+        return m_RenderingAPI->CreateTexture2D(path);
+    }
+
     Scene Renderer::NewScene(Camera* camera) {
         return Scene(m_RenderingAPI, camera);
     }
