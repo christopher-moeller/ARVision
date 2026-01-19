@@ -15,7 +15,7 @@
 int main()
 {
     // Toggle between Metal and OpenGL rendering backends
-    bool useMetal = true;
+    bool useMetal = false;
 
     arv::PlattformProvider* plattformProvider;
     if(useMetal) {
@@ -31,8 +31,8 @@ int main()
     
     arv::StandardCamera* standardCamera = new arv::StandardCamera(800, 600);
 
-    arv::StandardCameraController cameraController(standardCamera, arv::DeviceType::DESKTOP_COMPUTER);
-    cameraController.Init();
+    auto cameraController = arv::CreateStandardCameraController(standardCamera, true /* isDesktop */);
+    cameraController->Init();
 
     arv::Canvas* canvas = plattformProvider->GetCanvas();
 
@@ -58,7 +58,7 @@ int main()
 
         arv::Timestep timestep = app->CalculateNextTimestep();
         arv::CameraControllerAppContext context(app->GetEventManager().get(), timestep);
-        cameraController.UpdateOnStep(context);
+        cameraController->UpdateOnStep(context);
 
         arv::Scene scene = app->GetRenderer()->NewScene(standardCamera);
         scene.ClearColor({0.2f, 0.3f, 0.3f, 1.0f});

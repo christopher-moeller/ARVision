@@ -5,22 +5,40 @@
 
 namespace arv {
 
-    class StandardCameraController : public CameraController {
+    // Type alias for convenience
+    using StandardCameraController = CameraController<StandardCamera>;
+
+    // Desktop input strategy for StandardCamera
+    class DesktopInputStrategy : public InputStrategy<StandardCamera> {
     public:
-        StandardCameraController(StandardCamera* standardCamera, DeviceType deviceType) : CameraController(standardCamera, deviceType), m_StandardCamera(standardCamera) {}
-        
-    protected:
-        void InitForMobileDevice() override;
-        void InitForDesktopComputer() override;
-        void UpdateOnStepForDesktopComputer(CameraControllerAppContext &context) override;
-        
+        DesktopInputStrategy(float translationSpeed = 5.0f, float rotationSpeed = 45.0f)
+            : m_TranslationSpeed(translationSpeed)
+            , m_RotationSpeed(rotationSpeed)
+        {}
+
+        void Init(StandardCameraController& controller) override;
+        void Update(StandardCameraController& controller, CameraControllerAppContext& context) override;
+
     private:
-        StandardCamera* m_StandardCamera;
-        float m_CameraTranslationSpeed = 5.0f;
-        float m_CameraRotationSpeed = 45.0f;
-        
-        void InitResizeHandling();
-        
+        float m_TranslationSpeed;
+        float m_RotationSpeed;
+
+        void InitResizeHandling(StandardCameraController& controller);
     };
+
+    // Mobile input strategy for StandardCamera
+    class MobileInputStrategy : public InputStrategy<StandardCamera> {
+    public:
+        void Init(StandardCameraController& controller) override;
+        void Update(StandardCameraController& controller, CameraControllerAppContext& context) override;
+
+    private:
+        void InitResizeHandling(StandardCameraController& controller);
+    };
+
+    // Factory function to create controller with appropriate strategy
+    std::unique_ptr<StandardCameraController> CreateStandardCameraController(
+        StandardCamera* camera,
+        bool isDesktop);
 
 }

@@ -1,72 +1,109 @@
 #include "StandardCameraController.h"
 #include "utils/KeyCodes.h"
-#include "StandardCamera.h"
 #include <glm/glm.hpp>
 #include "../ARVBase.h"
 
-
 namespace arv {
 
-    void StandardCameraController::InitForMobileDevice() {
-        InitResizeHandling();
+    // DesktopInputStrategy implementation
+
+    void DesktopInputStrategy::Init(StandardCameraController& controller) {
+        InitResizeHandling(controller);
     }
 
-    void StandardCameraController::InitForDesktopComputer() {
-        InitResizeHandling();
-    }
+    void DesktopInputStrategy::Update(StandardCameraController& controller, CameraControllerAppContext& context) {
+        StandardCamera* camera = controller.GetCamera();
 
-    void StandardCameraController::UpdateOnStepForDesktopComputer(CameraControllerAppContext& context) {
-        
-        glm::vec3 frontDirection = m_StandardCamera->GetFront();
-        glm::vec3 rightDirection = m_StandardCamera->GetRight();
-        
-        glm::vec3 newPosition = m_StandardCamera->GetPosition();
-        
-        float translationVelocity = m_CameraTranslationSpeed * context.GetTimestep();
-        
-        if(context.IsKeyPressed(ARV_KEY_UP)) {
+        glm::vec3 frontDirection = camera->GetFront();
+        glm::vec3 rightDirection = camera->GetRight();
+        glm::vec3 newPosition = camera->GetPosition();
+
+        float translationVelocity = m_TranslationSpeed * context.GetTimestep();
+
+        if (context.IsKeyPressed(ARV_KEY_UP)) {
             newPosition += frontDirection * translationVelocity;
         }
-        if(context.IsKeyPressed(ARV_KEY_DOWN)) {
+        if (context.IsKeyPressed(ARV_KEY_DOWN)) {
             newPosition -= frontDirection * translationVelocity;
         }
-        if(context.IsKeyPressed(ARV_KEY_LEFT)) {
+        if (context.IsKeyPressed(ARV_KEY_LEFT)) {
             newPosition -= rightDirection * translationVelocity;
         }
-        if(context.IsKeyPressed(ARV_KEY_RIGHT)) {
+        if (context.IsKeyPressed(ARV_KEY_RIGHT)) {
             newPosition += rightDirection * translationVelocity;
         }
-        
-        m_StandardCamera->SetPosition(newPosition);
-        
-        float rotationVelocity = m_CameraRotationSpeed * context.GetTimestep();
-        float pitch = m_StandardCamera->GetPitch();
-        float yaw = m_StandardCamera->GetYaw();
-        
-        if(context.IsKeyPressed(ARV_KEY_W)) {
-            pitch += 1.0f * rotationVelocity;
+
+        camera->SetPosition(newPosition);
+
+        float rotationVelocity = m_RotationSpeed * context.GetTimestep();
+        float pitch = camera->GetPitch();
+        float yaw = camera->GetYaw();
+
+        if (context.IsKeyPressed(ARV_KEY_W)) {
+            pitch += rotationVelocity;
         }
-        if(context.IsKeyPressed(ARV_KEY_S)) {
-            pitch -= 1.0f * rotationVelocity;
+        if (context.IsKeyPressed(ARV_KEY_S)) {
+            pitch -= rotationVelocity;
         }
-        if(context.IsKeyPressed(ARV_KEY_D)) {
-            yaw += 1.0f * rotationVelocity;
+        if (context.IsKeyPressed(ARV_KEY_D)) {
+            yaw += rotationVelocity;
         }
-        if(context.IsKeyPressed(ARV_KEY_A)) {
-            yaw -= 1.0f * rotationVelocity;
+        if (context.IsKeyPressed(ARV_KEY_A)) {
+            yaw -= rotationVelocity;
         }
-        
-        m_StandardCamera->SetRotation(yaw, pitch);
-        
+
+        camera->SetRotation(yaw, pitch);
     }
 
-    void StandardCameraController::InitResizeHandling() {
-        ARVApplication::Get()->GetEventManager()->AddListener(arv::EventType::ApplicationResizeEvent, [this](arv::Event& event) {
-            arv::ApplicationResizeEvent* resizeEvent = static_cast<arv::ApplicationResizeEvent*>(&event);
-            float aspectRatio = static_cast<float>(resizeEvent->GetWidth()) / static_cast<float>(resizeEvent->GetHeight());
-            this->m_StandardCamera->SetAspectRatio(aspectRatio);
-            return false;
-        });
+    void DesktopInputStrategy::InitResizeHandling(StandardCameraController& controller) {
+        StandardCamera* camera = controller.GetCamera();
+        ARVApplication::Get()->GetEventManager()->AddListener(
+            EventType::ApplicationResizeEvent,
+            [camera](Event& event) {
+                auto* resizeEvent = static_cast<ApplicationResizeEvent*>(&event);
+                float aspectRatio = static_cast<float>(resizeEvent->GetWidth()) /
+                                    static_cast<float>(resizeEvent->GetHeight());
+                camera->SetAspectRatio(aspectRatio);
+                return false;
+            });
+    }
+
+    // MobileInputStrategy implementation
+
+    void MobileInputStrategy::Init(StandardCameraController& controller) {
+        InitResizeHandling(controller);
+    }
+
+    void MobileInputStrategy::Update(StandardCameraController& controller, CameraControllerAppContext& context) {
+        // Mobile input handling - touch/gyro controls can be added here
+    }
+
+    void MobileInputStrategy::InitResizeHandling(StandardCameraController& controller) {
+        StandardCamera* camera = controller.GetCamera();
+        ARVApplication::Get()->GetEventManager()->AddListener(
+            EventType::ApplicationResizeEvent,
+            [camera](Event& event) {
+                auto* resizeEvent = static_cast<ApplicationResizeEvent*>(&event);
+                float aspectRatio = static_cast<float>(resizeEvent->GetWidth()) /
+                                    static_cast<float>(resizeEvent->GetHeight());
+                camera->SetAspectRatio(aspectRatio);
+                return false;
+            });
+    }
+
+    // Factory function
+
+    std::unique_ptr<StandardCameraController> CreateStandardCameraController(
+        StandardCamera* camera,
+        bool isDesktop)
+    {
+        std::unique_ptr<InputStrategy<StandardCamera>> strategy;
+        if (isDesktop) {
+            strategy = std::make_unique<DesktopInputStrategy>();
+        } else {
+            strategy = std::make_unique<MobileInputStrategy>();
+        }
+        return std::make_unique<StandardCameraController>(camera, std::move(strategy));
     }
 
 }

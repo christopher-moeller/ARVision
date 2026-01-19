@@ -6,10 +6,11 @@ namespace arv {
 
     class Camera {
     public:
-        virtual glm::mat4 GetViewMatrix() = 0;
-        virtual glm::mat4 GetProjectionMatrix() = 0;
-        virtual glm::mat4 GetViewProjectionMatrix() { return this->GetProjectionMatrix() * this->GetViewMatrix(); }
-        
+        virtual ~Camera() = default;
+
+        virtual glm::mat4 GetViewMatrix() const = 0;
+        virtual glm::mat4 GetProjectionMatrix() const = 0;
+        virtual glm::mat4 GetViewProjectionMatrix() const { return GetProjectionMatrix() * GetViewMatrix(); }
     };
 
 }
