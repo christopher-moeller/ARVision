@@ -32,33 +32,14 @@ namespace arv
 
     void MacosOpenGlRenderingAPI::Draw(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray)
     {
-        shader->Use();
-        vertexArray->Bind();
-
-        glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+        // Queue the draw command for later execution
+        m_drawCommands.push_back({shader, vertexArray, nullptr});
     }
 
     void MacosOpenGlRenderingAPI::Draw(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray, const std::shared_ptr<Texture2D>& texture)
     {
-        // Enable blending for alpha transparency
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        shader->Use();
-
-        // Bind texture to slot 0
-        if (texture)
-        {
-            texture->Bind(0);
-        }
-
-        vertexArray->Bind();
-        glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
-
-        if (texture)
-        {
-            texture->Unbind();
-        }
+        // Queue the draw command for later execution
+        m_drawCommands.push_back({shader, vertexArray, texture});
     }
 
     void MacosOpenGlRenderingAPI::SetClearColor(const glm::vec4& color)
@@ -73,12 +54,41 @@ namespace arv
 
     void MacosOpenGlRenderingAPI::BeginFrame()
     {
-        // OpenGL doesn't need explicit frame management
+        m_drawCommands.clear();
+        m_frameInProgress = true;
     }
 
     void MacosOpenGlRenderingAPI::EndFrame()
     {
-        // OpenGL doesn't need explicit frame management
+        if (!m_frameInProgress)
+        {
+            return;
+        }
+
+        // Execute all queued draw commands
+        for (const auto& cmd : m_drawCommands)
+        {
+            // Enable blending for alpha transparency if texture is present
+            if (cmd.texture)
+            {
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                cmd.texture->Bind(0);
+            }
+
+            cmd.shader->Use();
+            cmd.vertexArray->Bind();
+            glDrawElements(GL_TRIANGLES, cmd.vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+
+            if (cmd.texture)
+            {
+                cmd.texture->Unbind();
+            }
+        }
+
+        // Clear the command queue for the next frame
+        m_drawCommands.clear();
+        m_frameInProgress = false;
     }
 
     std::shared_ptr<VertexBuffer> MacosOpenGlRenderingAPI::CreateVertexBuffer(float* vertices, unsigned int size)

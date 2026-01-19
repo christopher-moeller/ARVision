@@ -1,8 +1,16 @@
 #pragma once
 #include "rendering/RenderingAPI.h"
+#include <vector>
 
 namespace arv
 {
+    struct OpenGLDrawCommand
+    {
+        std::shared_ptr<Shader> shader;
+        std::shared_ptr<VertexArray> vertexArray;
+        std::shared_ptr<Texture2D> texture; // nullptr if no texture
+    };
+
     class MacosOpenGlRenderingAPI : public RenderingAPI
     {
     public:
@@ -27,5 +35,8 @@ namespace arv
         std::shared_ptr<Shader> CreateShader(ShaderSource* shaderSource) override;
         std::shared_ptr<Texture2D> CreateTexture2D(const std::string& path) override;
 
+    private:
+        std::vector<OpenGLDrawCommand> m_drawCommands;
+        bool m_frameInProgress = false;
     };
 }
