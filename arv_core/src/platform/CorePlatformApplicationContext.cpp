@@ -1,20 +1,20 @@
-#include "CorePlattformApplicationContext.h"
+#include "CorePlatformApplicationContext.h"
 
 
 namespace arv {
 
-    CorePlattformApplicationContext::CorePlattformApplicationContext(Logger* logger, EventManager* eventManager)
+    CorePlatformApplicationContext::CorePlatformApplicationContext(Logger* logger, EventManager* eventManager)
         : m_logger(logger), m_eventManager(eventManager)
     {
 
     }
 
-    Logger* CorePlattformApplicationContext::GetLogger()
+    Logger* CorePlatformApplicationContext::GetLogger()
     {
         return m_logger;
     }
 
-    EventManager* CorePlattformApplicationContext::GetEventManager()
+    EventManager* CorePlatformApplicationContext::GetEventManager()
     {
         return m_eventManager;
     }

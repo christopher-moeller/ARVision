@@ -1,5 +1,5 @@
 #pragma once
-#include "plattform/Canvas.h"
+#include "platform/Canvas.h"
 
 struct GLFWwindow;
 
@@ -11,7 +11,7 @@ namespace arv
         MacosOpenGlGlfwCanvas();
         ~MacosOpenGlGlfwCanvas() override;
 
-        void Init(PlattformApplicationContext* context) override;
+        void Init(PlatformApplicationContext* context) override;
         void PollEvents() override;
         void SwapBuffers() override;
         void Destroy() override;

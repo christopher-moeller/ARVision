@@ -17,7 +17,7 @@ namespace arv
         MacosOpenGlRenderingAPI();
         ~MacosOpenGlRenderingAPI() override;
 
-        void Init(PlattformApplicationContext* context) override;
+        void Init(PlatformApplicationContext* context) override;
         void DrawExample() override;
 
         void Draw(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray) override;

@@ -5,11 +5,11 @@
 
 namespace arv {
 
-    class PlattformApplicationContext
+    class PlatformApplicationContext
     {
     public:
-        PlattformApplicationContext() = default;
-        ~PlattformApplicationContext() = default;
+        PlatformApplicationContext() = default;
+        ~PlatformApplicationContext() = default;
         
         virtual Logger* GetLogger() = 0;
         virtual EventManager* GetEventManager() = 0;

@@ -15,7 +15,7 @@ namespace arv
         Destroy();
     }
 
-    void MacosOpenGlGlfwCanvas::Init(PlattformApplicationContext* context)
+    void MacosOpenGlGlfwCanvas::Init(PlatformApplicationContext* context)
     {
         if (!glfwInit())
         {

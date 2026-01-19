@@ -1,14 +1,14 @@
 #pragma once
-#include "PlattformProvider.h"
+#include "PlatformProvider.h"
 
 namespace arv
 {
-    class MacosMetalPlattformProvider : public PlattformProvider
+    class MacosMetalPlatformProvider : public PlatformProvider
     {
     public:
-        MacosMetalPlattformProvider();
-        ~MacosMetalPlattformProvider() override;
+        MacosMetalPlatformProvider();
+        ~MacosMetalPlatformProvider() override;
 
-        void Init(PlattformApplicationContext* context) override;
+        void Init(PlatformApplicationContext* context) override;
     };
 }

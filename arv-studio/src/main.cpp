@@ -1,24 +1,24 @@
 #include <iostream>
 #include <memory>
 #include "ARVBase.h"
-#include "MacosMetalPlattformProvider.h"
-#include "MacosOpenGlPlattformProvider.h"
-#include "plattform/Canvas.h"
+#include "MacosMetalPlatformProvider.h"
+#include "MacosOpenGlPlatformProvider.h"
+#include "platform/Canvas.h"
 #include "layers/SceneLayer.h"
 
 int main()
 {
     // Toggle between Metal and OpenGL rendering backends
-    bool useMetal = true;
+    bool useMetal = false;
 
-    std::unique_ptr<arv::PlattformProvider> plattformProvider;
+    std::unique_ptr<arv::PlatformProvider> platformProvider;
     if(useMetal) {
-        plattformProvider = std::make_unique<arv::MacosMetalPlattformProvider>();
+        platformProvider = std::make_unique<arv::MacosMetalPlatformProvider>();
     } else {
-        plattformProvider = std::make_unique<arv::MacosOpenGlPlattformProvider>();
+        platformProvider = std::make_unique<arv::MacosOpenGlPlatformProvider>();
     }
 
-    arv::ARVApplication* app = arv::ARVApplication::Create(plattformProvider.get());
+    arv::ARVApplication* app = arv::ARVApplication::Create(platformProvider.get());
     ARV_LOG_INFO("ARV Application created");
 
     app->Initialize();
@@ -29,7 +29,7 @@ int main()
         app->GetEventManager().get()
     ));
 
-    arv::Canvas* canvas = plattformProvider->GetCanvas();
+    arv::Canvas* canvas = platformProvider->GetCanvas();
 
     while (!canvas->ShouldClose())
     {
@@ -47,7 +47,7 @@ int main()
     }
 
     arv::ARVApplication::Destroy();
-    // plattformProvider automatically cleaned up by unique_ptr
+    // platformProvider automatically cleaned up by unique_ptr
 
     return 0;
 }

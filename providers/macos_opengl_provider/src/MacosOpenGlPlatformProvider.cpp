@@ -1,22 +1,22 @@
-#include "MacosOpenGlPlattformProvider.h"
-#include "plattform/MacosOpenGlGlfwCanvas.h"
+#include "MacosOpenGlPlatformProvider.h"
+#include "platform/MacosOpenGlGlfwCanvas.h"
 #include "rendering/MacosOpenGlRenderingAPI.h"
 #include <iostream>
 #include <memory>
 
 namespace arv
 {
-    MacosOpenGlPlattformProvider::MacosOpenGlPlattformProvider()
+    MacosOpenGlPlatformProvider::MacosOpenGlPlatformProvider()
     {
         m_canvas = std::make_unique<MacosOpenGlGlfwCanvas>();
         m_renderingAPI = std::make_unique<MacosOpenGlRenderingAPI>();
     }
 
-    MacosOpenGlPlattformProvider::~MacosOpenGlPlattformProvider() = default;
+    MacosOpenGlPlatformProvider::~MacosOpenGlPlatformProvider() = default;
 
-    void MacosOpenGlPlattformProvider::Init(PlattformApplicationContext* context)
+    void MacosOpenGlPlatformProvider::Init(PlatformApplicationContext* context)
     {
-        std::cout << "MacosOpenGlPlattformProvider::Init()" << std::endl;
+        std::cout << "MacosOpenGlPlatformProvider::Init()" << std::endl;
         m_canvas->Init(context);
         m_renderingAPI->Init(context);
     }

@@ -21,7 +21,7 @@ namespace arv
         
     }
 
-    void MacosOpenGlRenderingAPI::Init(PlattformApplicationContext* context)
+    void MacosOpenGlRenderingAPI::Init(PlatformApplicationContext* context)
     {
         glEnable(GL_DEPTH_TEST);
     }

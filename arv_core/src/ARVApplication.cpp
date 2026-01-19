@@ -5,7 +5,7 @@
 
 #include "utils/StdLogger.h"
 #include "events/CoreEventManager.h"
-#include "plattform/CorePlattformApplicationContext.h"
+#include "platform/CorePlatformApplicationContext.h"
 
 namespace arv
 {
@@ -16,8 +16,8 @@ namespace arv
         return s_Instance;
     }
 
-    ARVApplication* ARVApplication::Create(PlattformProvider* plattformProvider) {
-        s_Instance = new ARVApplication(plattformProvider);
+    ARVApplication* ARVApplication::Create(PlatformProvider* platformProvider) {
+        s_Instance = new ARVApplication(platformProvider);
         return s_Instance;
     }
 
@@ -25,8 +25,8 @@ namespace arv
         delete s_Instance;
     }
 
-    ARVApplication::ARVApplication(PlattformProvider* plattformProvider)
-        : m_plattformProvider(plattformProvider)
+    ARVApplication::ARVApplication(PlatformProvider* platformProvider)
+        : m_platformProvider(platformProvider)
     {
         m_Logger = std::make_unique<StdLogger>();
         m_EventManager = std::make_unique<CoreEventManager>();
@@ -34,14 +34,14 @@ namespace arv
 
     void ARVApplication::Initialize()
     {
-        Logger* customLogger = m_plattformProvider->CreateCustomLogger();
+        Logger* customLogger = m_platformProvider->CreateCustomLogger();
         if(customLogger) {
             m_Logger.reset(customLogger);
         }
 
-        CorePlattformApplicationContext context(m_Logger.get(), m_EventManager.get());
-        m_plattformProvider->Init(&context);
-        m_renderer = std::make_unique<Renderer>(m_plattformProvider->GetRenderingAPI());
+        CorePlatformApplicationContext context(m_Logger.get(), m_EventManager.get());
+        m_platformProvider->Init(&context);
+        m_renderer = std::make_unique<Renderer>(m_platformProvider->GetRenderingAPI());
 
         m_EventManager->AddListener(EventType::ApplicationResizeEvent, [this](arv::Event& event) {
             ApplicationResizeEvent* resizeEvent = static_cast<ApplicationResizeEvent*>(&event);
@@ -55,9 +55,9 @@ namespace arv
         std::cout << "ARVApplication Initialized." << std::endl;
     }
 
-    PlattformProvider* ARVApplication::GetPlattformProvider() const
+    PlatformProvider* ARVApplication::GetPlatformProvider() const
     {
-        return m_plattformProvider;
+        return m_platformProvider;
     }
 
     Renderer* ARVApplication::GetRenderer() const

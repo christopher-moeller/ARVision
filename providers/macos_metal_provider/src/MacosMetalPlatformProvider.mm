@@ -1,22 +1,22 @@
-#include "MacosMetalPlattformProvider.h"
-#include "plattform/MacosMetalGlfwCanvas.h"
+#include "MacosMetalPlatformProvider.h"
+#include "platform/MacosMetalGlfwCanvas.h"
 #include "rendering/MacosMetalRenderingAPI.h"
 #include <iostream>
 #include <memory>
 
 namespace arv
 {
-    MacosMetalPlattformProvider::MacosMetalPlattformProvider()
+    MacosMetalPlatformProvider::MacosMetalPlatformProvider()
     {
         m_canvas = std::make_unique<MacosMetalGlfwCanvas>();
         m_renderingAPI = std::make_unique<MacosMetalRenderingAPI>();
     }
 
-    MacosMetalPlattformProvider::~MacosMetalPlattformProvider() = default;
+    MacosMetalPlatformProvider::~MacosMetalPlatformProvider() = default;
 
-    void MacosMetalPlattformProvider::Init(PlattformApplicationContext* context)
+    void MacosMetalPlatformProvider::Init(PlatformApplicationContext* context)
     {
-        std::cout << "MacosMetalPlattformProvider::Init()" << std::endl;
+        std::cout << "MacosMetalPlatformProvider::Init()" << std::endl;
         m_canvas->Init(context);
 
         // Pass the Metal layer from the canvas to the rendering API

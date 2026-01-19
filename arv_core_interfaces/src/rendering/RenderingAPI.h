@@ -8,7 +8,7 @@
 #include "rendering/ShaderSource.h"
 #include "rendering/Texture.h"
 #include "rendering/Framebuffer.h"
-#include "plattform/PlattformApplicationContext.h"
+#include "platform/PlatformApplicationContext.h"
 
 namespace arv
 {
@@ -18,7 +18,7 @@ namespace arv
         RenderingAPI() = default;
         virtual ~RenderingAPI() = default;
 
-        virtual void Init(PlattformApplicationContext* context) = 0;
+        virtual void Init(PlatformApplicationContext* context) = 0;
         virtual void DrawExample() = 0;
 
         virtual void Draw(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray) = 0;

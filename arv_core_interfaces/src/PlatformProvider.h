@@ -2,20 +2,20 @@
 
 #include <memory>
 #include "utils/Logger.h"
-#include "plattform/PlattformApplicationContext.h"
-#include "plattform/Canvas.h"
+#include "platform/PlatformApplicationContext.h"
+#include "platform/Canvas.h"
 #include "rendering/RenderingAPI.h"
 
 namespace arv
 {
 
-    class PlattformProvider
+    class PlatformProvider
     {
     public:
-        PlattformProvider() = default;
-        virtual ~PlattformProvider() = default;
+        PlatformProvider() = default;
+        virtual ~PlatformProvider() = default;
 
-        virtual void Init(PlattformApplicationContext* context) = 0;
+        virtual void Init(PlatformApplicationContext* context) = 0;
 
         Canvas* GetCanvas() const { return m_canvas.get(); }
         RenderingAPI* GetRenderingAPI() const { return m_renderingAPI.get(); }

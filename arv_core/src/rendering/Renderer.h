@@ -29,7 +29,7 @@ namespace arv {
         Scene NewScene(Camera* camera);
 
     private:
-        RenderingAPI* m_RenderingAPI;  // Non-owning pointer, owned by PlattformProvider
+        RenderingAPI* m_RenderingAPI;  // Non-owning pointer, owned by PlatformProvider
     };
 
 }

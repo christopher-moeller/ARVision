@@ -1,15 +1,15 @@
 #pragma once
 
-#include "plattform/PlattformApplicationContext.h"
+#include "platform/PlatformApplicationContext.h"
 
 namespace arv {
-    class CorePlattformApplicationContext : public PlattformApplicationContext
+    class CorePlatformApplicationContext : public PlatformApplicationContext
     {
     public:
-        CorePlattformApplicationContext() = default;
-        ~CorePlattformApplicationContext() = default;
+        CorePlatformApplicationContext() = default;
+        ~CorePlatformApplicationContext() = default;
 
-        CorePlattformApplicationContext(Logger* m_logger, EventManager* m_eventManager);
+        CorePlatformApplicationContext(Logger* m_logger, EventManager* m_eventManager);
 
         Logger* GetLogger() override;
         EventManager* GetEventManager() override;
