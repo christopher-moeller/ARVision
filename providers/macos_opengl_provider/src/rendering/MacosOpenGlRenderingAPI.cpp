@@ -71,6 +71,16 @@ namespace arv
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
+    void MacosOpenGlRenderingAPI::BeginFrame()
+    {
+        // OpenGL doesn't need explicit frame management
+    }
+
+    void MacosOpenGlRenderingAPI::EndFrame()
+    {
+        // OpenGL doesn't need explicit frame management
+    }
+
     std::shared_ptr<VertexBuffer> MacosOpenGlRenderingAPI::CreateVertexBuffer(float* vertices, unsigned int size)
     {
         return std::make_shared<OpenGLVertexBuffer>(vertices, size);

@@ -60,214 +60,255 @@ namespace arv
         Clear();
     }
 
-    void MacosMetalRenderingAPI::Draw(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray)
+    void MacosMetalRenderingAPI::BeginFrame()
     {
-        if (!m_metalLayer || !m_commandQueue)
+        if (!m_metalLayer || !m_commandQueue || m_frameInProgress)
         {
             return;
         }
 
-        @autoreleasepool {
-            // Get the next drawable
-            id<CAMetalDrawable> drawable = [m_metalLayer nextDrawable];
-            if (!drawable)
+        // Get the next drawable
+        m_currentDrawable = [m_metalLayer nextDrawable];
+        if (!m_currentDrawable)
+        {
+            return;
+        }
+
+        // Create render pass descriptor with clear action
+        MTLRenderPassDescriptor* renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+        renderPassDescriptor.colorAttachments[0].texture = m_currentDrawable.texture;
+        renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
+        renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
+        renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(
+            m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
+
+        // Create command buffer
+        m_currentCommandBuffer = [m_commandQueue commandBuffer];
+        if (!m_currentCommandBuffer)
+        {
+            m_currentDrawable = nil;
+            return;
+        }
+
+        // Create render encoder
+        m_currentRenderEncoder = [m_currentCommandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+        if (!m_currentRenderEncoder)
+        {
+            m_currentCommandBuffer = nil;
+            m_currentDrawable = nil;
+            return;
+        }
+
+        m_frameInProgress = true;
+    }
+
+    void MacosMetalRenderingAPI::EndFrame()
+    {
+        if (!m_frameInProgress || !m_currentRenderEncoder || !m_currentCommandBuffer || !m_currentDrawable)
+        {
+            return;
+        }
+
+        [m_currentRenderEncoder endEncoding];
+
+        // Present and commit
+        [m_currentCommandBuffer presentDrawable:m_currentDrawable];
+        [m_currentCommandBuffer commit];
+
+        // Reset frame state
+        m_currentRenderEncoder = nil;
+        m_currentCommandBuffer = nil;
+        m_currentDrawable = nil;
+        m_frameInProgress = false;
+    }
+
+    void MacosMetalRenderingAPI::Draw(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray)
+    {
+        DrawInternal(shader, vertexArray, nullptr);
+    }
+
+    void MacosMetalRenderingAPI::DrawInternal(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray, const std::shared_ptr<Texture2D>& texture)
+    {
+        if (!m_frameInProgress || !m_currentRenderEncoder)
+        {
+            return;
+        }
+
+        // Get Metal-specific objects
+        MetalShader* metalShader = static_cast<MetalShader*>(shader.get());
+        MetalVertexArray* metalVA = static_cast<MetalVertexArray*>(vertexArray.get());
+
+        // Set the render pipeline state
+        if (metalShader && metalShader->GetPipelineState())
+        {
+            [m_currentRenderEncoder setRenderPipelineState:metalShader->GetPipelineState()];
+        }
+
+        // Bind vertex buffers
+        const auto& vertexBuffers = metalVA->GetVertexBuffers();
+        for (size_t i = 0; i < vertexBuffers.size(); ++i)
+        {
+            MetalVertexBuffer* metalVB = static_cast<MetalVertexBuffer*>(vertexBuffers[i].get());
+            if (metalVB && metalVB->GetMetalBuffer())
             {
-                return;
+                [m_currentRenderEncoder setVertexBuffer:metalVB->GetMetalBuffer() offset:0 atIndex:i];
             }
+        }
 
-            // Create render pass descriptor
-            MTLRenderPassDescriptor* renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-            renderPassDescriptor.colorAttachments[0].texture = drawable.texture;
-            renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-            renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-            renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(
-                m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
+        // Get the uniform layout parsed from the shader source
+        const auto& uniformLayout = metalShader->GetUniformLayout();
 
-            // Create command buffer
-            id<MTLCommandBuffer> commandBuffer = [m_commandQueue commandBuffer];
-            if (!commandBuffer)
+        // Helper lambda to pack uniform data based on field type
+        auto packUniformData = [&shader](const std::vector<UniformField>& fields) -> std::vector<uint8_t> {
+            std::vector<uint8_t> data;
+
+            const auto& intUniforms = shader->GetIntUniforms();
+            const auto& floatUniforms = shader->GetFloatUniforms();
+            const auto& float2Uniforms = shader->GetFloat2Uniforms();
+            const auto& float3Uniforms = shader->GetFloat3Uniforms();
+            const auto& float4Uniforms = shader->GetFloat4Uniforms();
+            const auto& mat3Uniforms = shader->GetMat3Uniforms();
+            const auto& mat4Uniforms = shader->GetMat4Uniforms();
+
+            for (const auto& field : fields)
             {
-                return;
-            }
-
-            // Create render encoder
-            id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
-            if (!renderEncoder)
-            {
-                return;
-            }
-
-            // Get Metal-specific objects
-            MetalShader* metalShader = static_cast<MetalShader*>(shader.get());
-            MetalVertexArray* metalVA = static_cast<MetalVertexArray*>(vertexArray.get());
-
-            // Set the render pipeline state
-            if (metalShader && metalShader->GetPipelineState())
-            {
-                [renderEncoder setRenderPipelineState:metalShader->GetPipelineState()];
-            }
-
-            // Bind vertex buffers
-            const auto& vertexBuffers = metalVA->GetVertexBuffers();
-            for (size_t i = 0; i < vertexBuffers.size(); ++i)
-            {
-                MetalVertexBuffer* metalVB = static_cast<MetalVertexBuffer*>(vertexBuffers[i].get());
-                if (metalVB && metalVB->GetMetalBuffer())
+                switch (field.type)
                 {
-                    [renderEncoder setVertexBuffer:metalVB->GetMetalBuffer() offset:0 atIndex:i];
-                }
-            }
-
-            // Get the uniform layout parsed from the shader source
-            const auto& uniformLayout = metalShader->GetUniformLayout();
-
-            // Helper lambda to pack uniform data based on field type
-            auto packUniformData = [&shader](const std::vector<UniformField>& fields) -> std::vector<uint8_t> {
-                std::vector<uint8_t> data;
-
-                const auto& intUniforms = shader->GetIntUniforms();
-                const auto& floatUniforms = shader->GetFloatUniforms();
-                const auto& float2Uniforms = shader->GetFloat2Uniforms();
-                const auto& float3Uniforms = shader->GetFloat3Uniforms();
-                const auto& float4Uniforms = shader->GetFloat4Uniforms();
-                const auto& mat3Uniforms = shader->GetMat3Uniforms();
-                const auto& mat4Uniforms = shader->GetMat4Uniforms();
-
-                for (const auto& field : fields)
-                {
-                    switch (field.type)
+                    case MetalDataType::Int:
                     {
-                        case MetalDataType::Int:
+                        auto it = intUniforms.find(field.name);
+                        if (it != intUniforms.end())
                         {
-                            auto it = intUniforms.find(field.name);
-                            if (it != intUniforms.end())
-                            {
-                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(&it->second);
-                                data.insert(data.end(), ptr, ptr + sizeof(int));
-                            }
-                            break;
+                            const uint8_t* ptr = reinterpret_cast<const uint8_t*>(&it->second);
+                            data.insert(data.end(), ptr, ptr + sizeof(int));
                         }
-                        case MetalDataType::Float:
+                        break;
+                    }
+                    case MetalDataType::Float:
+                    {
+                        auto it = floatUniforms.find(field.name);
+                        if (it != floatUniforms.end())
                         {
-                            auto it = floatUniforms.find(field.name);
-                            if (it != floatUniforms.end())
-                            {
-                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(&it->second);
-                                data.insert(data.end(), ptr, ptr + sizeof(float));
-                            }
-                            break;
+                            const uint8_t* ptr = reinterpret_cast<const uint8_t*>(&it->second);
+                            data.insert(data.end(), ptr, ptr + sizeof(float));
                         }
-                        case MetalDataType::Float2:
+                        break;
+                    }
+                    case MetalDataType::Float2:
+                    {
+                        auto it = float2Uniforms.find(field.name);
+                        if (it != float2Uniforms.end())
                         {
-                            auto it = float2Uniforms.find(field.name);
-                            if (it != float2Uniforms.end())
-                            {
-                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(it->second));
-                                data.insert(data.end(), ptr, ptr + sizeof(glm::vec2));
-                            }
-                            break;
+                            const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(it->second));
+                            data.insert(data.end(), ptr, ptr + sizeof(glm::vec2));
                         }
-                        case MetalDataType::Float3:
+                        break;
+                    }
+                    case MetalDataType::Float3:
+                    {
+                        auto it = float3Uniforms.find(field.name);
+                        if (it != float3Uniforms.end())
                         {
-                            auto it = float3Uniforms.find(field.name);
-                            if (it != float3Uniforms.end())
+                            const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(it->second));
+                            data.insert(data.end(), ptr, ptr + sizeof(glm::vec3));
+                            // Add padding to align to 16 bytes (Metal requires float3 to be padded)
+                            data.insert(data.end(), sizeof(float), 0);
+                        }
+                        break;
+                    }
+                    case MetalDataType::Float4:
+                    {
+                        auto it = float4Uniforms.find(field.name);
+                        if (it != float4Uniforms.end())
+                        {
+                            const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(it->second));
+                            data.insert(data.end(), ptr, ptr + sizeof(glm::vec4));
+                        }
+                        break;
+                    }
+                    case MetalDataType::Mat3:
+                    {
+                        auto it = mat3Uniforms.find(field.name);
+                        if (it != mat3Uniforms.end())
+                        {
+                            // Metal float3x3 is stored as 3 float4 columns (padded)
+                            const glm::mat3& mat = it->second;
+                            for (int col = 0; col < 3; ++col)
                             {
-                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(it->second));
+                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(mat[col]));
                                 data.insert(data.end(), ptr, ptr + sizeof(glm::vec3));
-                                // Add padding to align to 16 bytes (Metal requires float3 to be padded)
+                                // Pad each column to 16 bytes
                                 data.insert(data.end(), sizeof(float), 0);
                             }
-                            break;
                         }
-                        case MetalDataType::Float4:
+                        break;
+                    }
+                    case MetalDataType::Mat4:
+                    {
+                        auto it = mat4Uniforms.find(field.name);
+                        if (it != mat4Uniforms.end())
                         {
-                            auto it = float4Uniforms.find(field.name);
-                            if (it != float4Uniforms.end())
-                            {
-                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(it->second));
-                                data.insert(data.end(), ptr, ptr + sizeof(glm::vec4));
-                            }
-                            break;
+                            const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(it->second));
+                            data.insert(data.end(), ptr, ptr + sizeof(glm::mat4));
                         }
-                        case MetalDataType::Mat3:
-                        {
-                            auto it = mat3Uniforms.find(field.name);
-                            if (it != mat3Uniforms.end())
-                            {
-                                // Metal float3x3 is stored as 3 float4 columns (padded)
-                                const glm::mat3& mat = it->second;
-                                for (int col = 0; col < 3; ++col)
-                                {
-                                    const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(mat[col]));
-                                    data.insert(data.end(), ptr, ptr + sizeof(glm::vec3));
-                                    // Pad each column to 16 bytes
-                                    data.insert(data.end(), sizeof(float), 0);
-                                }
-                            }
-                            break;
-                        }
-                        case MetalDataType::Mat4:
-                        {
-                            auto it = mat4Uniforms.find(field.name);
-                            if (it != mat4Uniforms.end())
-                            {
-                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(it->second));
-                                data.insert(data.end(), ptr, ptr + sizeof(glm::mat4));
-                            }
-                            break;
-                        }
+                        break;
                     }
                 }
-
-                return data;
-            };
-
-            // Bind vertex uniforms in the order defined by the shader's VertexUniforms struct
-            if (!uniformLayout.vertexUniforms.empty())
-            {
-                std::vector<uint8_t> vertexUniformData = packUniformData(uniformLayout.vertexUniforms);
-
-                if (!vertexUniformData.empty())
-                {
-                    [renderEncoder setVertexBytes:vertexUniformData.data()
-                                           length:vertexUniformData.size()
-                                          atIndex:1];
-                }
             }
 
-            // Bind fragment uniforms in the order defined by the shader's FragmentUniforms struct
-            if (!uniformLayout.fragmentUniforms.empty())
+            return data;
+        };
+
+        // Bind vertex uniforms in the order defined by the shader's VertexUniforms struct
+        if (!uniformLayout.vertexUniforms.empty())
+        {
+            std::vector<uint8_t> vertexUniformData = packUniformData(uniformLayout.vertexUniforms);
+
+            if (!vertexUniformData.empty())
             {
-                std::vector<uint8_t> fragmentUniformData = packUniformData(uniformLayout.fragmentUniforms);
-
-                if (!fragmentUniformData.empty())
-                {
-                    [renderEncoder setFragmentBytes:fragmentUniformData.data()
-                                             length:fragmentUniformData.size()
-                                            atIndex:0];
-                }
+                [m_currentRenderEncoder setVertexBytes:vertexUniformData.data()
+                                       length:vertexUniformData.size()
+                                      atIndex:1];
             }
+        }
 
-            // Get index buffer
-            const auto& indexBuffer = metalVA->GetIndexBuffer();
-            if (indexBuffer)
+        // Bind fragment uniforms in the order defined by the shader's FragmentUniforms struct
+        if (!uniformLayout.fragmentUniforms.empty())
+        {
+            std::vector<uint8_t> fragmentUniformData = packUniformData(uniformLayout.fragmentUniforms);
+
+            if (!fragmentUniformData.empty())
             {
-                MetalIndexBuffer* metalIB = static_cast<MetalIndexBuffer*>(indexBuffer.get());
-                if (metalIB && metalIB->GetMetalBuffer())
-                {
-                    [renderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
-                                              indexCount:metalIB->GetCount()
-                                               indexType:MTLIndexTypeUInt32
-                                             indexBuffer:metalIB->GetMetalBuffer()
-                                       indexBufferOffset:0];
-                }
+                [m_currentRenderEncoder setFragmentBytes:fragmentUniformData.data()
+                                         length:fragmentUniformData.size()
+                                        atIndex:0];
             }
+        }
 
-            [renderEncoder endEncoding];
+        // Bind texture if provided
+        if (texture)
+        {
+            MetalTexture2D* metalTex = static_cast<MetalTexture2D*>(texture.get());
+            if (metalTex && metalTex->GetMetalTexture())
+            {
+                [m_currentRenderEncoder setFragmentTexture:metalTex->GetMetalTexture() atIndex:0];
+                [m_currentRenderEncoder setFragmentSamplerState:metalTex->GetSamplerState() atIndex:0];
+            }
+        }
 
-            // Present and commit
-            [commandBuffer presentDrawable:drawable];
-            [commandBuffer commit];
+        // Get index buffer
+        const auto& indexBuffer = metalVA->GetIndexBuffer();
+        if (indexBuffer)
+        {
+            MetalIndexBuffer* metalIB = static_cast<MetalIndexBuffer*>(indexBuffer.get());
+            if (metalIB && metalIB->GetMetalBuffer())
+            {
+                [m_currentRenderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
+                                          indexCount:metalIB->GetCount()
+                                           indexType:MTLIndexTypeUInt32
+                                         indexBuffer:metalIB->GetMetalBuffer()
+                                   indexBufferOffset:0];
+            }
         }
     }
 
@@ -310,210 +351,6 @@ namespace arv
 
     void MacosMetalRenderingAPI::Draw(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray, const std::shared_ptr<Texture2D>& texture)
     {
-        if (!m_metalLayer || !m_commandQueue)
-        {
-            return;
-        }
-
-        @autoreleasepool {
-            // Get the next drawable
-            id<CAMetalDrawable> drawable = [m_metalLayer nextDrawable];
-            if (!drawable)
-            {
-                return;
-            }
-
-            // Create render pass descriptor
-            MTLRenderPassDescriptor* renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-            renderPassDescriptor.colorAttachments[0].texture = drawable.texture;
-            renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-            renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-            renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(
-                m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
-
-            // Create command buffer
-            id<MTLCommandBuffer> commandBuffer = [m_commandQueue commandBuffer];
-            if (!commandBuffer)
-            {
-                return;
-            }
-
-            // Create render encoder
-            id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
-            if (!renderEncoder)
-            {
-                return;
-            }
-
-            // Get Metal-specific objects
-            MetalShader* metalShader = static_cast<MetalShader*>(shader.get());
-            MetalVertexArray* metalVA = static_cast<MetalVertexArray*>(vertexArray.get());
-
-            // Set the render pipeline state
-            if (metalShader && metalShader->GetPipelineState())
-            {
-                [renderEncoder setRenderPipelineState:metalShader->GetPipelineState()];
-            }
-
-            // Bind vertex buffers
-            const auto& vertexBuffers = metalVA->GetVertexBuffers();
-            for (size_t i = 0; i < vertexBuffers.size(); ++i)
-            {
-                MetalVertexBuffer* metalVB = static_cast<MetalVertexBuffer*>(vertexBuffers[i].get());
-                if (metalVB && metalVB->GetMetalBuffer())
-                {
-                    [renderEncoder setVertexBuffer:metalVB->GetMetalBuffer() offset:0 atIndex:i];
-                }
-            }
-
-            // Get the uniform layout parsed from the shader source
-            const auto& uniformLayout = metalShader->GetUniformLayout();
-
-            // Helper lambda to pack uniform data based on field type
-            auto packUniformData = [&shader](const std::vector<UniformField>& fields) -> std::vector<uint8_t> {
-                std::vector<uint8_t> data;
-
-                const auto& intUniforms = shader->GetIntUniforms();
-                const auto& floatUniforms = shader->GetFloatUniforms();
-                const auto& float2Uniforms = shader->GetFloat2Uniforms();
-                const auto& float3Uniforms = shader->GetFloat3Uniforms();
-                const auto& float4Uniforms = shader->GetFloat4Uniforms();
-                const auto& mat3Uniforms = shader->GetMat3Uniforms();
-                const auto& mat4Uniforms = shader->GetMat4Uniforms();
-
-                for (const auto& field : fields)
-                {
-                    switch (field.type)
-                    {
-                        case MetalDataType::Int:
-                        {
-                            auto it = intUniforms.find(field.name);
-                            if (it != intUniforms.end())
-                            {
-                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(&it->second);
-                                data.insert(data.end(), ptr, ptr + sizeof(int));
-                            }
-                            break;
-                        }
-                        case MetalDataType::Float:
-                        {
-                            auto it = floatUniforms.find(field.name);
-                            if (it != floatUniforms.end())
-                            {
-                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(&it->second);
-                                data.insert(data.end(), ptr, ptr + sizeof(float));
-                            }
-                            break;
-                        }
-                        case MetalDataType::Float2:
-                        {
-                            auto it = float2Uniforms.find(field.name);
-                            if (it != float2Uniforms.end())
-                            {
-                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(it->second));
-                                data.insert(data.end(), ptr, ptr + sizeof(glm::vec2));
-                            }
-                            break;
-                        }
-                        case MetalDataType::Float3:
-                        {
-                            auto it = float3Uniforms.find(field.name);
-                            if (it != float3Uniforms.end())
-                            {
-                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(it->second));
-                                data.insert(data.end(), ptr, ptr + sizeof(glm::vec3));
-                                // Add padding to align to 16 bytes (Metal requires float3 to be padded)
-                                data.insert(data.end(), sizeof(float), 0);
-                            }
-                            break;
-                        }
-                        case MetalDataType::Float4:
-                        {
-                            auto it = float4Uniforms.find(field.name);
-                            if (it != float4Uniforms.end())
-                            {
-                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(it->second));
-                                data.insert(data.end(), ptr, ptr + sizeof(glm::vec4));
-                            }
-                            break;
-                        }
-                        case MetalDataType::Mat3:
-                        {
-                            auto it = mat3Uniforms.find(field.name);
-                            if (it != mat3Uniforms.end())
-                            {
-                                // Metal float3x3 is stored as 3 float4 columns (padded)
-                                const glm::mat3& mat = it->second;
-                                for (int col = 0; col < 3; ++col)
-                                {
-                                    const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(mat[col]));
-                                    data.insert(data.end(), ptr, ptr + sizeof(glm::vec3));
-                                    // Pad each column to 16 bytes
-                                    data.insert(data.end(), sizeof(float), 0);
-                                }
-                            }
-                            break;
-                        }
-                        case MetalDataType::Mat4:
-                        {
-                            auto it = mat4Uniforms.find(field.name);
-                            if (it != mat4Uniforms.end())
-                            {
-                                const uint8_t* ptr = reinterpret_cast<const uint8_t*>(glm::value_ptr(it->second));
-                                data.insert(data.end(), ptr, ptr + sizeof(glm::mat4));
-                            }
-                            break;
-                        }
-                    }
-                }
-
-                return data;
-            };
-
-            // Bind vertex uniforms
-            if (!uniformLayout.vertexUniforms.empty())
-            {
-                std::vector<uint8_t> vertexUniformData = packUniformData(uniformLayout.vertexUniforms);
-
-                if (!vertexUniformData.empty())
-                {
-                    [renderEncoder setVertexBytes:vertexUniformData.data()
-                                           length:vertexUniformData.size()
-                                          atIndex:1];
-                }
-            }
-
-            // Bind texture if provided
-            if (texture)
-            {
-                MetalTexture2D* metalTex = static_cast<MetalTexture2D*>(texture.get());
-                if (metalTex && metalTex->GetMetalTexture())
-                {
-                    [renderEncoder setFragmentTexture:metalTex->GetMetalTexture() atIndex:0];
-                    [renderEncoder setFragmentSamplerState:metalTex->GetSamplerState() atIndex:0];
-                }
-            }
-
-            // Get index buffer
-            const auto& indexBuffer = metalVA->GetIndexBuffer();
-            if (indexBuffer)
-            {
-                MetalIndexBuffer* metalIB = static_cast<MetalIndexBuffer*>(indexBuffer.get());
-                if (metalIB && metalIB->GetMetalBuffer())
-                {
-                    [renderEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
-                                              indexCount:metalIB->GetCount()
-                                               indexType:MTLIndexTypeUInt32
-                                             indexBuffer:metalIB->GetMetalBuffer()
-                                       indexBufferOffset:0];
-                }
-            }
-
-            [renderEncoder endEncoding];
-
-            // Present and commit
-            [commandBuffer presentDrawable:drawable];
-            [commandBuffer commit];
-        }
+        DrawInternal(shader, vertexArray, texture);
     }
 }

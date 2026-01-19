@@ -11,6 +11,7 @@ namespace arv {
     void Scene::ClearColor(const glm::vec4 &color) {
         m_RenderingAPI->SetClearColor(color);
         m_RenderingAPI->Clear();
+        m_RenderingAPI->BeginFrame();
     }
 
     void Scene::Submit(RenderingObject& object) {
@@ -62,7 +63,7 @@ namespace arv {
     }
 
     void Scene::Render() {
-        // TODO: render all commands just here
+        m_RenderingAPI->EndFrame();
     }
 
 }

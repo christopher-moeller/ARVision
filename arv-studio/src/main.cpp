@@ -15,7 +15,7 @@
 int main()
 {
     // Toggle between Metal and OpenGL rendering backends
-    bool useMetal = true;
+    bool useMetal = false;
 
     arv::PlattformProvider* plattformProvider;
     if(useMetal) {
