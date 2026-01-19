@@ -16,7 +16,7 @@
 int main()
 {
     // Toggle between Metal and OpenGL rendering backends
-    bool useMetal = true;
+    bool useMetal = false;
 
     arv::PlattformProvider* plattformProvider;
     if(useMetal) {
@@ -43,8 +43,8 @@ int main()
 
     // Position objects side by side
     triangleObject->SetPosition(glm::vec3(-1.0f, 0.0f, 0.0f));
-    simpleTriangleObject->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     imageObject->SetPosition(glm::vec3(1.0f, 0.0f, 0.0f));
+    simpleTriangleObject->SetPosition(glm::vec3(-1.0f, 0.0f, -1.0f));
 
     auto startTime = std::chrono::high_resolution_clock::now();
 

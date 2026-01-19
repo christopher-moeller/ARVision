@@ -20,6 +20,8 @@ namespace arv
 
     MacosMetalRenderingAPI::~MacosMetalRenderingAPI()
     {
+        m_depthTexture = nil;
+        m_depthStencilState = nil;
         m_commandQueue = nil;
         m_device = nil;
     }
@@ -51,6 +53,12 @@ namespace arv
             return;
         }
 
+        // Create depth stencil state for depth testing
+        MTLDepthStencilDescriptor* depthDescriptor = [[MTLDepthStencilDescriptor alloc] init];
+        depthDescriptor.depthCompareFunction = MTLCompareFunctionLess;
+        depthDescriptor.depthWriteEnabled = YES;
+        m_depthStencilState = [m_device newDepthStencilStateWithDescriptor:depthDescriptor];
+
         std::cout << "MacosMetalRenderingAPI::Init() - Metal initialized successfully" << std::endl;
     }
 
@@ -58,6 +66,29 @@ namespace arv
     {
         // Example drawing - just clears the screen
         Clear();
+    }
+
+    void MacosMetalRenderingAPI::CreateDepthTextureIfNeeded(size_t width, size_t height)
+    {
+        // Check if we need to create or recreate the depth texture
+        if (m_depthTexture)
+        {
+            if ([m_depthTexture width] == width && [m_depthTexture height] == height)
+            {
+                return; // Depth texture already exists with correct size
+            }
+        }
+
+        // Create depth texture descriptor
+        MTLTextureDescriptor* depthTextureDescriptor = [MTLTextureDescriptor
+            texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth32Float
+            width:width
+            height:height
+            mipmapped:NO];
+        depthTextureDescriptor.usage = MTLTextureUsageRenderTarget;
+        depthTextureDescriptor.storageMode = MTLStorageModePrivate;
+
+        m_depthTexture = [m_device newTextureWithDescriptor:depthTextureDescriptor];
     }
 
     void MacosMetalRenderingAPI::BeginFrame()
@@ -74,6 +105,11 @@ namespace arv
             return;
         }
 
+        // Create or update depth texture to match drawable size
+        size_t width = m_currentDrawable.texture.width;
+        size_t height = m_currentDrawable.texture.height;
+        CreateDepthTextureIfNeeded(width, height);
+
         // Create render pass descriptor with clear action
         MTLRenderPassDescriptor* renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
         renderPassDescriptor.colorAttachments[0].texture = m_currentDrawable.texture;
@@ -81,6 +117,12 @@ namespace arv
         renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
         renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(
             m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
+
+        // Configure depth attachment
+        renderPassDescriptor.depthAttachment.texture = m_depthTexture;
+        renderPassDescriptor.depthAttachment.loadAction = MTLLoadActionClear;
+        renderPassDescriptor.depthAttachment.storeAction = MTLStoreActionDontCare;
+        renderPassDescriptor.depthAttachment.clearDepth = 1.0;
 
         // Create command buffer
         m_currentCommandBuffer = [m_commandQueue commandBuffer];
@@ -98,6 +140,9 @@ namespace arv
             m_currentDrawable = nil;
             return;
         }
+
+        // Set depth stencil state for depth testing
+        [m_currentRenderEncoder setDepthStencilState:m_depthStencilState];
 
         m_frameInProgress = true;
     }

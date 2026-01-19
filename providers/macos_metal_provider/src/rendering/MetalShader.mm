@@ -96,6 +96,7 @@ namespace arv {
             pipelineDescriptor.vertexFunction = m_vertexFunction;
             pipelineDescriptor.fragmentFunction = m_fragmentFunction;
             pipelineDescriptor.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
+            pipelineDescriptor.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
 
             // Enable alpha blending for transparent textures
             pipelineDescriptor.colorAttachments[0].blendingEnabled = YES;
