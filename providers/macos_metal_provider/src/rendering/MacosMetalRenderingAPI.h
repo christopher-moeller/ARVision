@@ -48,8 +48,11 @@ namespace arv
         std::shared_ptr<VertexArray> CreateVertexArray() override;
         std::shared_ptr<Shader> CreateShader(ShaderSource* shaderSource) override;
         std::shared_ptr<Texture2D> CreateTexture2D(const std::string& path) override;
+        std::shared_ptr<Framebuffer> CreateFramebuffer(const FramebufferSpecification& spec) override;
 
         void SetMetalLayer(CAMetalLayer* layer);
+        void BindFramebuffer(const std::shared_ptr<Framebuffer>& framebuffer);
+        void UnbindFramebuffer();
 
 #ifdef __OBJC__
         id<MTLDevice> GetDevice() const { return m_device; }
@@ -80,5 +83,6 @@ namespace arv
         CAMetalLayer* m_metalLayer = nullptr;
         glm::vec4 m_clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
         bool m_frameInProgress = false;
+        std::shared_ptr<Framebuffer> m_boundFramebuffer = nullptr;
     };
 }

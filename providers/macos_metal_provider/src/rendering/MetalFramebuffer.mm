@@ -1,0 +1,136 @@
+#include "MetalFramebuffer.h"
+
+#import <Metal/Metal.h>
+#import <QuartzCore/CAMetalLayer.h>
+#include <iostream>
+
+namespace arv {
+
+    static MTLPixelFormat TextureFormatToMetal(FramebufferTextureFormat format)
+    {
+        switch (format)
+        {
+            case FramebufferTextureFormat::RGBA8:    return MTLPixelFormatRGBA8Unorm;
+            case FramebufferTextureFormat::RGBA16F:  return MTLPixelFormatRGBA16Float;
+            case FramebufferTextureFormat::RGBA32F:  return MTLPixelFormatRGBA32Float;
+            default: return MTLPixelFormatRGBA8Unorm;
+        }
+    }
+
+    MetalFramebuffer::MetalFramebuffer(id<MTLDevice> device, const FramebufferSpecification& spec)
+        : m_Device(device), m_Specification(spec)
+    {
+        Invalidate();
+    }
+
+    MetalFramebuffer::~MetalFramebuffer()
+    {
+        m_ColorTextures.clear();
+        m_DepthTexture = nil;
+        m_RenderPassDescriptor = nil;
+    }
+
+    void MetalFramebuffer::Invalidate()
+    {
+        // Clean up existing resources
+        m_ColorTextures.clear();
+        m_DepthTexture = nil;
+        m_RenderPassDescriptor = nil;
+
+        // Create color attachments
+        for (size_t i = 0; i < m_Specification.colorAttachments.size(); i++)
+        {
+            MTLTextureDescriptor* colorDesc = [MTLTextureDescriptor
+                texture2DDescriptorWithPixelFormat:TextureFormatToMetal(m_Specification.colorAttachments[i])
+                width:m_Specification.width
+                height:m_Specification.height
+                mipmapped:NO];
+            colorDesc.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
+            colorDesc.storageMode = MTLStorageModePrivate;
+
+            id<MTLTexture> colorTexture = [m_Device newTextureWithDescriptor:colorDesc];
+            m_ColorTextures.push_back(colorTexture);
+        }
+
+        // Create depth attachment if needed
+        if (m_Specification.hasDepthAttachment)
+        {
+            MTLTextureDescriptor* depthDesc = [MTLTextureDescriptor
+                texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth32Float
+                width:m_Specification.width
+                height:m_Specification.height
+                mipmapped:NO];
+            depthDesc.usage = MTLTextureUsageRenderTarget;
+            depthDesc.storageMode = MTLStorageModePrivate;
+
+            m_DepthTexture = [m_Device newTextureWithDescriptor:depthDesc];
+        }
+
+        // Create render pass descriptor
+        m_RenderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+
+        // Configure color attachments
+        for (size_t i = 0; i < m_ColorTextures.size(); i++)
+        {
+            m_RenderPassDescriptor.colorAttachments[i].texture = m_ColorTextures[i];
+            m_RenderPassDescriptor.colorAttachments[i].loadAction = MTLLoadActionClear;
+            m_RenderPassDescriptor.colorAttachments[i].storeAction = MTLStoreActionStore;
+            m_RenderPassDescriptor.colorAttachments[i].clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 1.0);
+        }
+
+        // Configure depth attachment
+        if (m_DepthTexture)
+        {
+            m_RenderPassDescriptor.depthAttachment.texture = m_DepthTexture;
+            m_RenderPassDescriptor.depthAttachment.loadAction = MTLLoadActionClear;
+            m_RenderPassDescriptor.depthAttachment.storeAction = MTLStoreActionDontCare;
+            m_RenderPassDescriptor.depthAttachment.clearDepth = 1.0;
+        }
+    }
+
+    void MetalFramebuffer::Bind()
+    {
+        m_IsBound = true;
+        // Actual binding is handled by MacosMetalRenderingAPI when it creates
+        // the render encoder using our render pass descriptor
+    }
+
+    void MetalFramebuffer::Unbind()
+    {
+        m_IsBound = false;
+    }
+
+    void MetalFramebuffer::Resize(uint32_t width, uint32_t height)
+    {
+        if (width == 0 || height == 0 || width > 8192 || height > 8192)
+        {
+            std::cerr << "MetalFramebuffer: Invalid resize dimensions: " << width << "x" << height << std::endl;
+            return;
+        }
+
+        m_Specification.width = width;
+        m_Specification.height = height;
+        Invalidate();
+    }
+
+    uint32_t MetalFramebuffer::GetColorAttachmentID(uint32_t index) const
+    {
+        // Metal doesn't use integer IDs like OpenGL
+        // Return the index for identification purposes
+        if (index < m_ColorTextures.size())
+        {
+            return index;
+        }
+        return 0;
+    }
+
+    id<MTLTexture> MetalFramebuffer::GetColorTexture(uint32_t index) const
+    {
+        if (index < m_ColorTextures.size())
+        {
+            return m_ColorTextures[index];
+        }
+        return nil;
+    }
+
+}

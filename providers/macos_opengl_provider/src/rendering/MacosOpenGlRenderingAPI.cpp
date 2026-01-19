@@ -6,6 +6,7 @@
 #include "OpenGLShader.h"
 #include "OpenGLVertexArray.h"
 #include "OpenGLTexture.h"
+#include "OpenGLFramebuffer.h"
 
 namespace arv
 {
@@ -114,6 +115,11 @@ namespace arv
     std::shared_ptr<Texture2D> MacosOpenGlRenderingAPI::CreateTexture2D(const std::string& path)
     {
         return std::make_shared<OpenGLTexture2D>(path);
+    }
+
+    std::shared_ptr<Framebuffer> MacosOpenGlRenderingAPI::CreateFramebuffer(const FramebufferSpecification& spec)
+    {
+        return std::make_shared<OpenGLFramebuffer>(spec);
     }
 
 }

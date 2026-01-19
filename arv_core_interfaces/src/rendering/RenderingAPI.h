@@ -7,6 +7,7 @@
 #include "rendering/Shader.h"
 #include "rendering/ShaderSource.h"
 #include "rendering/Texture.h"
+#include "rendering/Framebuffer.h"
 #include "plattform/PlattformApplicationContext.h"
 
 namespace arv
@@ -34,5 +35,6 @@ namespace arv
         virtual std::shared_ptr<VertexArray> CreateVertexArray() = 0;
         virtual std::shared_ptr<Shader> CreateShader(ShaderSource* shaderSource) = 0;
         virtual std::shared_ptr<Texture2D> CreateTexture2D(const std::string& path) = 0;
+        virtual std::shared_ptr<Framebuffer> CreateFramebuffer(const FramebufferSpecification& spec) = 0;
     };
 }

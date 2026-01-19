@@ -34,6 +34,7 @@ namespace arv
         std::shared_ptr<VertexArray> CreateVertexArray() override;
         std::shared_ptr<Shader> CreateShader(ShaderSource* shaderSource) override;
         std::shared_ptr<Texture2D> CreateTexture2D(const std::string& path) override;
+        std::shared_ptr<Framebuffer> CreateFramebuffer(const FramebufferSpecification& spec) override;
 
     private:
         std::vector<OpenGLDrawCommand> m_drawCommands;

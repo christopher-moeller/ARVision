@@ -7,6 +7,7 @@
 #include "MetalShader.h"
 #include "MetalVertexArray.h"
 #include "MetalTexture.h"
+#include "MetalFramebuffer.h"
 
 #include <iostream>
 #include <vector>
@@ -98,31 +99,43 @@ namespace arv
             return;
         }
 
-        // Get the next drawable
+        // Get the next drawable (needed even for off-screen rendering for eventual presentation)
         m_currentDrawable = [m_metalLayer nextDrawable];
         if (!m_currentDrawable)
         {
             return;
         }
 
-        // Create or update depth texture to match drawable size
-        size_t width = m_currentDrawable.texture.width;
-        size_t height = m_currentDrawable.texture.height;
-        CreateDepthTextureIfNeeded(width, height);
+        MTLRenderPassDescriptor* renderPassDescriptor;
 
-        // Create render pass descriptor with clear action
-        MTLRenderPassDescriptor* renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-        renderPassDescriptor.colorAttachments[0].texture = m_currentDrawable.texture;
-        renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-        renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-        renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(
-            m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
+        if (m_boundFramebuffer)
+        {
+            // Use the bound framebuffer's render pass descriptor
+            MetalFramebuffer* metalFB = static_cast<MetalFramebuffer*>(m_boundFramebuffer.get());
+            renderPassDescriptor = metalFB->GetRenderPassDescriptor();
+        }
+        else
+        {
+            // Use default screen framebuffer
+            // Create or update depth texture to match drawable size
+            size_t width = m_currentDrawable.texture.width;
+            size_t height = m_currentDrawable.texture.height;
+            CreateDepthTextureIfNeeded(width, height);
 
-        // Configure depth attachment
-        renderPassDescriptor.depthAttachment.texture = m_depthTexture;
-        renderPassDescriptor.depthAttachment.loadAction = MTLLoadActionClear;
-        renderPassDescriptor.depthAttachment.storeAction = MTLStoreActionDontCare;
-        renderPassDescriptor.depthAttachment.clearDepth = 1.0;
+            // Create render pass descriptor with clear action
+            renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+            renderPassDescriptor.colorAttachments[0].texture = m_currentDrawable.texture;
+            renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
+            renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
+            renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(
+                m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
+
+            // Configure depth attachment
+            renderPassDescriptor.depthAttachment.texture = m_depthTexture;
+            renderPassDescriptor.depthAttachment.loadAction = MTLLoadActionClear;
+            renderPassDescriptor.depthAttachment.storeAction = MTLStoreActionDontCare;
+            renderPassDescriptor.depthAttachment.clearDepth = 1.0;
+        }
 
         // Create command buffer
         m_currentCommandBuffer = [m_commandQueue commandBuffer];
@@ -397,5 +410,28 @@ namespace arv
     void MacosMetalRenderingAPI::Draw(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray, const std::shared_ptr<Texture2D>& texture)
     {
         DrawInternal(shader, vertexArray, texture);
+    }
+
+    std::shared_ptr<Framebuffer> MacosMetalRenderingAPI::CreateFramebuffer(const FramebufferSpecification& spec)
+    {
+        return std::make_shared<MetalFramebuffer>(m_device, spec);
+    }
+
+    void MacosMetalRenderingAPI::BindFramebuffer(const std::shared_ptr<Framebuffer>& framebuffer)
+    {
+        m_boundFramebuffer = framebuffer;
+        if (m_boundFramebuffer)
+        {
+            m_boundFramebuffer->Bind();
+        }
+    }
+
+    void MacosMetalRenderingAPI::UnbindFramebuffer()
+    {
+        if (m_boundFramebuffer)
+        {
+            m_boundFramebuffer->Unbind();
+        }
+        m_boundFramebuffer = nullptr;
     }
 }
