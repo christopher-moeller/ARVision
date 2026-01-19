@@ -3,6 +3,7 @@
 #include <memory>
 #include "utils/Logger.h"
 #include "events/EventManager.h"
+#include "LayerStack.h"
 
 #include "PlattformProvider.h"
 #include "rendering/Renderer.h"
@@ -25,7 +26,11 @@ namespace arv
 
         inline std::unique_ptr<Logger>& GetLogger() { return m_Logger; }
         inline std::unique_ptr<EventManager>& GetEventManager() { return m_EventManager; }
-        
+
+        void PushLayer(std::unique_ptr<Layer> layer);
+        void PushOverlay(std::unique_ptr<Layer> overlay);
+        LayerStack& GetLayerStack() { return m_LayerStack; }
+
         inline int GetWidth() { return m_Width; }
         inline int GetHeight() { return m_Height; }
         
@@ -43,7 +48,8 @@ namespace arv
     private:
         PlattformProvider* m_plattformProvider;
         Renderer* m_renderer;
-        
+        LayerStack m_LayerStack;
+
         float m_LastFrameTime = 0.0f;
 
         static ARVApplication* s_Instance;

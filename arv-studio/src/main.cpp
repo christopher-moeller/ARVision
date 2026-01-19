@@ -1,17 +1,9 @@
 #include <iostream>
-#include <cmath>
-#include <chrono>
 #include "ARVBase.h"
 #include "MacosMetalPlattformProvider.h"
 #include "MacosOpenGlPlattformProvider.h"
 #include "plattform/Canvas.h"
-#include "rendering/RenderingAPI.h"
-#include "objects/ExampleTriangleRO.h"
-#include "objects/SimpleTriangleRO.h"
-#include "objects/ImageTextureRO.h"
-#include <glm/glm.hpp>
-#include "camera/StandardCamera.h"
-#include "camera/StandardCameraController.h"
+#include "layers/SceneLayer.h"
 
 int main()
 {
@@ -29,57 +21,31 @@ int main()
     ARV_LOG_INFO("ARV Application created");
 
     app->Initialize();
-    
-    arv::StandardCamera* standardCamera = new arv::StandardCamera(800, 600);
 
-    auto cameraController = arv::CreateStandardCameraController(standardCamera, true /* isDesktop */);
-    cameraController->Init();
+    // Push the scene layer
+    app->PushLayer(std::make_unique<SceneLayer>(
+        app->GetRenderer(),
+        app->GetEventManager().get()
+    ));
 
     arv::Canvas* canvas = plattformProvider->GetCanvas();
 
-    arv::ExampleTriangleRO* triangleObject = new arv::ExampleTriangleRO();
-    arv::ImageTextureRO* imageObject = new arv::ImageTextureRO("/Users/cmoeller/dev/projects/ARVision/arv-studio/assets/fc-logo.png");
-    arv::SimpleTriangleRO* simpleTriangleObject = new arv::SimpleTriangleRO();
-
-    // Position objects side by side
-    triangleObject->SetPosition(glm::vec3(-1.0f, 0.0f, 0.0f));
-    imageObject->SetPosition(glm::vec3(1.0f, 0.0f, 0.0f));
-    simpleTriangleObject->SetPosition(glm::vec3(-1.0f, 0.0f, -1.0f));
-
-    auto startTime = std::chrono::high_resolution_clock::now();
-
     while (!canvas->ShouldClose())
     {
-
-        // Animate the color over time (pulsing effect)
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration<float>(currentTime - startTime).count();
-        float r = (std::sin(time * 2.0f) + 1.0f) / 2.0f;
-        float g = (std::sin(time * 2.0f + 2.0f) + 1.0f) / 2.0f;
-        float b = (std::sin(time * 2.0f + 4.0f) + 1.0f) / 2.0f;
-        triangleObject->SetColor(glm::vec4(r, g, b, 1.0f));
-        simpleTriangleObject->SetColor(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-
         arv::Timestep timestep = app->CalculateNextTimestep();
-        arv::CameraControllerAppContext context(app->GetEventManager().get(), timestep);
-        cameraController->UpdateOnStep(context);
 
-        arv::Scene scene = app->GetRenderer()->NewScene(standardCamera);
-        scene.ClearColor({0.2f, 0.3f, 0.3f, 1.0f});
-        scene.Submit(*triangleObject);
-        scene.Submit(*simpleTriangleObject);
-        scene.Submit(*imageObject, imageObject->GetTexture());
-        scene.Render();
+        // Update all layers
+        app->GetLayerStack().OnUpdate(timestep.GetSeconds());
+
+        // Render all layers
+        app->GetLayerStack().OnRender();
 
         // Step
         canvas->PollEvents();
         canvas->SwapBuffers();
     }
 
-    delete imageObject;
-    delete triangleObject;
-    delete simpleTriangleObject;
-    delete app;
+    arv::ARVApplication::Destroy();
     delete plattformProvider;
 
     return 0;

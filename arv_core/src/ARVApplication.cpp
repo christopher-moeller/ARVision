@@ -77,4 +77,12 @@ namespace arv
         auto now = steady_clock::now();
         return duration<float>(now - start).count();
     }
+
+    void ARVApplication::PushLayer(std::unique_ptr<Layer> layer) {
+        m_LayerStack.PushLayer(std::move(layer));
+    }
+
+    void ARVApplication::PushOverlay(std::unique_ptr<Layer> overlay) {
+        m_LayerStack.PushOverlay(std::move(overlay));
+    }
 }

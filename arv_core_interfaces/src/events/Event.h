@@ -19,12 +19,15 @@ namespace arv {
     };
 
     class Event {
-        
+
     public:
+        virtual ~Event() = default;
+
         virtual EventType GetType() = 0;
         virtual const char* GetName() const = 0;
         virtual std::string ToString() const { return GetName(); }
-        
+
+        bool handled = false;  // Layers can mark events as consumed
     };
 
     class WindowCloseEvent : public Event {
