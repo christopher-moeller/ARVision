@@ -1,7 +1,7 @@
 #include "MacosOpenGlGlfwCanvas.h"
+#include "ARVBase.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <iostream>
 
 
 namespace arv
@@ -19,7 +19,7 @@ namespace arv
     {
         if (!glfwInit())
         {
-            std::cerr << "Failed to initialize GLFW" << std::endl;
+            ARV_LOG_ERROR("Failed to initialize GLFW");
             return;
         }
 
@@ -31,7 +31,7 @@ namespace arv
         m_window = glfwCreateWindow(800, 600, "ARVision (OpenGL)", nullptr, nullptr);
         if (!m_window)
         {
-            std::cerr << "Failed to create GLFW window" << std::endl;
+            ARV_LOG_ERROR("Failed to create GLFW window");
             glfwTerminate();
             return;
         }
@@ -40,7 +40,7 @@ namespace arv
 
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         {
-            std::cerr << "Failed to initialize GLAD" << std::endl;
+            ARV_LOG_ERROR("Failed to initialize GLAD");
             return;
         }
 
@@ -125,8 +125,8 @@ namespace arv
         
 
 
-        std::cout << "MacosOpenGlGlfwCanvas::Init() - Window created successfully" << std::endl;
-        std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
+        ARV_LOG_INFO("MacosOpenGlGlfwCanvas::Init() - Window created successfully");
+        ARV_LOG_INFO("OpenGL Version: {}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
     }
 
     void MacosOpenGlGlfwCanvas::PollEvents()

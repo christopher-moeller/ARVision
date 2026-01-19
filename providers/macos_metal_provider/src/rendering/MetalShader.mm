@@ -2,7 +2,7 @@
 
 #import <Metal/Metal.h>
 #include <glm/gtc/type_ptr.hpp>
-#include <iostream>
+#include "ARVBase.h"
 #include <regex>
 #include <algorithm>
 
@@ -70,8 +70,7 @@ namespace arv {
 
             if (error)
             {
-                std::cerr << "Failed to compile Metal shader library: "
-                          << [[error localizedDescription] UTF8String] << std::endl;
+                ARV_LOG_ERROR("Failed to compile Metal shader library: {}", [[error localizedDescription] UTF8String]);
                 return;
             }
 
@@ -79,7 +78,7 @@ namespace arv {
             m_vertexFunction = [m_library newFunctionWithName:@"vertexMain"];
             if (!m_vertexFunction)
             {
-                std::cerr << "Failed to find vertex function 'vertexMain'" << std::endl;
+                ARV_LOG_ERROR("Failed to find vertex function 'vertexMain'");
                 return;
             }
 
@@ -87,7 +86,7 @@ namespace arv {
             m_fragmentFunction = [m_library newFunctionWithName:@"fragmentMain"];
             if (!m_fragmentFunction)
             {
-                std::cerr << "Failed to find fragment function 'fragmentMain'" << std::endl;
+                ARV_LOG_ERROR("Failed to find fragment function 'fragmentMain'");
                 return;
             }
 
@@ -130,12 +129,11 @@ namespace arv {
 
             if (error)
             {
-                std::cerr << "Failed to create render pipeline state: "
-                          << [[error localizedDescription] UTF8String] << std::endl;
+                ARV_LOG_ERROR("Failed to create render pipeline state: {}", [[error localizedDescription] UTF8String]);
                 return;
             }
 
-            std::cout << "Metal shader compiled successfully" << std::endl;
+            ARV_LOG_INFO("Metal shader compiled successfully");
         }
     }
 

@@ -1,7 +1,7 @@
 #include "OpenGLTexture.h"
+#include "ARVBase.h"
 #include <glad/glad.h>
 #include <stb_image.h>
-#include <iostream>
 
 namespace arv {
 
@@ -15,7 +15,7 @@ namespace arv {
 
         if (!data)
         {
-            std::cerr << "Failed to load texture: " << path << std::endl;
+            ARV_LOG_ERROR("Failed to load texture: {}", path);
             return;
         }
 
@@ -54,7 +54,7 @@ namespace arv {
 
         stbi_image_free(data);
 
-        std::cout << "OpenGL texture loaded: " << path << " (" << width << "x" << height << ", " << channels << " channels)" << std::endl;
+        ARV_LOG_INFO("OpenGL texture loaded: {} ({}x{}, {} channels)", path, width, height, channels);
     }
 
     OpenGLTexture2D::~OpenGLTexture2D()

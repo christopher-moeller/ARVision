@@ -1,6 +1,6 @@
 #include "OpenGLFramebuffer.h"
+#include "ARVBase.h"
 #include <glad/glad.h>
-#include <iostream>
 
 namespace arv {
 
@@ -117,7 +117,7 @@ namespace arv {
         // Check framebuffer completeness
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            std::cerr << "OpenGLFramebuffer: Framebuffer is not complete!" << std::endl;
+            ARV_LOG_ERROR("OpenGLFramebuffer: Framebuffer is not complete!");
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -138,7 +138,7 @@ namespace arv {
     {
         if (width == 0 || height == 0 || width > 8192 || height > 8192)
         {
-            std::cerr << "OpenGLFramebuffer: Invalid resize dimensions: " << width << "x" << height << std::endl;
+            ARV_LOG_ERROR("OpenGLFramebuffer: Invalid resize dimensions: {}x{}", width, height);
             return;
         }
 

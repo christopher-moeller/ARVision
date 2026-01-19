@@ -1,8 +1,8 @@
 #include "MetalTexture.h"
+#include "ARVBase.h"
 
 #import <Metal/Metal.h>
 #include <stb_image.h>
-#include <iostream>
 
 namespace arv {
 
@@ -17,7 +17,7 @@ namespace arv {
 
         if (!data)
         {
-            std::cerr << "Failed to load texture: " << path << std::endl;
+            ARV_LOG_ERROR("Failed to load texture: {}", path);
             return;
         }
 
@@ -37,7 +37,7 @@ namespace arv {
 
         if (!m_Texture)
         {
-            std::cerr << "Failed to create Metal texture" << std::endl;
+            ARV_LOG_ERROR("Failed to create Metal texture");
             stbi_image_free(data);
             return;
         }
@@ -60,7 +60,7 @@ namespace arv {
 
         m_SamplerState = [device newSamplerStateWithDescriptor:samplerDescriptor];
 
-        std::cout << "Metal texture loaded: " << path << " (" << width << "x" << height << ", " << m_Channels << " channels)" << std::endl;
+        ARV_LOG_INFO("Metal texture loaded: {} ({}x{}, {} channels)", path, width, height, m_Channels);
     }
 
     MetalTexture2D::~MetalTexture2D()

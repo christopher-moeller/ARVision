@@ -1,8 +1,8 @@
 #include "MetalFramebuffer.h"
+#include "ARVBase.h"
 
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
-#include <iostream>
 
 namespace arv {
 
@@ -104,7 +104,7 @@ namespace arv {
     {
         if (width == 0 || height == 0 || width > 8192 || height > 8192)
         {
-            std::cerr << "MetalFramebuffer: Invalid resize dimensions: " << width << "x" << height << std::endl;
+            ARV_LOG_ERROR("MetalFramebuffer: Invalid resize dimensions: {}x{}", width, height);
             return;
         }
 

@@ -12,7 +12,8 @@ project "arv_macos_opengl_provider"
     files { "src/**.cpp", "src/**.h" }
 
     includedirs {
-        "../../arv_core_interfaces/src"
+        "../../arv_core_interfaces/src",
+        "../../arv_core/src"
     }
 
     sysincludedirs {

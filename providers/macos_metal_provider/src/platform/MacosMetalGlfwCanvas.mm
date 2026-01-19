@@ -9,7 +9,7 @@
 #import <QuartzCore/CAMetalLayer.h>
 #import <Cocoa/Cocoa.h>
 
-#include <iostream>
+#include "ARVBase.h"
 
 namespace arv
 {
@@ -26,7 +26,7 @@ namespace arv
     {
         if (!glfwInit())
         {
-            std::cerr << "Failed to initialize GLFW" << std::endl;
+            ARV_LOG_ERROR("Failed to initialize GLFW");
             return;
         }
 
@@ -36,7 +36,7 @@ namespace arv
         m_window = glfwCreateWindow(800, 600, "ARVision (Metal)", nullptr, nullptr);
         if (!m_window)
         {
-            std::cerr << "Failed to create GLFW window" << std::endl;
+            ARV_LOG_ERROR("Failed to create GLFW window");
             glfwTerminate();
             return;
         }
@@ -45,7 +45,7 @@ namespace arv
         NSWindow* nsWindow = glfwGetCocoaWindow(m_window);
         if (!nsWindow)
         {
-            std::cerr << "Failed to get Cocoa window" << std::endl;
+            ARV_LOG_ERROR("Failed to get Cocoa window");
             return;
         }
 
@@ -53,7 +53,7 @@ namespace arv
         id<MTLDevice> device = MTLCreateSystemDefaultDevice();
         if (!device)
         {
-            std::cerr << "Failed to create Metal device" << std::endl;
+            ARV_LOG_ERROR("Failed to create Metal device");
             return;
         }
 
@@ -151,8 +151,8 @@ namespace arv
             eventManager->PushEvent(event);
         });
 
-        std::cout << "MacosMetalGlfwCanvas::Init() - Window created successfully" << std::endl;
-        std::cout << "Metal Device: " << [[device name] UTF8String] << std::endl;
+        ARV_LOG_INFO("MacosMetalGlfwCanvas::Init() - Window created successfully");
+        ARV_LOG_INFO("Metal Device: {}", [[device name] UTF8String]);
     }
 
     void MacosMetalGlfwCanvas::PollEvents()

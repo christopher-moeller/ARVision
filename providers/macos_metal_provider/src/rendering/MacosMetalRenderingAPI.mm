@@ -9,7 +9,7 @@
 #include "MetalTexture.h"
 #include "MetalFramebuffer.h"
 
-#include <iostream>
+#include "ARVBase.h"
 #include <vector>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -36,21 +36,21 @@ namespace arv
     {
         if (!m_metalLayer)
         {
-            std::cerr << "Metal layer not set!" << std::endl;
+            ARV_LOG_ERROR("Metal layer not set!");
             return;
         }
 
         m_device = m_metalLayer.device;
         if (!m_device)
         {
-            std::cerr << "Failed to get Metal device from layer!" << std::endl;
+            ARV_LOG_ERROR("Failed to get Metal device from layer!");
             return;
         }
 
         m_commandQueue = [m_device newCommandQueue];
         if (!m_commandQueue)
         {
-            std::cerr << "Failed to create Metal command queue!" << std::endl;
+            ARV_LOG_ERROR("Failed to create Metal command queue!");
             return;
         }
 
@@ -60,7 +60,7 @@ namespace arv
         depthDescriptor.depthWriteEnabled = YES;
         m_depthStencilState = [m_device newDepthStencilStateWithDescriptor:depthDescriptor];
 
-        std::cout << "MacosMetalRenderingAPI::Init() - Metal initialized successfully" << std::endl;
+        ARV_LOG_INFO("MacosMetalRenderingAPI::Init() - Metal initialized successfully");
     }
 
     void MacosMetalRenderingAPI::DrawExample()

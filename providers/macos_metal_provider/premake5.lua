@@ -11,7 +11,8 @@ project "arv_macos_metal_provider"
     files { "src/**.mm", "src/**.h" }
 
     includedirs {
-        "../../arv_core_interfaces/src"
+        "../../arv_core_interfaces/src",
+        "../../arv_core/src"
     }
 
     sysincludedirs {
