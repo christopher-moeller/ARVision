@@ -7,6 +7,7 @@
 #include "plattform/Canvas.h"
 #include "rendering/RenderingAPI.h"
 #include "objects/ExampleTriangleRO.h"
+#include "objects/SimpleTriangleRO.h"
 #include "objects/ImageTextureRO.h"
 #include <glm/glm.hpp>
 #include "camera/StandardCamera.h"
@@ -15,7 +16,7 @@
 int main()
 {
     // Toggle between Metal and OpenGL rendering backends
-    bool useMetal = false;
+    bool useMetal = true;
 
     arv::PlattformProvider* plattformProvider;
     if(useMetal) {
@@ -38,9 +39,11 @@ int main()
 
     arv::ExampleTriangleRO* triangleObject = new arv::ExampleTriangleRO();
     arv::ImageTextureRO* imageObject = new arv::ImageTextureRO("/Users/cmoeller/dev/projects/ARVision/arv-studio/assets/fc-logo.png");
+    arv::SimpleTriangleRO* simpleTriangleObject = new arv::SimpleTriangleRO();
 
     // Position objects side by side
     triangleObject->SetPosition(glm::vec3(-1.0f, 0.0f, 0.0f));
+    simpleTriangleObject->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     imageObject->SetPosition(glm::vec3(1.0f, 0.0f, 0.0f));
 
     auto startTime = std::chrono::high_resolution_clock::now();
@@ -55,6 +58,7 @@ int main()
         float g = (std::sin(time * 2.0f + 2.0f) + 1.0f) / 2.0f;
         float b = (std::sin(time * 2.0f + 4.0f) + 1.0f) / 2.0f;
         triangleObject->SetColor(glm::vec4(r, g, b, 1.0f));
+        simpleTriangleObject->SetColor(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
 
         arv::Timestep timestep = app->CalculateNextTimestep();
         arv::CameraControllerAppContext context(app->GetEventManager().get(), timestep);
@@ -63,6 +67,7 @@ int main()
         arv::Scene scene = app->GetRenderer()->NewScene(standardCamera);
         scene.ClearColor({0.2f, 0.3f, 0.3f, 1.0f});
         scene.Submit(*triangleObject);
+        scene.Submit(*simpleTriangleObject);
         scene.Submit(*imageObject, imageObject->GetTexture());
         scene.Render();
 
@@ -73,6 +78,7 @@ int main()
 
     delete imageObject;
     delete triangleObject;
+    delete simpleTriangleObject;
     delete app;
     delete plattformProvider;
 
