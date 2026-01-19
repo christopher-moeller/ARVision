@@ -15,7 +15,7 @@
 int main()
 {
     // Toggle between Metal and OpenGL rendering backends
-    bool useMetal = false;
+    bool useMetal = true;
 
     arv::PlattformProvider* plattformProvider;
     if(useMetal) {
@@ -39,6 +39,10 @@ int main()
     arv::ExampleTriangleRO* triangleObject = new arv::ExampleTriangleRO();
     arv::ImageTextureRO* imageObject = new arv::ImageTextureRO("/Users/cmoeller/dev/projects/ARVision/arv-studio/assets/fc-logo.png");
 
+    // Position objects side by side
+    triangleObject->SetPosition(glm::vec3(-1.0f, 0.0f, 0.0f));
+    imageObject->SetPosition(glm::vec3(1.0f, 0.0f, 0.0f));
+
     auto startTime = std::chrono::high_resolution_clock::now();
 
     while (!canvas->ShouldClose())
@@ -59,7 +63,7 @@ int main()
         arv::Scene scene = app->GetRenderer()->NewScene(standardCamera);
         scene.ClearColor({0.2f, 0.3f, 0.3f, 1.0f});
         scene.Submit(*triangleObject);
-        scene.Submit(imageObject->GetShader(), imageObject->GetVertexArray(), imageObject->GetTexture());
+        scene.Submit(*imageObject, imageObject->GetTexture());
         scene.Render();
 
         // Step

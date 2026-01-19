@@ -14,7 +14,27 @@ namespace arv {
     }
 
     void Scene::Submit(RenderingObject& object) {
-        Submit(object.GetShader(), object.GetVertexArray());
+        glm::mat4 projection = m_Camera->GetProjectionMatrix();
+        glm::mat4 view = m_Camera->GetViewMatrix();
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), object.GetPosition());
+
+        glm::mat4 mvp = projection * view * transform;
+
+        object.GetShader()->UploadUniformMat4("u_mvp", mvp);
+
+        m_RenderingAPI->Draw(object.GetShader(), object.GetVertexArray());
+    }
+
+    void Scene::Submit(RenderingObject& object, const std::shared_ptr<Texture2D>& texture) {
+        glm::mat4 projection = m_Camera->GetProjectionMatrix();
+        glm::mat4 view = m_Camera->GetViewMatrix();
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), object.GetPosition());
+
+        glm::mat4 mvp = projection * view * transform;
+
+        object.GetShader()->UploadUniformMat4("u_mvp", mvp);
+
+        m_RenderingAPI->Draw(object.GetShader(), object.GetVertexArray(), texture);
     }
 
     void Scene::Submit(const std::shared_ptr<Shader> &shader, const std::shared_ptr<VertexArray> &vertexArray) {
