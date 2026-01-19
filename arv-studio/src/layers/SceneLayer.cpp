@@ -4,6 +4,7 @@
 #include "../objects/ImageTextureRO.h"
 #include "rendering/Scene.h"
 #include "utils/Timestep.h"
+#include "utils/AssetPath.h"
 #include <cmath>
 #include <glm/glm.hpp>
 
@@ -27,7 +28,7 @@ void SceneLayer::OnAttach()
 
     // Create scene objects
     m_TriangleObject = std::make_unique<arv::ExampleTriangleRO>();
-    m_ImageObject = std::make_unique<arv::ImageTextureRO>("/Users/cmoeller/dev/projects/ARVision/arv-studio/assets/fc-logo.png");
+    m_ImageObject = std::make_unique<arv::ImageTextureRO>(arv::AssetPath::Resolve("fc-logo.png"));
     m_SimpleTriangleObject = std::make_unique<arv::SimpleTriangleRO>();
 
     // Position objects
