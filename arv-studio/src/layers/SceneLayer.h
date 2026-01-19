@@ -31,9 +31,9 @@ private:
     std::unique_ptr<arv::StandardCamera> m_Camera;
     std::unique_ptr<arv::CameraController<arv::StandardCamera>> m_CameraController;
 
-    arv::ExampleTriangleRO* m_TriangleObject = nullptr;
-    arv::SimpleTriangleRO* m_SimpleTriangleObject = nullptr;
-    arv::ImageTextureRO* m_ImageObject = nullptr;
+    std::unique_ptr<arv::ExampleTriangleRO> m_TriangleObject;
+    std::unique_ptr<arv::SimpleTriangleRO> m_SimpleTriangleObject;
+    std::unique_ptr<arv::ImageTextureRO> m_ImageObject;
 
     std::chrono::high_resolution_clock::time_point m_StartTime;
     float m_AccumulatedTime = 0.0f;

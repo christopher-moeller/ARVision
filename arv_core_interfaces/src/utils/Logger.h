@@ -8,8 +8,10 @@
 namespace arv {
     
     class Logger {
-      
+
     public:
+        virtual ~Logger() = default;
+
         template<typename... Args>
         void Info(const std::string& format, Args&&... args) {
             std::string message = formatString(format, std::forward<Args>(args)...);

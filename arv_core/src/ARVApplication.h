@@ -47,7 +47,7 @@ namespace arv
 
     private:
         PlattformProvider* m_plattformProvider;
-        Renderer* m_renderer;
+        std::unique_ptr<Renderer> m_renderer;
         LayerStack m_LayerStack;
 
         float m_LastFrameTime = 0.0f;

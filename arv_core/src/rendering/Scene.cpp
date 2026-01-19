@@ -4,8 +4,9 @@
 
 namespace arv {
 
-    Scene::Scene(std::shared_ptr<RenderingAPI>& renderingApi, Camera* camera) : m_RenderingAPI(renderingApi), m_Camera(camera) {
-        
+    Scene::Scene(RenderingAPI* renderingApi, Camera* camera)
+        : m_RenderingAPI(renderingApi), m_Camera(camera)
+    {
     }
 
     void Scene::ClearColor(const glm::vec4 &color) {

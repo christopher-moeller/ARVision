@@ -26,9 +26,9 @@ void SceneLayer::OnAttach()
     m_CameraController->Init();
 
     // Create scene objects
-    m_TriangleObject = new arv::ExampleTriangleRO();
-    m_ImageObject = new arv::ImageTextureRO("/Users/cmoeller/dev/projects/ARVision/arv-studio/assets/fc-logo.png");
-    m_SimpleTriangleObject = new arv::SimpleTriangleRO();
+    m_TriangleObject = std::make_unique<arv::ExampleTriangleRO>();
+    m_ImageObject = std::make_unique<arv::ImageTextureRO>("/Users/cmoeller/dev/projects/ARVision/arv-studio/assets/fc-logo.png");
+    m_SimpleTriangleObject = std::make_unique<arv::SimpleTriangleRO>();
 
     // Position objects
     m_TriangleObject->SetPosition(glm::vec3(-1.0f, 0.0f, 0.0f));
@@ -40,13 +40,10 @@ void SceneLayer::OnAttach()
 
 void SceneLayer::OnDetach()
 {
-    delete m_ImageObject;
-    delete m_TriangleObject;
-    delete m_SimpleTriangleObject;
-
-    m_ImageObject = nullptr;
-    m_TriangleObject = nullptr;
-    m_SimpleTriangleObject = nullptr;
+    // unique_ptr handles cleanup automatically
+    m_ImageObject.reset();
+    m_TriangleObject.reset();
+    m_SimpleTriangleObject.reset();
 }
 
 void SceneLayer::OnUpdate(float deltaTime)

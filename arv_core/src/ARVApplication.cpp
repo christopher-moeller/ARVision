@@ -39,8 +39,9 @@ namespace arv
             m_Logger.reset(customLogger);
         }
 
-        m_plattformProvider->Init(new CorePlattformApplicationContext(m_Logger.get(), m_EventManager.get()));
-        m_renderer = new Renderer(m_plattformProvider->GetRenderingAPI());
+        CorePlattformApplicationContext context(m_Logger.get(), m_EventManager.get());
+        m_plattformProvider->Init(&context);
+        m_renderer = std::make_unique<Renderer>(m_plattformProvider->GetRenderingAPI());
 
         m_EventManager->AddListener(EventType::ApplicationResizeEvent, [this](arv::Event& event) {
             ApplicationResizeEvent* resizeEvent = static_cast<ApplicationResizeEvent*>(&event);
@@ -61,7 +62,7 @@ namespace arv
 
     Renderer* ARVApplication::GetRenderer() const
     {
-        return m_renderer;
+        return m_renderer.get();
     }
 
     Timestep ARVApplication::CalculateNextTimestep() {

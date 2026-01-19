@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 #include "ARVBase.h"
 #include "MacosMetalPlattformProvider.h"
 #include "MacosOpenGlPlattformProvider.h"
@@ -10,14 +11,14 @@ int main()
     // Toggle between Metal and OpenGL rendering backends
     bool useMetal = true;
 
-    arv::PlattformProvider* plattformProvider;
+    std::unique_ptr<arv::PlattformProvider> plattformProvider;
     if(useMetal) {
-        plattformProvider = new arv::MacosMetalPlattformProvider();
+        plattformProvider = std::make_unique<arv::MacosMetalPlattformProvider>();
     } else {
-        plattformProvider = new arv::MacosOpenGlPlattformProvider();
+        plattformProvider = std::make_unique<arv::MacosOpenGlPlattformProvider>();
     }
 
-    arv::ARVApplication* app = arv::ARVApplication::Create(plattformProvider);
+    arv::ARVApplication* app = arv::ARVApplication::Create(plattformProvider.get());
     ARV_LOG_INFO("ARV Application created");
 
     app->Initialize();
@@ -46,7 +47,7 @@ int main()
     }
 
     arv::ARVApplication::Destroy();
-    delete plattformProvider;
+    // plattformProvider automatically cleaned up by unique_ptr
 
     return 0;
 }

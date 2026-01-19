@@ -4,8 +4,8 @@
 namespace arv {
 
     Renderer::Renderer(RenderingAPI* renderingAPI)
+        : m_RenderingAPI(renderingAPI)
     {
-        m_RenderingAPI.reset(renderingAPI);
     }
 
     void Renderer::DrawObject(RenderingObject& object)
