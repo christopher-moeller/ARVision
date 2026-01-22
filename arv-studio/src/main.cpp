@@ -13,7 +13,7 @@ constexpr int WINDOW_HEIGHT = 600;
 int main()
 {
     // Toggle between Metal and OpenGL rendering backends
-    bool useMetal = false;
+    bool useMetal = true;
 
     std::unique_ptr<arv::PlatformProvider> platformProvider;
     if(useMetal) {

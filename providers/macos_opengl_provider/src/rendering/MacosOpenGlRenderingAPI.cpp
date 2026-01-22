@@ -20,7 +20,7 @@ namespace arv
 
     MacosOpenGlRenderingAPI::~MacosOpenGlRenderingAPI()
     {
-        ARV_LOG_INFO("MacosOpenGlRenderingAPI::~MacosOpenGlRenderingAPI() - OpenGL Rendering API destroyed");
+
     }
 
     void MacosOpenGlRenderingAPI::Init(PlatformApplicationContext* context)

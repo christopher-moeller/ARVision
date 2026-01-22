@@ -21,7 +21,6 @@ namespace arv
 
     MacosMetalRenderingAPI::~MacosMetalRenderingAPI()
     {
-        ARV_LOG_INFO("MacosMetalRenderingAPI::~MacosMetalRenderingAPI() - Destroying Metal Rendering API");
         m_depthTexture = nil;
         m_depthStencilState = nil;
         m_commandQueue = nil;
