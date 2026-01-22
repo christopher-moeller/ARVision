@@ -18,11 +18,15 @@ namespace arv {
     OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& spec)
         : m_Specification(spec)
     {
+        ARV_LOG_INFO("OpenGLFramebuffer::OpenGLFramebuffer() - Creating framebuffer {}x{} with {} color attachments",
+                     spec.width, spec.height, spec.colorAttachments.size());
         Invalidate();
     }
 
     OpenGLFramebuffer::~OpenGLFramebuffer()
     {
+        ARV_LOG_INFO("OpenGLFramebuffer::~OpenGLFramebuffer() - Destroying framebuffer {}x{}",
+                     m_Specification.width, m_Specification.height);
         glDeleteFramebuffers(1, &m_RendererID);
         glDeleteTextures(static_cast<GLsizei>(m_ColorAttachments.size()), m_ColorAttachments.data());
         if (m_DepthAttachment)
@@ -33,7 +37,7 @@ namespace arv {
 
     void OpenGLFramebuffer::Invalidate()
     {
-        // Clean up existing resources if any
+        ARV_LOG_INFO("OpenGLFramebuffer::Invalidate() - Recreating framebuffer textures");
         if (m_RendererID)
         {
             glDeleteFramebuffers(1, &m_RendererID);
@@ -46,7 +50,7 @@ namespace arv {
             m_DepthAttachment = 0;
         }
 
-        // Create framebuffer
+        ARV_LOG_INFO("OpenGLFramebuffer::Invalidate() - Creating framebuffer");
         glGenFramebuffers(1, &m_RendererID);
         glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
 
@@ -125,20 +129,24 @@ namespace arv {
 
     void OpenGLFramebuffer::Bind()
     {
+        ARV_LOG_INFO("OpenGLFramebuffer::Bind() - Binding framebuffer ID {}", m_RendererID);
         glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
         glViewport(0, 0, m_Specification.width, m_Specification.height);
     }
 
     void OpenGLFramebuffer::Unbind()
     {
+        ARV_LOG_INFO("OpenGLFramebuffer::Unbind() - Unbinding framebuffer");
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     void OpenGLFramebuffer::Resize(uint32_t width, uint32_t height)
     {
+        ARV_LOG_INFO("OpenGLFramebuffer::Resize() - Resizing from {}x{} to {}x{}",
+                     m_Specification.width, m_Specification.height, width, height);
         if (width == 0 || height == 0 || width > 8192 || height > 8192)
         {
-            ARV_LOG_ERROR("OpenGLFramebuffer: Invalid resize dimensions: {}x{}", width, height);
+            ARV_LOG_ERROR("OpenGLFramebuffer::Resize() - Invalid dimensions: {}x{}", width, height);
             return;
         }
 

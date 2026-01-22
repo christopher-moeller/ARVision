@@ -65,6 +65,7 @@ namespace arv {
 
     MetalTexture2D::~MetalTexture2D()
     {
+        ARV_LOG_INFO("MetalTexture2D::~MetalTexture2D() - Destroying texture ({}x{})", m_Width, m_Height);
         m_Texture = nil;
         m_SamplerState = nil;
     }

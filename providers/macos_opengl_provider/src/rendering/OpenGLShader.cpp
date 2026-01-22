@@ -1,40 +1,46 @@
 #include "OpenGLShader.h"
+#include "ARVBase.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
 namespace arv {
 
     OpenGLShader::~OpenGLShader() {
+        ARV_LOG_INFO("OpenGLShader::~OpenGLShader() - Destroying shader program {}", m_ProgramId);
         Destroy();
     }
 
     void OpenGLShader::Compile() {
+        ARV_LOG_INFO("OpenGLShader::Compile() - Starting shader compilation");
 
         std::string vertexSource = m_ShaderSource->GetSource("GLSL_VERTEX_SHADER");
         std::string fragmentSource = m_ShaderSource->GetSource("GLSL_FRAGMENT_SHADER");
 
+        ARV_LOG_INFO("OpenGLShader::Compile() - Compiling vertex shader");
         GLuint vertexShader = CompileShader(vertexSource.c_str(), GL_VERTEX_SHADER);
+        ARV_LOG_INFO("OpenGLShader::Compile() - Compiling fragment shader");
         GLuint fragmentShader = CompileShader(fragmentSource.c_str(), GL_FRAGMENT_SHADER);
-                
+
+        ARV_LOG_INFO("OpenGLShader::Compile() - Linking shader program");
         GLuint shaderProgram = glCreateProgram();
         glAttachShader(shaderProgram, vertexShader);
         glAttachShader(shaderProgram, fragmentShader);
         glLinkProgram(shaderProgram);
-        
+
         GLint success;
         char infoLog[512];
         glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
         if (!success) {
             glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
-            //GATE_ASSERT(false, "ERROR: Shader Program Linking Failed: {}", infoLog);
+            ARV_LOG_ERROR("OpenGLShader::Compile() - Shader program linking failed: {}", infoLog);
             return;
         }
-        
+
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
-        
+
         m_ProgramId = shaderProgram;
-        
+        ARV_LOG_INFO("OpenGLShader::Compile() - Shader compiled successfully, program ID: {}", m_ProgramId);
     }
 
     void OpenGLShader::Destroy() {
@@ -44,14 +50,12 @@ namespace arv {
     void OpenGLShader::Use() {
         glUseProgram(m_ProgramId);
 
-        // Apply stored uniforms after binding the program
         for (const auto& [name, value] : m_Float4Uniforms)
         {
             GLint location = glGetUniformLocation(m_ProgramId, name.c_str());
             glUniform4f(location, value.x, value.y, value.z, value.w);
         }
 
-        // Apply stored Mat4 uniforms
         for (const auto& [name, value] : m_Mat4Uniforms)
         {
             GLint location = glGetUniformLocation(m_ProgramId, name.c_str());
@@ -63,16 +67,15 @@ namespace arv {
         GLuint glShader = glCreateShader(shaderType);
         glShaderSource(glShader, 1, &source, nullptr);
         glCompileShader(glShader);
-        
-        // Check for compilation errors
+
         GLint success;
         char infoLog[512];
         glGetShaderiv(glShader, GL_COMPILE_STATUS, &success);
         if (!success) {
             glGetShaderInfoLog(glShader, 512, nullptr, infoLog);
-            //GATE_ASSERT(false, "ERROR: Vertex Shader Compilation Failed: {}", infoLog);
+            ARV_LOG_ERROR("OpenGLShader::CompileShader() - Shader compilation failed: {}", infoLog);
         }
-        
+
         return glShader;
     }
 

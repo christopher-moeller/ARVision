@@ -1,4 +1,5 @@
 #include "StandardCamera.h"
+#include "ARVBase.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
@@ -18,6 +19,8 @@ namespace arv {
         , m_Yaw(-90.0f)
         , m_Pitch(0.0f)
     {
+        ARV_LOG_INFO("StandardCamera::StandardCamera() - Creating camera with viewport {}x{}, aspect ratio {:.2f}",
+                     width, height, m_AspectRatio);
         UpdateCameraVectors();
     }
 
@@ -34,6 +37,8 @@ namespace arv {
         , m_Yaw(-90.0f)
         , m_Pitch(0.0f)
     {
+        ARV_LOG_INFO("StandardCamera::StandardCamera() - Creating camera with FOV {:.1f}, aspect ratio {:.2f}, near {:.2f}, far {:.1f}",
+                     fov, aspectRatio, nearPlane, farPlane);
         UpdateCameraVectors();
     }
 
@@ -56,10 +61,13 @@ namespace arv {
     }
 
     void StandardCamera::SetAspectRatio(float aspectRatio) {
+        ARV_LOG_INFO("StandardCamera::SetAspectRatio() - Aspect ratio changed to {:.2f}", aspectRatio);
         m_AspectRatio = aspectRatio;
     }
 
     void StandardCamera::SetWorldUp(const glm::vec3& worldUp) {
+        ARV_LOG_INFO("StandardCamera::SetWorldUp() - World up vector changed to ({:.2f}, {:.2f}, {:.2f})",
+                     worldUp.x, worldUp.y, worldUp.z);
         m_WorldUp = glm::normalize(worldUp);
         UpdateCameraVectors();
     }

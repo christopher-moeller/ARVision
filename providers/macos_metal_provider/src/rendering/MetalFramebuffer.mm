@@ -20,11 +20,15 @@ namespace arv {
     MetalFramebuffer::MetalFramebuffer(id<MTLDevice> device, const FramebufferSpecification& spec)
         : m_Device(device), m_Specification(spec)
     {
+        ARV_LOG_INFO("MetalFramebuffer::MetalFramebuffer() - Creating framebuffer {}x{} with {} color attachments",
+                     spec.width, spec.height, spec.colorAttachments.size());
         Invalidate();
     }
 
     MetalFramebuffer::~MetalFramebuffer()
     {
+        ARV_LOG_INFO("MetalFramebuffer::~MetalFramebuffer() - Destroying framebuffer {}x{}",
+                     m_Specification.width, m_Specification.height);
         m_ColorTextures.clear();
         m_DepthTexture = nil;
         m_RenderPassDescriptor = nil;
@@ -32,12 +36,12 @@ namespace arv {
 
     void MetalFramebuffer::Invalidate()
     {
-        // Clean up existing resources
+        ARV_LOG_INFO("MetalFramebuffer::Invalidate() - Recreating framebuffer textures");
         m_ColorTextures.clear();
         m_DepthTexture = nil;
         m_RenderPassDescriptor = nil;
 
-        // Create color attachments
+        ARV_LOG_INFO("MetalFramebuffer::Invalidate() - Creating {} color attachments", m_Specification.colorAttachments.size());
         for (size_t i = 0; i < m_Specification.colorAttachments.size(); i++)
         {
             MTLTextureDescriptor* colorDesc = [MTLTextureDescriptor
@@ -90,21 +94,23 @@ namespace arv {
 
     void MetalFramebuffer::Bind()
     {
+        ARV_LOG_INFO("MetalFramebuffer::Bind() - Binding framebuffer");
         m_IsBound = true;
-        // Actual binding is handled by MacosMetalRenderingAPI when it creates
-        // the render encoder using our render pass descriptor
     }
 
     void MetalFramebuffer::Unbind()
     {
+        ARV_LOG_INFO("MetalFramebuffer::Unbind() - Unbinding framebuffer");
         m_IsBound = false;
     }
 
     void MetalFramebuffer::Resize(uint32_t width, uint32_t height)
     {
+        ARV_LOG_INFO("MetalFramebuffer::Resize() - Resizing from {}x{} to {}x{}",
+                     m_Specification.width, m_Specification.height, width, height);
         if (width == 0 || height == 0 || width > 8192 || height > 8192)
         {
-            ARV_LOG_ERROR("MetalFramebuffer: Invalid resize dimensions: {}x{}", width, height);
+            ARV_LOG_ERROR("MetalFramebuffer::Resize() - Invalid dimensions: {}x{}", width, height);
             return;
         }
 

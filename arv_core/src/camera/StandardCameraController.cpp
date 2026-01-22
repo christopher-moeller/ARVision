@@ -8,6 +8,7 @@ namespace arv {
     // DesktopInputStrategy implementation
 
     void DesktopInputStrategy::Init(StandardCameraController& controller) {
+        ARV_LOG_INFO("DesktopInputStrategy::Init() - Initializing desktop input strategy");
         InitResizeHandling(controller);
     }
 
@@ -56,6 +57,7 @@ namespace arv {
     }
 
     void DesktopInputStrategy::InitResizeHandling(StandardCameraController& controller) {
+        ARV_LOG_INFO("DesktopInputStrategy::InitResizeHandling() - Setting up resize event listener");
         StandardCamera* camera = controller.GetCamera();
         ARVApplication::Get()->GetEventManager()->AddListener(
             EventType::ApplicationResizeEvent,
@@ -71,6 +73,7 @@ namespace arv {
     // MobileInputStrategy implementation
 
     void MobileInputStrategy::Init(StandardCameraController& controller) {
+        ARV_LOG_INFO("MobileInputStrategy::Init() - Initializing mobile input strategy");
         InitResizeHandling(controller);
     }
 
@@ -79,6 +82,7 @@ namespace arv {
     }
 
     void MobileInputStrategy::InitResizeHandling(StandardCameraController& controller) {
+        ARV_LOG_INFO("MobileInputStrategy::InitResizeHandling() - Setting up resize event listener");
         StandardCamera* camera = controller.GetCamera();
         ARVApplication::Get()->GetEventManager()->AddListener(
             EventType::ApplicationResizeEvent,
@@ -97,10 +101,13 @@ namespace arv {
         StandardCamera* camera,
         bool isDesktop)
     {
+        ARV_LOG_INFO("CreateStandardCameraController() - Creating camera controller, isDesktop: {}", isDesktop);
         std::unique_ptr<InputStrategy<StandardCamera>> strategy;
         if (isDesktop) {
+            ARV_LOG_INFO("CreateStandardCameraController() - Using DesktopInputStrategy");
             strategy = std::make_unique<DesktopInputStrategy>();
         } else {
+            ARV_LOG_INFO("CreateStandardCameraController() - Using MobileInputStrategy");
             strategy = std::make_unique<MobileInputStrategy>();
         }
         return std::make_unique<StandardCameraController>(camera, std::move(strategy));

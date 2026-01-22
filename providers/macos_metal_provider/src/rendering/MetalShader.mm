@@ -11,10 +11,12 @@ namespace arv {
     MetalShader::MetalShader(id<MTLDevice> device, ShaderSource* shaderSource)
         : Shader(shaderSource), m_device(device)
     {
+        ARV_LOG_INFO("MetalShader::MetalShader() - Creating Metal shader");
     }
 
     MetalShader::~MetalShader()
     {
+        ARV_LOG_INFO("MetalShader::~MetalShader() - Destroying Metal shader");
         Destroy();
     }
 
@@ -49,21 +51,22 @@ namespace arv {
 
     void MetalShader::Compile()
     {
+        ARV_LOG_INFO("MetalShader::Compile() - Starting Metal shader compilation");
         @autoreleasepool {
             NSError* error = nil;
 
-            // Use the MSL source from ShaderSource via GetSource()
+            ARV_LOG_INFO("MetalShader::Compile() - Getting MSL shader source");
             std::string mslSource = m_ShaderSource->GetSource("MSL_SHADER");
 
-            // Parse the uniform layout from the shader source
+            ARV_LOG_INFO("MetalShader::Compile() - Parsing uniform layout");
             ParseUniformLayout(mslSource);
 
-            // Parse the vertex layout from the shader source
+            ARV_LOG_INFO("MetalShader::Compile() - Parsing vertex layout");
             ParseVertexLayout(mslSource);
 
             NSString* sourceNS = [NSString stringWithUTF8String:mslSource.c_str()];
 
-            // Compile the shader library from source
+            ARV_LOG_INFO("MetalShader::Compile() - Compiling shader library from source");
             m_library = [m_device newLibraryWithSource:sourceNS
                                                options:nil
                                                  error:&error];
@@ -74,23 +77,23 @@ namespace arv {
                 return;
             }
 
-            // Get the vertex function (named "vertexMain" by convention)
+            ARV_LOG_INFO("MetalShader::Compile() - Getting vertex function 'vertexMain'");
             m_vertexFunction = [m_library newFunctionWithName:@"vertexMain"];
             if (!m_vertexFunction)
             {
-                ARV_LOG_ERROR("Failed to find vertex function 'vertexMain'");
+                ARV_LOG_ERROR("MetalShader::Compile() - Failed to find vertex function 'vertexMain'");
                 return;
             }
 
-            // Get the fragment function (named "fragmentMain" by convention)
+            ARV_LOG_INFO("MetalShader::Compile() - Getting fragment function 'fragmentMain'");
             m_fragmentFunction = [m_library newFunctionWithName:@"fragmentMain"];
             if (!m_fragmentFunction)
             {
-                ARV_LOG_ERROR("Failed to find fragment function 'fragmentMain'");
+                ARV_LOG_ERROR("MetalShader::Compile() - Failed to find fragment function 'fragmentMain'");
                 return;
             }
 
-            // Create the render pipeline state
+            ARV_LOG_INFO("MetalShader::Compile() - Creating render pipeline state");
             MTLRenderPipelineDescriptor* pipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
             pipelineDescriptor.vertexFunction = m_vertexFunction;
             pipelineDescriptor.fragmentFunction = m_fragmentFunction;
@@ -188,11 +191,13 @@ namespace arv {
 
     void MetalShader::ParseUniformLayout(const std::string& mslSource)
     {
-        // Parse VertexUniforms struct for vertex shader uniforms
+        ARV_LOG_INFO("MetalShader::ParseUniformLayout() - Parsing VertexUniforms struct");
         m_uniformLayout.vertexUniforms = ParseStructFields(mslSource, "VertexUniforms");
+        ARV_LOG_INFO("MetalShader::ParseUniformLayout() - Found {} vertex uniforms", m_uniformLayout.vertexUniforms.size());
 
-        // Parse FragmentUniforms struct for fragment shader uniforms
+        ARV_LOG_INFO("MetalShader::ParseUniformLayout() - Parsing FragmentUniforms struct");
         m_uniformLayout.fragmentUniforms = ParseStructFields(mslSource, "FragmentUniforms");
+        ARV_LOG_INFO("MetalShader::ParseUniformLayout() - Found {} fragment uniforms", m_uniformLayout.fragmentUniforms.size());
     }
 
     std::vector<UniformField> MetalShader::ParseStructFields(const std::string& source, const std::string& structName)
@@ -267,7 +272,9 @@ namespace arv {
 
     void MetalShader::ParseVertexLayout(const std::string& mslSource)
     {
+        ARV_LOG_INFO("MetalShader::ParseVertexLayout() - Parsing VertexIn struct");
         m_vertexLayout.attributes = ParseVertexInFields(mslSource);
+        ARV_LOG_INFO("MetalShader::ParseVertexLayout() - Found {} vertex attributes", m_vertexLayout.attributes.size());
     }
 
     std::vector<VertexAttribute> MetalShader::ParseVertexInFields(const std::string& source)

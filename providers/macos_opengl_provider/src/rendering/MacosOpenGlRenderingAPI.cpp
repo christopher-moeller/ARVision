@@ -1,4 +1,5 @@
 #include "MacosOpenGlRenderingAPI.h"
+#include "ARVBase.h"
 #include <glad/glad.h>
 #include <iostream>
 
@@ -10,36 +11,37 @@
 
 namespace arv
 {
-    
+
 
     MacosOpenGlRenderingAPI::MacosOpenGlRenderingAPI()
     {
+
     }
 
     MacosOpenGlRenderingAPI::~MacosOpenGlRenderingAPI()
     {
-        
+        ARV_LOG_INFO("MacosOpenGlRenderingAPI::~MacosOpenGlRenderingAPI() - OpenGL Rendering API destroyed");
     }
 
     void MacosOpenGlRenderingAPI::Init(PlatformApplicationContext* context)
     {
+        ARV_LOG_INFO("MacosOpenGlRenderingAPI::Init() - Enabling depth testing");
         glEnable(GL_DEPTH_TEST);
+        ARV_LOG_INFO("MacosOpenGlRenderingAPI::Init() - OpenGL Rendering API initialized");
     }
 
     void MacosOpenGlRenderingAPI::DrawExample()
     {
-        
+
     }
 
     void MacosOpenGlRenderingAPI::Draw(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray)
     {
-        // Queue the draw command for later execution
         m_drawCommands.push_back({shader, vertexArray, nullptr});
     }
 
     void MacosOpenGlRenderingAPI::Draw(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray, const std::shared_ptr<Texture2D>& texture)
     {
-        // Queue the draw command for later execution
         m_drawCommands.push_back({shader, vertexArray, texture});
     }
 
@@ -66,10 +68,8 @@ namespace arv
             return;
         }
 
-        // Execute all queued draw commands
         for (const auto& cmd : m_drawCommands)
         {
-            // Enable blending for alpha transparency if texture is present
             if (cmd.texture)
             {
                 glEnable(GL_BLEND);
@@ -87,38 +87,43 @@ namespace arv
             }
         }
 
-        // Clear the command queue for the next frame
         m_drawCommands.clear();
         m_frameInProgress = false;
     }
 
     std::shared_ptr<VertexBuffer> MacosOpenGlRenderingAPI::CreateVertexBuffer(float* vertices, unsigned int size)
     {
+        ARV_LOG_INFO("MacosOpenGlRenderingAPI::CreateVertexBuffer() - Creating vertex buffer with {} bytes", size);
         return std::make_shared<OpenGLVertexBuffer>(vertices, size);
     }
 
     std::shared_ptr<IndexBuffer> MacosOpenGlRenderingAPI::CreateIndexBuffer(unsigned int* indices, unsigned int size)
     {
+        ARV_LOG_INFO("MacosOpenGlRenderingAPI::CreateIndexBuffer() - Creating index buffer with {} indices", size);
         return std::make_shared<OpenGLIndexBuffer>(indices, size);
     }
 
     std::shared_ptr<VertexArray> MacosOpenGlRenderingAPI::CreateVertexArray()
     {
+        ARV_LOG_INFO("MacosOpenGlRenderingAPI::CreateVertexArray() - Creating vertex array");
         return std::make_shared<OpenGLVertexArray>();
     }
 
     std::shared_ptr<Shader> MacosOpenGlRenderingAPI::CreateShader(ShaderSource* shaderSource)
     {
-       return std::make_shared<OpenGLShader>(shaderSource);
+        ARV_LOG_INFO("MacosOpenGlRenderingAPI::CreateShader() - Creating shader from source");
+        return std::make_shared<OpenGLShader>(shaderSource);
     }
 
     std::shared_ptr<Texture2D> MacosOpenGlRenderingAPI::CreateTexture2D(const std::string& path)
     {
+        ARV_LOG_INFO("MacosOpenGlRenderingAPI::CreateTexture2D() - Creating texture from path: {}", path);
         return std::make_shared<OpenGLTexture2D>(path);
     }
 
     std::shared_ptr<Framebuffer> MacosOpenGlRenderingAPI::CreateFramebuffer(const FramebufferSpecification& spec)
     {
+        ARV_LOG_INFO("MacosOpenGlRenderingAPI::CreateFramebuffer() - Creating framebuffer {}x{}", spec.width, spec.height);
         return std::make_shared<OpenGLFramebuffer>(spec);
     }
 

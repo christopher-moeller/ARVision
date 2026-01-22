@@ -21,6 +21,7 @@ namespace arv
 
     MacosMetalRenderingAPI::~MacosMetalRenderingAPI()
     {
+        ARV_LOG_INFO("MacosMetalRenderingAPI::~MacosMetalRenderingAPI() - Destroying Metal Rendering API");
         m_depthTexture = nil;
         m_depthStencilState = nil;
         m_commandQueue = nil;
@@ -29,32 +30,37 @@ namespace arv
 
     void MacosMetalRenderingAPI::SetMetalLayer(CAMetalLayer* layer)
     {
+        ARV_LOG_INFO("MacosMetalRenderingAPI::SetMetalLayer() - Metal layer set");
         m_metalLayer = layer;
     }
 
     void MacosMetalRenderingAPI::Init(PlatformApplicationContext* context)
     {
+        ARV_LOG_INFO("MacosMetalRenderingAPI::Init() - Starting initialization");
+
         if (!m_metalLayer)
         {
-            ARV_LOG_ERROR("Metal layer not set!");
+            ARV_LOG_ERROR("MacosMetalRenderingAPI::Init() - Metal layer not set!");
             return;
         }
 
         m_device = m_metalLayer.device;
         if (!m_device)
         {
-            ARV_LOG_ERROR("Failed to get Metal device from layer!");
+            ARV_LOG_ERROR("MacosMetalRenderingAPI::Init() - Failed to get Metal device from layer!");
             return;
         }
+        ARV_LOG_INFO("MacosMetalRenderingAPI::Init() - Got Metal device: {}", [[m_device name] UTF8String]);
 
         m_commandQueue = [m_device newCommandQueue];
         if (!m_commandQueue)
         {
-            ARV_LOG_ERROR("Failed to create Metal command queue!");
+            ARV_LOG_ERROR("MacosMetalRenderingAPI::Init() - Failed to create Metal command queue!");
             return;
         }
+        ARV_LOG_INFO("MacosMetalRenderingAPI::Init() - Command queue created");
 
-        // Create depth stencil state for depth testing
+        ARV_LOG_INFO("MacosMetalRenderingAPI::Init() - Creating depth stencil state");
         MTLDepthStencilDescriptor* depthDescriptor = [[MTLDepthStencilDescriptor alloc] init];
         depthDescriptor.depthCompareFunction = MTLCompareFunctionLess;
         depthDescriptor.depthWriteEnabled = YES;
@@ -384,26 +390,31 @@ namespace arv
 
     std::shared_ptr<VertexBuffer> MacosMetalRenderingAPI::CreateVertexBuffer(float* vertices, unsigned int size)
     {
+        ARV_LOG_INFO("MacosMetalRenderingAPI::CreateVertexBuffer() - Creating vertex buffer with {} bytes", size);
         return std::make_shared<MetalVertexBuffer>(m_device, vertices, size);
     }
 
     std::shared_ptr<IndexBuffer> MacosMetalRenderingAPI::CreateIndexBuffer(unsigned int* indices, unsigned int size)
     {
+        ARV_LOG_INFO("MacosMetalRenderingAPI::CreateIndexBuffer() - Creating index buffer with {} indices", size);
         return std::make_shared<MetalIndexBuffer>(m_device, indices, size);
     }
 
     std::shared_ptr<VertexArray> MacosMetalRenderingAPI::CreateVertexArray()
     {
+        ARV_LOG_INFO("MacosMetalRenderingAPI::CreateVertexArray() - Creating vertex array");
         return std::make_shared<MetalVertexArray>();
     }
 
     std::shared_ptr<Shader> MacosMetalRenderingAPI::CreateShader(ShaderSource* shaderSource)
     {
+        ARV_LOG_INFO("MacosMetalRenderingAPI::CreateShader() - Creating shader from source");
         return std::make_shared<MetalShader>(m_device, shaderSource);
     }
 
     std::shared_ptr<Texture2D> MacosMetalRenderingAPI::CreateTexture2D(const std::string& path)
     {
+        ARV_LOG_INFO("MacosMetalRenderingAPI::CreateTexture2D() - Creating texture from path: {}", path);
         return std::make_shared<MetalTexture2D>(m_device, path);
     }
 
@@ -414,11 +425,13 @@ namespace arv
 
     std::shared_ptr<Framebuffer> MacosMetalRenderingAPI::CreateFramebuffer(const FramebufferSpecification& spec)
     {
+        ARV_LOG_INFO("MacosMetalRenderingAPI::CreateFramebuffer() - Creating framebuffer {}x{}", spec.width, spec.height);
         return std::make_shared<MetalFramebuffer>(m_device, spec);
     }
 
     void MacosMetalRenderingAPI::BindFramebuffer(const std::shared_ptr<Framebuffer>& framebuffer)
     {
+        ARV_LOG_INFO("MacosMetalRenderingAPI::BindFramebuffer() - Binding framebuffer");
         m_boundFramebuffer = framebuffer;
         if (m_boundFramebuffer)
         {
@@ -428,6 +441,7 @@ namespace arv
 
     void MacosMetalRenderingAPI::UnbindFramebuffer()
     {
+        ARV_LOG_INFO("MacosMetalRenderingAPI::UnbindFramebuffer() - Unbinding framebuffer");
         if (m_boundFramebuffer)
         {
             m_boundFramebuffer->Unbind();
