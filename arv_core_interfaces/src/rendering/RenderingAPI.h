@@ -39,6 +39,10 @@ namespace arv
         virtual void BeginFrame() = 0;
         virtual void EndFrame() = 0;
 
+        // Flush any pending draw commands (used by deferred renderers like OpenGL)
+        // Default implementation does nothing
+        virtual void FlushDrawCommands() {}
+
         virtual std::shared_ptr<VertexBuffer> CreateVertexBuffer(float* vertices, unsigned int size) = 0;
         virtual std::shared_ptr<IndexBuffer> CreateIndexBuffer(unsigned int* indices, unsigned int size) = 0;
         virtual std::shared_ptr<VertexArray> CreateVertexArray() = 0;

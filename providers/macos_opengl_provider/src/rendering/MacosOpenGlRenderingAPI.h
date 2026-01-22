@@ -31,6 +31,9 @@ namespace arv
         void BeginFrame() override;
         void EndFrame() override;
 
+        // Execute pending draw commands without ending the frame
+        void FlushDrawCommands() override;
+
         std::shared_ptr<VertexBuffer> CreateVertexBuffer(float* vertices, unsigned int size) override;
         std::shared_ptr<IndexBuffer> CreateIndexBuffer(unsigned int* indices, unsigned int size) override;
         std::shared_ptr<VertexArray> CreateVertexArray() override;

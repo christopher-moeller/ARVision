@@ -61,13 +61,8 @@ namespace arv
         m_frameInProgress = true;
     }
 
-    void MacosOpenGlRenderingAPI::EndFrame()
+    void MacosOpenGlRenderingAPI::FlushDrawCommands()
     {
-        if (!m_frameInProgress)
-        {
-            return;
-        }
-
         for (const auto& cmd : m_drawCommands)
         {
             if (cmd.texture)
@@ -88,6 +83,18 @@ namespace arv
         }
 
         m_drawCommands.clear();
+    }
+
+    void MacosOpenGlRenderingAPI::EndFrame()
+    {
+        if (!m_frameInProgress)
+        {
+            return;
+        }
+
+        // Execute any remaining draw commands
+        FlushDrawCommands();
+
         m_frameInProgress = false;
     }
 

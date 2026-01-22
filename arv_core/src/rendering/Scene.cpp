@@ -69,7 +69,8 @@ namespace arv {
     }
 
     void Scene::Render() {
-        // Note: EndFrame is now called from main loop to allow multiple layers (like ImGui) to render
+        // Flush any pending draw commands so they execute before overlays (like ImGui) render
+        m_RenderingAPI->FlushDrawCommands();
     }
 
 }
