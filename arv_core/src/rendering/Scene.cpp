@@ -14,7 +14,7 @@ namespace arv {
     void Scene::ClearColor(const glm::vec4 &color) {
         m_RenderingAPI->SetClearColor(color);
         m_RenderingAPI->Clear();
-        m_RenderingAPI->BeginFrame();
+        // Note: BeginFrame is now called from main loop to allow multiple layers to render
     }
 
     void Scene::Submit(RenderingObject& object) {
@@ -69,8 +69,7 @@ namespace arv {
     }
 
     void Scene::Render() {
-
-        m_RenderingAPI->EndFrame();
+        // Note: EndFrame is now called from main loop to allow multiple layers (like ImGui) to render
     }
 
 }

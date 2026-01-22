@@ -4,6 +4,7 @@
 #include "MacosMetalPlatformProvider.h"
 #include "MacosOpenGlPlatformProvider.h"
 #include "platform/Canvas.h"
+#include "rendering/RenderingAPI.h"
 #include "layers/SceneLayer.h"
 #include "layers/ImGuiLayer.h"
 
@@ -44,6 +45,8 @@ int main()
         platformProvider->GetRenderingAPI()
     ));
 
+    arv::RenderingAPI* renderingAPI = platformProvider->GetRenderingAPI();
+
     while (!canvas->ShouldClose())
     {
         arv::Timestep timestep = app->CalculateNextTimestep();
@@ -51,8 +54,14 @@ int main()
         // Update all layers
         app->GetLayerStack().OnUpdate(timestep.GetSeconds());
 
-        // Render all layers
+        // Begin frame before rendering
+        renderingAPI->BeginFrame();
+
+        // Render all layers (scene + ImGui)
         app->GetLayerStack().OnRender();
+
+        // End frame after all layers have rendered
+        renderingAPI->EndFrame();
 
         // Step
         canvas->PollEvents();

@@ -59,6 +59,18 @@ namespace arv
 #ifdef __OBJC__
         id<MTLDevice> GetDevice() const { return m_device; }
         id<MTLCommandQueue> GetCommandQueue() const { return m_commandQueue; }
+        id<MTLCommandBuffer> GetCurrentCommandBuffer() const { return m_currentCommandBuffer; }
+        id<CAMetalDrawable> GetCurrentDrawable() const { return m_currentDrawable; }
+
+        // ImGui integration methods
+        // Ends the current render encoder but keeps command buffer active for ImGui
+        void EndRenderPass();
+        // Creates a render pass descriptor for ImGui (loads existing content)
+        MTLRenderPassDescriptor* CreateImGuiRenderPassDescriptor();
+        // Creates a new render encoder for ImGui
+        id<MTLRenderCommandEncoder> CreateImGuiRenderEncoder(MTLRenderPassDescriptor* descriptor);
+        // Ends ImGui render pass and prepares for EndFrame
+        void EndImGuiRenderPass(id<MTLRenderCommandEncoder> encoder);
 #endif
 
     private:

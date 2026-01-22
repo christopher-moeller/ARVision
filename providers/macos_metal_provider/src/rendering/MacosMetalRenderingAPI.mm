@@ -101,6 +101,8 @@ namespace arv
     {
         if (!m_metalLayer || !m_commandQueue || m_frameInProgress)
         {
+            ARV_LOG_INFO("BeginFrame: early return - metalLayer:{} commandQueue:{} frameInProgress:{}",
+                (m_metalLayer != nil), (m_commandQueue != nil), m_frameInProgress);
             return;
         }
 
@@ -108,6 +110,7 @@ namespace arv
         m_currentDrawable = [m_metalLayer nextDrawable];
         if (!m_currentDrawable)
         {
+            ARV_LOG_ERROR("BeginFrame: Failed to get next drawable");
             return;
         }
 
@@ -167,19 +170,23 @@ namespace arv
 
     void MacosMetalRenderingAPI::EndFrame()
     {
-        if (!m_frameInProgress || !m_currentRenderEncoder || !m_currentCommandBuffer || !m_currentDrawable)
+        if (!m_frameInProgress || !m_currentCommandBuffer || !m_currentDrawable)
         {
             return;
         }
 
-        [m_currentRenderEncoder endEncoding];
+        // End encoding if still active (might have been ended by ImGui layer)
+        if (m_currentRenderEncoder)
+        {
+            [m_currentRenderEncoder endEncoding];
+            m_currentRenderEncoder = nil;
+        }
 
         // Present and commit
         [m_currentCommandBuffer presentDrawable:m_currentDrawable];
         [m_currentCommandBuffer commit];
 
         // Reset frame state
-        m_currentRenderEncoder = nil;
         m_currentCommandBuffer = nil;
         m_currentDrawable = nil;
         m_frameInProgress = false;
@@ -446,5 +453,54 @@ namespace arv
             m_boundFramebuffer->Unbind();
         }
         m_boundFramebuffer = nullptr;
+    }
+
+    void MacosMetalRenderingAPI::EndRenderPass()
+    {
+        if (m_currentRenderEncoder)
+        {
+            [m_currentRenderEncoder endEncoding];
+            m_currentRenderEncoder = nil;
+        }
+    }
+
+    MTLRenderPassDescriptor* MacosMetalRenderingAPI::CreateImGuiRenderPassDescriptor()
+    {
+        if (!m_currentDrawable)
+        {
+            ARV_LOG_ERROR("CreateImGuiRenderPassDescriptor: m_currentDrawable is nil");
+            return nil;
+        }
+
+        if (!m_frameInProgress)
+        {
+            ARV_LOG_ERROR("CreateImGuiRenderPassDescriptor: frame not in progress");
+            return nil;
+        }
+
+        MTLRenderPassDescriptor* descriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+        descriptor.colorAttachments[0].texture = m_currentDrawable.texture;
+        descriptor.colorAttachments[0].loadAction = MTLLoadActionLoad; // Preserve existing content
+        descriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
+
+        return descriptor;
+    }
+
+    id<MTLRenderCommandEncoder> MacosMetalRenderingAPI::CreateImGuiRenderEncoder(MTLRenderPassDescriptor* descriptor)
+    {
+        if (!m_currentCommandBuffer || !descriptor)
+        {
+            return nil;
+        }
+
+        return [m_currentCommandBuffer renderCommandEncoderWithDescriptor:descriptor];
+    }
+
+    void MacosMetalRenderingAPI::EndImGuiRenderPass(id<MTLRenderCommandEncoder> encoder)
+    {
+        if (encoder)
+        {
+            [encoder endEncoding];
+        }
     }
 }

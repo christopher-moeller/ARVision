@@ -69,6 +69,7 @@ void ImGuiLayer::OnAttach()
         if (device) {
             ImGui_ImplMetal_Init(device);
             m_Initialized = true;
+            ARV_LOG_INFO("ImGuiLayer::OnAttach() - Metal backend initialized successfully");
         } else {
             ARV_LOG_ERROR("ImGuiLayer::OnAttach() - Failed to get Metal device");
         }
@@ -120,15 +121,17 @@ void ImGuiLayer::Begin()
     }
     else if (backend == arv::RenderingBackend::Metal) {
 #ifdef __APPLE__
-        // For Metal, we need to pass the render pass descriptor
-        // This is a simplified version - for full Metal support,
-        // we'd need to integrate with the Metal rendering pipeline
+        arv::MacosMetalRenderingAPI* metalAPI = static_cast<arv::MacosMetalRenderingAPI*>(m_RenderingAPI);
 
-        // Create a basic render pass descriptor for ImGui
-        MTLRenderPassDescriptor* renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-        // Note: This is a simplified setup. For proper Metal integration,
-        // the render pass descriptor should come from the main rendering pipeline.
-        ImGui_ImplMetal_NewFrame(renderPassDescriptor);
+        // End the current scene render pass so ImGui can create its own
+        metalAPI->EndRenderPass();
+
+        // Create render pass descriptor for ImGui (loads existing content)
+        MTLRenderPassDescriptor* renderPassDescriptor = metalAPI->CreateImGuiRenderPassDescriptor();
+
+        if (renderPassDescriptor) {
+            ImGui_ImplMetal_NewFrame(renderPassDescriptor);
+        }
 #endif
     }
 
@@ -149,10 +152,35 @@ void ImGuiLayer::End()
     }
     else if (backend == arv::RenderingBackend::Metal) {
 #ifdef __APPLE__
-        // For Metal, we need command buffer and render encoder
-        // This requires deeper integration with the Metal rendering pipeline
-        // For now, Metal ImGui rendering is not fully implemented
-        ARV_LOG_INFO("ImGuiLayer::End() - Metal rendering not fully implemented yet");
+        arv::MacosMetalRenderingAPI* metalAPI = static_cast<arv::MacosMetalRenderingAPI*>(m_RenderingAPI);
+
+        // Get the render pass descriptor for ImGui
+        MTLRenderPassDescriptor* renderPassDescriptor = metalAPI->CreateImGuiRenderPassDescriptor();
+        if (!renderPassDescriptor) {
+            ARV_LOG_ERROR("ImGuiLayer::End() - Failed to create render pass descriptor");
+            return;
+        }
+
+        // Create a render encoder for ImGui
+        id<MTLRenderCommandEncoder> renderEncoder = metalAPI->CreateImGuiRenderEncoder(renderPassDescriptor);
+        if (!renderEncoder) {
+            ARV_LOG_ERROR("ImGuiLayer::End() - Failed to create render encoder");
+            return;
+        }
+
+        // Get the command buffer for ImGui rendering
+        id<MTLCommandBuffer> commandBuffer = metalAPI->GetCurrentCommandBuffer();
+        if (!commandBuffer) {
+            ARV_LOG_ERROR("ImGuiLayer::End() - No current command buffer");
+            metalAPI->EndImGuiRenderPass(renderEncoder);
+            return;
+        }
+
+        // Render ImGui draw data
+        ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), commandBuffer, renderEncoder);
+
+        // End the ImGui render pass
+        metalAPI->EndImGuiRenderPass(renderEncoder);
 #endif
     }
 }
@@ -181,6 +209,14 @@ void ImGuiLayer::OnRender()
     }
     ImGui::SameLine();
     ImGui::Text("Button clicked %d times", counter);
+
+    // Show which backend is active
+    arv::RenderingBackend backend = m_RenderingAPI->GetBackendType();
+    if (backend == arv::RenderingBackend::Metal) {
+        ImGui::Text("Rendering Backend: Metal");
+    } else if (backend == arv::RenderingBackend::OpenGL) {
+        ImGui::Text("Rendering Backend: OpenGL");
+    }
 
     ImGui::End();
 
