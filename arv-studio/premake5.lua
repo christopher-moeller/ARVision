@@ -1,3 +1,6 @@
+-- Include ImGui vendor library
+include "vendor/imgui"
+
 project "arv-studio"
     kind "ConsoleApp"
     language "C++"
@@ -6,7 +9,7 @@ project "arv-studio"
 
     systemversion "10.15"
 
-    files { "src/**.cpp", "src/**.h" }
+    files { "src/**.cpp", "src/**.h", "src/**.mm" }
 
     includedirs {
         "../arv_core_interfaces/src",
@@ -16,7 +19,11 @@ project "arv-studio"
     }
 
     sysincludedirs {
-        GLM_INCLUDE_DIR
+        GLM_INCLUDE_DIR,
+        IMGUI_INCLUDE_DIR,
+        IMGUI_BACKENDS_DIR,
+        -- GLFW headers for ImGui layer
+        "../providers/macos_metal_provider/vendor/GLFW/src/include"
     }
 
     libdirs {
@@ -33,7 +40,11 @@ project "arv-studio"
         "../providers/macos_opengl_provider/vendor/GLFW/bin/Debug",
         "../providers/macos_opengl_provider/vendor/GLFW/bin/Release",
         "../providers/macos_opengl_provider/vendor/glad/bin/Debug",
-        "../providers/macos_opengl_provider/vendor/glad/bin/Release"
+        "../providers/macos_opengl_provider/vendor/glad/bin/Release",
+
+        -- ImGui library
+        "vendor/imgui/bin/Debug",
+        "vendor/imgui/bin/Release"
     }
 
     links {
@@ -42,14 +53,18 @@ project "arv-studio"
         "arv_macos_metal_provider",
         "GLFW",
         "glad",
+        "ImGui",
         "Cocoa.framework",
         "OpenGL.framework",
         "IOKit.framework",
         "CoreVideo.framework",
         "CoreFoundation.framework",
         "QuartzCore.framework",
-        "Metal.framework"
+        "Metal.framework",
+        "MetalKit.framework"
     }
+
+    dependson { "ImGui" }
 
     filter "configurations:Debug"
         symbols "On"

@@ -5,6 +5,7 @@
 #include "MacosOpenGlPlatformProvider.h"
 #include "platform/Canvas.h"
 #include "layers/SceneLayer.h"
+#include "layers/ImGuiLayer.h"
 
 // Window configuration
 constexpr int WINDOW_WIDTH = 800;
@@ -13,7 +14,7 @@ constexpr int WINDOW_HEIGHT = 600;
 int main()
 {
     // Toggle between Metal and OpenGL rendering backends
-    bool useMetal = true;
+    bool useMetal = false;
 
     std::unique_ptr<arv::PlatformProvider> platformProvider;
     if(useMetal) {
@@ -36,6 +37,12 @@ int main()
     ));
 
     arv::Canvas* canvas = platformProvider->GetCanvas();
+
+    // Push ImGui layer as an overlay (renders on top of scene)
+    app->PushOverlay(std::make_unique<ImGuiLayer>(
+        canvas,
+        platformProvider->GetRenderingAPI()
+    ));
 
     while (!canvas->ShouldClose())
     {

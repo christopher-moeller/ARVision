@@ -17,6 +17,8 @@ namespace arv
         MacosOpenGlRenderingAPI();
         ~MacosOpenGlRenderingAPI() override;
 
+        RenderingBackend GetBackendType() const override { return RenderingBackend::OpenGL; }
+
         void Init(PlatformApplicationContext* context) override;
         void DrawExample() override;
 

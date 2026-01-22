@@ -31,6 +31,8 @@ namespace arv
         MacosMetalRenderingAPI();
         ~MacosMetalRenderingAPI() override;
 
+        RenderingBackend GetBackendType() const override { return RenderingBackend::Metal; }
+
         void Init(PlatformApplicationContext* context) override;
         void DrawExample() override;
 

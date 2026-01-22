@@ -12,11 +12,20 @@
 
 namespace arv
 {
+    enum class RenderingBackend
+    {
+        None = 0,
+        OpenGL,
+        Metal
+    };
+
     class RenderingAPI
     {
     public:
         RenderingAPI() = default;
         virtual ~RenderingAPI() = default;
+
+        virtual RenderingBackend GetBackendType() const = 0;
 
         virtual void Init(PlatformApplicationContext* context) = 0;
         virtual void DrawExample() = 0;

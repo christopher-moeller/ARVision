@@ -15,5 +15,8 @@ namespace arv
         virtual void SwapBuffers() = 0;
         virtual void Destroy() = 0;
         virtual bool ShouldClose() = 0;
+
+        // Returns the native window handle (e.g., GLFWwindow*)
+        virtual void* GetNativeWindow() const = 0;
     };
 }

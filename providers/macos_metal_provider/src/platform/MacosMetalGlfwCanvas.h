@@ -22,6 +22,7 @@ namespace arv
         void SwapBuffers() override;
         void Destroy() override;
         bool ShouldClose() override;
+        void* GetNativeWindow() const override { return m_window; }
 
         CAMetalLayer* GetMetalLayer() const { return m_metalLayer; }
 

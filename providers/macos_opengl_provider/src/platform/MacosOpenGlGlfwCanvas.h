@@ -16,6 +16,7 @@ namespace arv
         void SwapBuffers() override;
         void Destroy() override;
         bool ShouldClose() override;
+        void* GetNativeWindow() const override { return m_window; }
 
     private:
         GLFWwindow* m_window = nullptr;
