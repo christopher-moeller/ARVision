@@ -6,6 +6,10 @@
 #include "platform/Canvas.h"
 #include "layers/SceneLayer.h"
 
+// Window configuration
+constexpr int WINDOW_WIDTH = 800;
+constexpr int WINDOW_HEIGHT = 600;
+
 int main()
 {
     // Toggle between Metal and OpenGL rendering backends
@@ -23,10 +27,12 @@ int main()
 
     app->Initialize();
 
-    // Push the scene layer
+    // Push the scene layer with configured window dimensions
     app->PushLayer(std::make_unique<SceneLayer>(
         app->GetRenderer(),
-        app->GetEventManager().get()
+        app->GetEventManager().get(),
+        WINDOW_WIDTH,
+        WINDOW_HEIGHT
     ));
 
     arv::Canvas* canvas = platformProvider->GetCanvas();

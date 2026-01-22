@@ -16,7 +16,7 @@ namespace arv {
 
 class SceneLayer : public arv::Layer {
 public:
-    SceneLayer(arv::Renderer* renderer, arv::EventManager* eventManager);
+    SceneLayer(arv::Renderer* renderer, arv::EventManager* eventManager, int width, int height);
     ~SceneLayer();
 
     void OnAttach() override;
@@ -27,6 +27,8 @@ public:
 private:
     arv::Renderer* m_Renderer;
     arv::EventManager* m_EventManager;
+    int m_InitialWidth;
+    int m_InitialHeight;
 
     std::unique_ptr<arv::StandardCamera> m_Camera;
     std::unique_ptr<arv::CameraController<arv::StandardCamera>> m_CameraController;

@@ -8,8 +8,9 @@
 #include <cmath>
 #include <glm/glm.hpp>
 
-SceneLayer::SceneLayer(arv::Renderer* renderer, arv::EventManager* eventManager)
-    : Layer("SceneLayer"), m_Renderer(renderer), m_EventManager(eventManager)
+SceneLayer::SceneLayer(arv::Renderer* renderer, arv::EventManager* eventManager, int width, int height)
+    : Layer("SceneLayer"), m_Renderer(renderer), m_EventManager(eventManager),
+      m_InitialWidth(width), m_InitialHeight(height)
 {
 }
 
@@ -19,8 +20,8 @@ SceneLayer::~SceneLayer()
 
 void SceneLayer::OnAttach()
 {
-    // Create camera
-    m_Camera = std::make_unique<arv::StandardCamera>(800, 600);
+    // Create camera with the configured dimensions
+    m_Camera = std::make_unique<arv::StandardCamera>(m_InitialWidth, m_InitialHeight);
 
     // Create camera controller
     m_CameraController = arv::CreateStandardCameraController(m_Camera.get(), true /* isDesktop */);
