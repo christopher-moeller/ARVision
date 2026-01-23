@@ -2,6 +2,7 @@
 #include "../objects/ExampleTriangleRO.h"
 #include "../objects/SimpleTriangleRO.h"
 #include "../objects/ImageTextureRO.h"
+#include "../objects/ObjAssetRO.h"
 #include "rendering/Scene.h"
 #include "utils/Timestep.h"
 #include "utils/AssetPath.h"
@@ -31,11 +32,13 @@ void SceneLayer::OnAttach()
     m_TriangleObject = std::make_unique<arv::ExampleTriangleRO>();
     m_ImageObject = std::make_unique<arv::ImageTextureRO>(arv::AssetPath::Resolve("fc-logo.png"));
     m_SimpleTriangleObject = std::make_unique<arv::SimpleTriangleRO>();
+    m_SmgObject = std::make_unique<arv::ObjAssetRO>("SMG");
 
     // Position objects
     m_TriangleObject->SetPosition(glm::vec3(-1.0f, 0.0f, 0.0f));
     m_ImageObject->SetPosition(glm::vec3(1.0f, 0.0f, 0.0f));
     m_SimpleTriangleObject->SetPosition(glm::vec3(-1.0f, 0.0f, -1.0f));
+    m_SmgObject->SetPosition(glm::vec3(0.0f, 0.0f, -2.0f));
 
     m_StartTime = std::chrono::high_resolution_clock::now();
 }
@@ -46,6 +49,7 @@ void SceneLayer::OnDetach()
     m_ImageObject.reset();
     m_TriangleObject.reset();
     m_SimpleTriangleObject.reset();
+    m_SmgObject.reset();
 }
 
 void SceneLayer::OnUpdate(float deltaTime)
@@ -72,5 +76,6 @@ void SceneLayer::OnRender()
     scene.Submit(*m_TriangleObject);
     scene.Submit(*m_SimpleTriangleObject);
     scene.Submit(*m_ImageObject, m_ImageObject->GetTexture());
+    scene.Submit(*m_SmgObject, m_SmgObject->GetTexture());
     scene.Render();
 }

@@ -12,6 +12,7 @@ namespace arv {
     class ExampleTriangleRO;
     class SimpleTriangleRO;
     class ImageTextureRO;
+    class ObjAssetRO;
 }
 
 class SceneLayer : public arv::Layer {
@@ -36,6 +37,7 @@ private:
     std::unique_ptr<arv::ExampleTriangleRO> m_TriangleObject;
     std::unique_ptr<arv::SimpleTriangleRO> m_SimpleTriangleObject;
     std::unique_ptr<arv::ImageTextureRO> m_ImageObject;
+    std::unique_ptr<arv::ObjAssetRO> m_SmgObject;
 
     std::chrono::high_resolution_clock::time_point m_StartTime;
     float m_AccumulatedTime = 0.0f;

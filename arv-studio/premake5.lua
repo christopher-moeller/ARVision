@@ -23,7 +23,9 @@ project "arv-studio"
         IMGUI_INCLUDE_DIR,
         IMGUI_BACKENDS_DIR,
         -- GLFW headers for ImGui layer
-        "../providers/macos_metal_provider/vendor/GLFW/src/include"
+        "../providers/macos_metal_provider/vendor/GLFW/src/include",
+        -- tinyobjloader for OBJ file loading
+        "vendor/tinyobjloader"
     }
 
     libdirs {

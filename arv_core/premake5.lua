@@ -8,7 +8,10 @@ project "arv_core"
 
     files { "src/**.cpp", "src/**.h" }
 
-    includedirs { "../arv_core_interfaces/src" }
+    includedirs {
+        "src",
+        "../arv_core_interfaces/src"
+    }
 
     sysincludedirs {
         GLM_INCLUDE_DIR,
