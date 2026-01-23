@@ -17,8 +17,8 @@ namespace arv
         return s_Instance;
     }
 
-    ARVApplication* ARVApplication::Create(PlatformProvider* platformProvider) {
-        s_Instance = new ARVApplication(platformProvider);
+    ARVApplication* ARVApplication::Create(std::unique_ptr<PlatformProvider> platformProvider) {
+        s_Instance = new ARVApplication(std::move(platformProvider));
         s_Instance->GetLogger()->Info("ARVApplication::Create() - Application instance created");
         return s_Instance;
     }
@@ -31,8 +31,8 @@ namespace arv
         s_Instance = nullptr;
     }
 
-    ARVApplication::ARVApplication(PlatformProvider* platformProvider)
-        : m_platformProvider(platformProvider)
+    ARVApplication::ARVApplication(std::unique_ptr<PlatformProvider> platformProvider)
+        : m_platformProvider(std::move(platformProvider))
     {
         m_Logger = std::make_unique<StdLogger>();
         m_EventManager = std::make_unique<CoreEventManager>();
@@ -76,7 +76,7 @@ namespace arv
 
     PlatformProvider* ARVApplication::GetPlatformProvider() const
     {
-        return m_platformProvider;
+        return m_platformProvider.get();
     }
 
     Renderer* ARVApplication::GetRenderer() const

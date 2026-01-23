@@ -15,7 +15,7 @@ namespace arv
     class ARVApplication
     {
     public:
-        static ARVApplication* Create(PlatformProvider* platformProvider);
+        static ARVApplication* Create(std::unique_ptr<PlatformProvider> platformProvider);
         static void Destroy();
         static ARVApplication* Get();
         ARVApplication(ARVApplication& obj) = delete;
@@ -33,20 +33,20 @@ namespace arv
 
         inline int GetWidth() { return m_Width; }
         inline int GetHeight() { return m_Height; }
-        
+
         float GetTime();
         Timestep CalculateNextTimestep();
 
     protected:
-        ARVApplication(PlatformProvider* platformProvider);
-        
+        ARVApplication(std::unique_ptr<PlatformProvider> platformProvider);
+
         std::unique_ptr<Logger> m_Logger;
         std::unique_ptr<EventManager> m_EventManager;
 
         int m_Width, m_Height;
 
     private:
-        PlatformProvider* m_platformProvider;
+        std::unique_ptr<PlatformProvider> m_platformProvider;
         std::unique_ptr<Renderer> m_renderer;
         LayerStack m_LayerStack;
 
