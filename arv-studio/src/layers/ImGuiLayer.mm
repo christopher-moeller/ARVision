@@ -1,6 +1,8 @@
 #include "ImGuiLayer.h"
 #include "ARVBase.h"
 
+#include "../events/StudioActionEvents.h"
+
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -192,23 +194,26 @@ void ImGuiLayer::OnRender()
     Begin();
 
     // Demo window for testing
-    ImGui::ShowDemoWindow();
+    //ImGui::ShowDemoWindow();
 
     // Simple example window
-    ImGui::Begin("ARVision ImGui Example");
-    ImGui::Text("Hello from ImGui!");
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-                1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::Begin("ARVision");
 
-    static float sliderValue = 0.5f;
-    ImGui::SliderFloat("Example Slider", &sliderValue, 0.0f, 1.0f);
-
-    static int counter = 0;
-    if (ImGui::Button("Click Me!")) {
-        counter++;
+    if(ImGui::Button("Restart with OpenGL")) {
+        arv::EventDataOnPlatformChange data;
+        data.changeTo = PROVIDER_OPENGL;
+        arv::CustomActionEvent event(EVENT_ON_PLATFORM_CHANGE, &data);
+        arv::ARVApplication::Get()->GetEventManager()->PushEvent(event);
     }
+    
     ImGui::SameLine();
-    ImGui::Text("Button clicked %d times", counter);
+    
+    if(ImGui::Button("Restart with Metal")) {
+        arv::EventDataOnPlatformChange data;
+        data.changeTo = PROVIDER_METAL;
+        arv::CustomActionEvent event(EVENT_ON_PLATFORM_CHANGE, &data);
+        arv::ARVApplication::Get()->GetEventManager()->PushEvent(event);
+    }
 
     // Show which backend is active
     arv::RenderingBackend backend = m_RenderingAPI->GetBackendType();

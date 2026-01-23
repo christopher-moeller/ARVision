@@ -14,7 +14,8 @@ namespace arv {
         MouseMoved,
         ScreenTouchedEvent,
         KeyPressedEvent,
-        KeyReleasedEvent
+        KeyReleasedEvent,
+        CustomActionEvent
         
     };
 
@@ -156,6 +157,25 @@ namespace arv {
         
     private:
         int m_Width, m_Height;
+    };
+
+    class CustomActionEvent : public Event {
+        public:
+            CustomActionEvent(int dataType, void* data) : m_Data(data), m_DataType(dataType) {}
+            inline void* GetData() const { return m_Data; }
+            inline int GetDataType() const { return m_DataType; }
+
+            std::string ToString() const override {
+            std::stringstream ss;
+            ss << "CustomActionEvent: " << m_DataType;
+            return ss.str();
+        }
+
+            EventType GetType() override { return EventType::CustomActionEvent; }
+        const char* GetName() const override { return "CustomActionEvent"; }
+        private:
+            void* m_Data;
+            int m_DataType;
     };
 
 
