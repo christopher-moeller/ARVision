@@ -2,7 +2,7 @@
 #include "../objects/ExampleTriangleRO.h"
 #include "../objects/SimpleTriangleRO.h"
 #include "../objects/ImageTextureRO.h"
-#include "../objects/ObjAssetRO.h"
+#include "rendering/ObjAssetRO.h"
 #include "rendering/Scene.h"
 #include "utils/Timestep.h"
 #include "utils/AssetPath.h"

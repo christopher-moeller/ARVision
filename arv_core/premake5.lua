@@ -15,7 +15,8 @@ project "arv_core"
 
     sysincludedirs {
         GLM_INCLUDE_DIR,
-        STB_INCLUDE_DIR
+        STB_INCLUDE_DIR,
+        TINYOBJLOADER_INCLUDE_DIR
     }
 
     filter "configurations:Debug"

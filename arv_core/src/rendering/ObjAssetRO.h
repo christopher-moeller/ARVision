@@ -1,7 +1,7 @@
 #pragma once
 
-#include "rendering/RenderingObject.h"
-#include "rendering/CoreShaderSource.h"
+#include "RenderingObject.h"
+#include "CoreShaderSource.h"
 #include "rendering/Texture.h"
 #include <glm/glm.hpp>
 #include <memory>

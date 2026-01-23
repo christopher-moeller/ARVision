@@ -1,7 +1,7 @@
 #include "ObjAssetRO.h"
 #include "ARVApplication.h"
 #include "rendering/ShaderSource.h"
-#include "rendering/CoreShaderSource.h"
+#include "CoreShaderSource.h"
 #include "utils/AssetPath.h"
 #include "ARVBase.h"
 
