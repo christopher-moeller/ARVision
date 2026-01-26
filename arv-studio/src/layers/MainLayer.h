@@ -53,6 +53,7 @@ private:
 
     // ImGui state
     bool m_ImGuiInitialized = false;
+    int m_SelectedObjectIndex = -1;  // -1 means no selection
 
     // Animation
     std::chrono::high_resolution_clock::time_point m_StartTime;

@@ -59,6 +59,11 @@ namespace arv {
                         pos.at(2).get<float>()
                     ));
                 }
+
+                // Set name from JSON if present
+                if (objJson.contains("name")) {
+                    obj->SetName(objJson.at("name").get<std::string>());
+                }                               
                 scene.objects.push_back(std::move(obj));
             } else {
                 std::string typeName = objJson.contains("type")

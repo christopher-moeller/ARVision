@@ -251,10 +251,51 @@ void MainLayer::RenderImGuiUI()
         } else if (backend == arv::RenderingBackend::OpenGL) {
             ImGui::Text("Rendering Backend: OpenGL");
         }
+        
+        ImGui::Separator();
 
-        // Scene info
-        ImGui::Text("Scene Info");
-        ImGui::Text("Objects: %zu", m_Objects.size());
+        // Scene objects list
+        ImGui::Text("Scene Objects (%zu)", m_Objects.size());
+
+        if (ImGui::BeginListBox("##objectslist", ImVec2(-FLT_MIN, 8 * ImGui::GetTextLineHeightWithSpacing())))
+        {
+            for (int i = 0; i < static_cast<int>(m_Objects.size()); i++)
+            {
+                const auto& obj = m_Objects[i];
+                std::string label = obj->GetName();
+                if (label.empty()) {
+                    label = "Object " + std::to_string(i);
+                }
+
+                bool is_selected = (m_SelectedObjectIndex == i);
+                if (ImGui::Selectable(label.c_str(), is_selected))
+                {
+                    m_SelectedObjectIndex = i;
+                }
+
+                if (is_selected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndListBox();
+        }
+
+        // Show selected object properties
+        if (m_SelectedObjectIndex >= 0 && m_SelectedObjectIndex < static_cast<int>(m_Objects.size()))
+        {
+            ImGui::Separator();
+            ImGui::Text("Selected Object Properties");
+
+            auto& selectedObj = m_Objects[m_SelectedObjectIndex];
+            glm::vec3 pos = selectedObj->GetPosition();
+
+            ImGui::Text("Name: %s", selectedObj->GetName().c_str());
+            if (ImGui::DragFloat3("Position", &pos.x, 0.1f))
+            {
+                selectedObj->SetPosition(pos);
+            }
+        }
+
+        ImGui::Separator();
         ImGui::Text("Viewport: %.0f x %.0f", m_ViewportSize.x, m_ViewportSize.y);
 
         ImGui::Separator();
