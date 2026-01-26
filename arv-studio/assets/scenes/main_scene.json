@@ -1,15 +1,25 @@
 {
-    "backgroundColor": [1.0, 0.0, 0.0, 1.0],
+    "backgroundColor": [0.2, 0.3, 0.3, 1.0],
     "objects": [
         {
-            "type": "image",
-            "position": [0.0, 0.0, 0.0],
-            "texturePath": "assets/textures/placeholder.png"
+            "type": "ExampleTriangleRO",
+            "position": [-1.0, 0.0, 0.0],
+            "color": [0.0, 1.0, 0.0, 1.0]
         },
         {
-            "type": "simple-triangle",
-            "position": [0.0, 0.0, 0.0],
-            "color": [0.0, 1.0, 0.0, 1.0]
+            "type": "ImageTextureRO",
+            "position": [1.0, 0.0, 0.0],
+            "texturePath": "fc-logo.png"
+        },
+        {
+            "type": "SimpleTriangleRO",
+            "position": [-1.0, 0.0, -1.0],
+            "color": [1.0, 0.0, 0.0, 1.0]
+        },
+        {
+            "type": "ObjAssetRO",
+            "position": [0.0, 0.0, -2.0],
+            "pathFragment": "SMG"
         }
     ]
 }

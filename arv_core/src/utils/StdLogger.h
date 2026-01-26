@@ -8,6 +8,7 @@ namespace arv {
 
     protected:
         void LogInfoMessage(const std::string &message) override;
+        void LogWarnMessage(const std::string &message) override;
         void LogErrorMessage(const std::string &message) override;
 
     };

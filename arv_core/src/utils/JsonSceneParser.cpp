@@ -1,119 +1,89 @@
 #include "JsonSceneParser.h"
+#include "rendering/RenderingObjectFactory.h"
+#include "ARVBase.h"
 
 #include <nlohmann/json.hpp>
 #include <fstream>
-#include <sstream>
 #include <stdexcept>
 
 using json = nlohmann::json;
 
-// ----- Public API -----
+namespace arv {
 
-Scene JsonSceneParser::parseFromFile(const std::string& filePath) {
-    std::ifstream file(filePath);
-    if (!file) {
-        throw std::runtime_error("Failed to open file: " + filePath);
-    }
+    // ----- Public API -----
 
-    json j;
-    file >> j;
-
-    return parseScene(j);
-}
-
-Scene JsonSceneParser::parseFromString(const std::string& jsonText) {
-    json j = json::parse(jsonText);
-    return parseScene(j);
-}
-
-// ----- Core Scene Parsing -----
-
-Scene JsonSceneParser::parseScene(const json& j) {
-    Scene scene;
-
-    // Validate required fields
-    if (!j.contains("backgroundColor") || !j["backgroundColor"].is_array()) {
-        throw std::runtime_error("Scene missing 'backgroundColor'");
-    }
-
-    if (!j.contains("objects") || !j["objects"].is_array()) {
-        throw std::runtime_error("Scene missing 'objects' array");
-    }
-
-    // Background
-    scene.backgroundColor = parseVec4(j.at("backgroundColor"));
-
-    // Objects
-    for (const auto& objJson : j.at("objects")) {
-        scene.objects.push_back(parseObject(objJson));
-    }
-
-    return scene;
-}
-
-// ----- Object Factory -----
-
-std::unique_ptr<ObjectBase> JsonSceneParser::parseObject(const json& j) {
-    if (!j.contains("type")) {
-        throw std::runtime_error("Object missing 'type' field");
-    }
-
-    std::string type = j.at("type").get<std::string>();
-
-    if (!j.contains("position")) {
-        throw std::runtime_error("Object of type '" + type + "' missing 'position'");
-    }
-
-    if (type == "image") {
-        if (!j.contains("texturePath")) {
-            throw std::runtime_error("Image object missing 'texturePath'");
+    ParsedScene JsonSceneParser::parseFromFile(const std::string& filePath) {
+        std::ifstream file(filePath);
+        if (!file) {
+            throw std::runtime_error("Failed to open file: " + filePath);
         }
 
-        auto obj = std::make_unique<ImageObject>();
-        obj->type = type;
-        obj->position = parseVec3(j.at("position"));
-        obj->texturePath = j.at("texturePath").get<std::string>();
-        return obj;
+        json j;
+        file >> j;
+
+        return parseScene(j);
     }
-    else if (type == "simple-triangle") {
-        if (!j.contains("color")) {
-            throw std::runtime_error("Triangle object missing 'color'");
+
+    ParsedScene JsonSceneParser::parseFromString(const std::string& jsonText) {
+        json j = json::parse(jsonText);
+        return parseScene(j);
+    }
+
+    // ----- Core Scene Parsing -----
+
+    ParsedScene JsonSceneParser::parseScene(const json& j) {
+        ParsedScene scene;
+
+        // Validate required fields
+        if (!j.contains("backgroundColor") || !j["backgroundColor"].is_array()) {
+            throw std::runtime_error("Scene missing 'backgroundColor'");
         }
 
-        auto obj = std::make_unique<TriangleObject>();
-        obj->type = type;
-        obj->position = parseVec3(j.at("position"));
-        obj->color = parseVec4(j.at("color"));
-        return obj;
+        if (!j.contains("objects") || !j["objects"].is_array()) {
+            throw std::runtime_error("Scene missing 'objects' array");
+        }
+
+        // Background color
+        scene.backgroundColor = parseVec4(j.at("backgroundColor"));
+
+        // Create objects via factory
+        for (const auto& objJson : j.at("objects")) {
+            auto obj = RenderingObjectFactory::Instance().Create(objJson);
+            if (obj) {
+                // Set position from JSON if present
+                if (objJson.contains("position") && objJson["position"].is_array()) {
+                    auto pos = objJson.at("position");
+                    obj->SetPosition(glm::vec3(
+                        pos.at(0).get<float>(),
+                        pos.at(1).get<float>(),
+                        pos.at(2).get<float>()
+                    ));
+                }
+                scene.objects.push_back(std::move(obj));
+            } else {
+                std::string typeName = objJson.contains("type")
+                    ? objJson.at("type").get<std::string>()
+                    : "unknown";
+                ARV_LOG_WARN("JsonSceneParser: Failed to create object of type '{}'", typeName);
+            }
+        }
+
+        return scene;
     }
-    else {
-        throw std::runtime_error("Unknown object type: " + type);
-    }
-}
 
-// ----- Utility Parsers -----
+    // ----- Utility Parsers -----
 
-Vec3 JsonSceneParser::parseVec3(const json& j) {
-    if (!j.is_array() || j.size() != 3) {
-        throw std::runtime_error("Expected Vec3 array of size 3");
-    }
+    glm::vec4 JsonSceneParser::parseVec4(const json& j) {
+        if (!j.is_array() || j.size() != 4) {
+            throw std::runtime_error("Expected vec4 array of size 4");
+        }
 
-    return {
-        j.at(0).get<float>(),
-        j.at(1).get<float>(),
-        j.at(2).get<float>()
-    };
-}
-
-Vec4 JsonSceneParser::parseVec4(const json& j) {
-    if (!j.is_array() || j.size() != 4) {
-        throw std::runtime_error("Expected Vec4 array of size 4");
+        return glm::vec4(
+            j.at(0).get<float>(),
+            j.at(1).get<float>(),
+            j.at(2).get<float>(),
+            j.at(3).get<float>()
+        );
     }
 
-    return {
-        j.at(0).get<float>(),
-        j.at(1).get<float>(),
-        j.at(2).get<float>(),
-        j.at(3).get<float>()
-    };
 }

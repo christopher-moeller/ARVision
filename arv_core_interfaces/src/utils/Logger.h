@@ -19,13 +19,20 @@ namespace arv {
         }
         
         template<typename... Args>
+        void Warn(const std::string& format, Args&&... args) {
+            std::string message = formatString(format, std::forward<Args>(args)...);
+            LogWarnMessage(message);
+        }
+
+        template<typename... Args>
         void Error(const std::string& format, Args&&... args) {
             std::string message = formatString(format, std::forward<Args>(args)...);
             LogErrorMessage(message);
         }
-        
+
     protected:
         virtual void LogInfoMessage(const std::string& message) = 0;
+        virtual void LogWarnMessage(const std::string& message) = 0;
         virtual void LogErrorMessage(const std::string& message) = 0;
         
     private:

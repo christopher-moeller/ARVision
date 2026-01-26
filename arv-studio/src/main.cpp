@@ -8,6 +8,7 @@
 #include "layers/SceneLayer.h"
 #include "layers/ImGuiLayer.h"
 #include "events/StudioActionEvents.h"
+#include "RenderingObjectRegistration.h"
 
 // Window configuration
 constexpr int WINDOW_WIDTH = 800;
@@ -41,6 +42,10 @@ int start(int platformType) {
         return 0;
     }
     ARV_LOG_INFO("ARV Application created");
+    
+    // Register all RenderingObject factories before loading any scenes
+    arv::RegisterRenderingObjects();
+    
     app->Initialize();
 
     // Push the scene layer
