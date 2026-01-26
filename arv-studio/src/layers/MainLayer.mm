@@ -170,7 +170,8 @@ void MainLayer::RenderImGuiUI()
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
                                     ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                                     ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus |
-                                    ImGuiWindowFlags_NoBackground;
+                                    ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoScrollbar |
+                                    ImGuiWindowFlags_NoScrollWithMouse;
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -184,7 +185,8 @@ void MainLayer::RenderImGuiUI()
     float controlsWidth = viewport->WorkSize.x * 0.35f;
 
     // Left panel: Scene viewport
-    ImGui::BeginChild("SceneViewport", ImVec2(sceneWidth, 0), true);
+    ImGuiWindowFlags childFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+    ImGui::BeginChild("SceneViewport", ImVec2(sceneWidth, 0), true, childFlags);
     {
         ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 
@@ -217,8 +219,8 @@ void MainLayer::RenderImGuiUI()
 
     ImGui::SameLine();
 
-    // Right panel: Controls
-    ImGui::BeginChild("ControlsPanel", ImVec2(controlsWidth, 0), true);
+    // Right panel: Controls (no horizontal scrolling)
+    ImGui::BeginChild("ControlsPanel", ImVec2(controlsWidth, 0), true, childFlags);
     {
         // ARVision controls
         ImGui::Text("ARVision Controls");
@@ -247,8 +249,6 @@ void MainLayer::RenderImGuiUI()
         } else if (backend == arv::RenderingBackend::OpenGL) {
             ImGui::Text("Rendering Backend: OpenGL");
         }
-
-        ImGui::Separator();
 
         // Scene info
         ImGui::Text("Scene Info");
