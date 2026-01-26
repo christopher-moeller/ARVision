@@ -57,5 +57,4 @@ private:
 
     // Animation
     std::chrono::high_resolution_clock::time_point m_StartTime;
-    float m_AccumulatedTime = 0.0f;
 };

@@ -1,6 +1,5 @@
 #include "MainLayer.h"
 #include "ARVBase.h"
-#include "../objects/ExampleTriangleRO.h"
 #include "../objects/SimpleTriangleRO.h"
 #include "../events/StudioActionEvents.h"
 #include "rendering/Scene.h"
@@ -89,19 +88,6 @@ void MainLayer::OnDetach()
 
 void MainLayer::OnUpdate(float deltaTime)
 {
-    m_AccumulatedTime += deltaTime;
-
-    // Animate colors for triangle objects
-    float r = (std::sin(m_AccumulatedTime * 2.0f) + 1.0f) / 2.0f;
-    float g = (std::sin(m_AccumulatedTime * 2.0f + 2.0f) + 1.0f) / 2.0f;
-    float b = (std::sin(m_AccumulatedTime * 2.0f + 4.0f) + 1.0f) / 2.0f;
-
-    for (auto& obj : m_Objects) {
-        if (auto* triangle = dynamic_cast<arv::ExampleTriangleRO*>(obj.get())) {
-            triangle->SetColor(glm::vec4(r, g, b, 1.0f));
-        }
-    }
-
     // Update camera controller
     arv::Timestep timestep(deltaTime);
     arv::CameraControllerAppContext context(m_EventManager, timestep);
