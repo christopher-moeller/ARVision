@@ -42,6 +42,8 @@ namespace arv {
             void main()
             {
                 color = texture(u_Texture, v_TexCoord);
+                if (color.a < 0.01)
+                    discard;
             }
 
             ### MSL_SHADER ###
@@ -75,7 +77,10 @@ namespace arv {
             fragment float4 fragmentMain(VertexOut in [[stage_in]],
                                          texture2d<float> tex [[texture(0)]],
                                          sampler texSampler [[sampler(0)]]) {
-                return tex.sample(texSampler, in.texCoord);
+                float4 color = tex.sample(texSampler, in.texCoord);
+                if (color.a < 0.01)
+                    discard_fragment();
+                return color;
             }
         )";
 
