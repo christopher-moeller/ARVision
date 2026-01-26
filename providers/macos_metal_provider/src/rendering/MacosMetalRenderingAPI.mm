@@ -503,4 +503,51 @@ namespace arv
             [encoder endEncoding];
         }
     }
+
+    void MacosMetalRenderingAPI::BeginFramebufferPass(const std::shared_ptr<Framebuffer>& framebuffer, const glm::vec4& clearColor)
+    {
+        if (!m_currentCommandBuffer)
+        {
+            ARV_LOG_ERROR("BeginFramebufferPass: No current command buffer");
+            return;
+        }
+
+        // End any existing render pass
+        if (m_currentRenderEncoder)
+        {
+            [m_currentRenderEncoder endEncoding];
+            m_currentRenderEncoder = nil;
+        }
+
+        // Get the framebuffer's render pass descriptor
+        MetalFramebuffer* metalFB = static_cast<MetalFramebuffer*>(framebuffer.get());
+        MTLRenderPassDescriptor* fbDescriptor = metalFB->GetRenderPassDescriptor();
+
+        // Update clear color
+        fbDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(
+            clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+
+        // Create render encoder for the framebuffer
+        m_currentRenderEncoder = [m_currentCommandBuffer renderCommandEncoderWithDescriptor:fbDescriptor];
+        if (!m_currentRenderEncoder)
+        {
+            ARV_LOG_ERROR("BeginFramebufferPass: Failed to create render encoder");
+            return;
+        }
+
+        // Set depth stencil state
+        [m_currentRenderEncoder setDepthStencilState:m_depthStencilState];
+
+        m_boundFramebuffer = framebuffer;
+    }
+
+    void MacosMetalRenderingAPI::EndFramebufferPass()
+    {
+        if (m_currentRenderEncoder)
+        {
+            [m_currentRenderEncoder endEncoding];
+            m_currentRenderEncoder = nil;
+        }
+        m_boundFramebuffer = nullptr;
+    }
 }

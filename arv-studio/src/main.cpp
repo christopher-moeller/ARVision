@@ -5,14 +5,13 @@
 #include "MacosOpenGlPlatformProvider.h"
 #include "platform/Canvas.h"
 #include "rendering/RenderingAPI.h"
-#include "layers/SceneLayer.h"
-#include "layers/ImGuiLayer.h"
+#include "layers/MainLayer.h"
 #include "events/StudioActionEvents.h"
 #include "RenderingObjectRegistration.h"
 
 // Window configuration
-constexpr int WINDOW_WIDTH = 800;
-constexpr int WINDOW_HEIGHT = 600;
+constexpr int WINDOW_WIDTH = 1280;
+constexpr int WINDOW_HEIGHT = 720;
 
 // Returns the next platform to use, or 0 to exit
 int start(int platformType);
@@ -48,19 +47,15 @@ int start(int platformType) {
     
     app->Initialize();
 
-    // Push the scene layer
-    app->PushLayer(std::make_unique<SceneLayer>(
+    // Push the main layer (combines scene rendering and ImGui)
+    arv::PlatformProvider* provider = app->GetPlatformProvider();
+    app->PushLayer(std::make_unique<MainLayer>(
         app->GetRenderer(),
+        provider->GetCanvas(),
+        provider->GetRenderingAPI(),
         app->GetEventManager().get(),
         WINDOW_WIDTH,
         WINDOW_HEIGHT
-    ));
-
-    // Push ImGui layer as an overlay
-    arv::PlatformProvider* provider = app->GetPlatformProvider();
-    app->PushOverlay(std::make_unique<ImGuiLayer>(
-        provider->GetCanvas(),
-        provider->GetRenderingAPI()
     ));
 
     // Track platform switch requests

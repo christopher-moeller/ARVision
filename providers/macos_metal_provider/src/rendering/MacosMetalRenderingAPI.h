@@ -71,6 +71,14 @@ namespace arv
         id<MTLRenderCommandEncoder> CreateImGuiRenderEncoder(MTLRenderPassDescriptor* descriptor);
         // Ends ImGui render pass and prepares for EndFrame
         void EndImGuiRenderPass(id<MTLRenderCommandEncoder> encoder);
+
+        // Framebuffer render pass methods
+        // Starts a render pass targeting the specified framebuffer
+        void BeginFramebufferPass(const std::shared_ptr<Framebuffer>& framebuffer, const glm::vec4& clearColor);
+        // Ends the framebuffer render pass
+        void EndFramebufferPass();
+        // Get depth stencil state for external use
+        id<MTLDepthStencilState> GetDepthStencilState() const { return m_depthStencilState; }
 #endif
 
     private:
