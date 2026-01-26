@@ -1,0 +1,15 @@
+{
+    "backgroundColor": [1.0, 0.0, 0.0, 1.0],
+    "objects": [
+        {
+            "type": "image",
+            "position": [0.0, 0.0, 0.0],
+            "texturePath": "assets/textures/placeholder.png"
+        },
+        {
+            "type": "simple-triangle",
+            "position": [0.0, 0.0, 0.0],
+            "color": [0.0, 1.0, 0.0, 1.0]
+        }
+    ]
+}

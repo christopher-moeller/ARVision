@@ -18,8 +18,7 @@ namespace arv {
 
         std::shared_ptr<Shader>& GetShader() override;
         std::shared_ptr<VertexArray>& GetVertexArray() override;
-
-        std::shared_ptr<Texture2D>& GetTexture() { return m_Texture; }
+        std::shared_ptr<Texture2D> GetTexture() override { return m_Texture; }
 
     private:
         std::unique_ptr<CoreShaderSource> m_ShaderSource;

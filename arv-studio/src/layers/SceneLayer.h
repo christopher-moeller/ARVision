@@ -4,16 +4,11 @@
 #include "camera/StandardCamera.h"
 #include "camera/StandardCameraController.h"
 #include "rendering/Renderer.h"
+#include "rendering/RenderingObject.h"
 #include "events/EventManager.h"
 #include <memory>
+#include <vector>
 #include <chrono>
-
-namespace arv {
-    class ExampleTriangleRO;
-    class SimpleTriangleRO;
-    class ImageTextureRO;
-    class ObjAssetRO;
-}
 
 class SceneLayer : public arv::Layer {
 public:
@@ -34,10 +29,7 @@ private:
     std::unique_ptr<arv::StandardCamera> m_Camera;
     std::unique_ptr<arv::CameraController<arv::StandardCamera>> m_CameraController;
 
-    std::unique_ptr<arv::ExampleTriangleRO> m_TriangleObject;
-    std::unique_ptr<arv::SimpleTriangleRO> m_SimpleTriangleObject;
-    std::unique_ptr<arv::ImageTextureRO> m_ImageObject;
-    std::unique_ptr<arv::ObjAssetRO> m_SmgObject;
+    std::vector<std::unique_ptr<arv::RenderingObject>> m_Objects;
 
     std::chrono::high_resolution_clock::time_point m_StartTime;
     float m_AccumulatedTime = 0.0f;

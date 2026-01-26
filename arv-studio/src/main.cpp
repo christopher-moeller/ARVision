@@ -18,6 +18,7 @@ int start(int platformType);
 
 int main()
 {
+
     int platform = PROVIDER_OPENGL;
     while (platform) {
         platform = start(platform);

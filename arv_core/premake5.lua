@@ -16,7 +16,8 @@ project "arv_core"
     sysincludedirs {
         GLM_INCLUDE_DIR,
         STB_INCLUDE_DIR,
-        TINYOBJLOADER_INCLUDE_DIR
+        TINYOBJLOADER_INCLUDE_DIR,
+        path.getabsolute("vendor/nlohmann")
     }
 
     filter "configurations:Debug"
