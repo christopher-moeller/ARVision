@@ -184,9 +184,11 @@ void MainLayer::RenderImGuiUI()
     float sceneWidth = viewport->WorkSize.x * 0.65f;
     float controlsWidth = viewport->WorkSize.x * 0.35f;
 
-    // Left panel: Scene viewport
+    // Left panel: Scene viewport (no border, no padding for seamless scene display)
     ImGuiWindowFlags childFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
-    ImGui::BeginChild("SceneViewport", ImVec2(sceneWidth, 0), true, childFlags);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::BeginChild("SceneViewport", ImVec2(sceneWidth, 0), false, childFlags);
+    ImGui::PopStyleVar();
     {
         ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 
