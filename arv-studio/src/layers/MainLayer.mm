@@ -386,7 +386,27 @@ void MainLayer::EndImGui()
             return;
         }
 
-        ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), commandBuffer, renderEncoder);
+        // During resize, drawable size may differ from ImGui's expected size
+        // Update ImGui's draw data to match actual drawable dimensions to prevent scissor rect errors
+        ImDrawData* drawData = ImGui::GetDrawData();
+        id<CAMetalDrawable> drawable = metalAPI->GetCurrentDrawable();
+        if (drawable && drawData) {
+            float drawableWidth = static_cast<float>(drawable.texture.width);
+            float drawableHeight = static_cast<float>(drawable.texture.height);
+            float expectedWidth = drawData->DisplaySize.x * drawData->FramebufferScale.x;
+            float expectedHeight = drawData->DisplaySize.y * drawData->FramebufferScale.y;
+
+            // If there's a size mismatch, adjust the draw data
+            if (std::abs(expectedWidth - drawableWidth) > 1.0f || std::abs(expectedHeight - drawableHeight) > 1.0f) {
+                // Scale the framebuffer scale to match actual drawable size
+                if (drawData->DisplaySize.x > 0 && drawData->DisplaySize.y > 0) {
+                    drawData->FramebufferScale.x = drawableWidth / drawData->DisplaySize.x;
+                    drawData->FramebufferScale.y = drawableHeight / drawData->DisplaySize.y;
+                }
+            }
+        }
+
+        ImGui_ImplMetal_RenderDrawData(drawData, commandBuffer, renderEncoder);
         metalAPI->EndImGuiRenderPass(renderEncoder);
 #endif
     }

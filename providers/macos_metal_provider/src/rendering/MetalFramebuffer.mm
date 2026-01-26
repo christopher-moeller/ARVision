@@ -10,10 +10,11 @@ namespace arv {
     {
         switch (format)
         {
-            case FramebufferTextureFormat::RGBA8:    return MTLPixelFormatRGBA8Unorm;
+            // Use BGRA8Unorm to match the screen drawable format (CAMetalLayer default)
+            case FramebufferTextureFormat::RGBA8:    return MTLPixelFormatBGRA8Unorm;
             case FramebufferTextureFormat::RGBA16F:  return MTLPixelFormatRGBA16Float;
             case FramebufferTextureFormat::RGBA32F:  return MTLPixelFormatRGBA32Float;
-            default: return MTLPixelFormatRGBA8Unorm;
+            default: return MTLPixelFormatBGRA8Unorm;
         }
     }
 

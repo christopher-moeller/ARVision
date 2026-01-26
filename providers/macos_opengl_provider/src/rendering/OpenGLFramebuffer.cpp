@@ -129,14 +129,12 @@ namespace arv {
 
     void OpenGLFramebuffer::Bind()
     {
-        ARV_LOG_INFO("OpenGLFramebuffer::Bind() - Binding framebuffer ID {}", m_RendererID);
         glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
         glViewport(0, 0, m_Specification.width, m_Specification.height);
     }
 
     void OpenGLFramebuffer::Unbind()
     {
-        ARV_LOG_INFO("OpenGLFramebuffer::Unbind() - Unbinding framebuffer");
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
