@@ -3,6 +3,9 @@
 #include "Layer.h"
 #include "platform/Canvas.h"
 #include "rendering/RenderingAPI.h"
+#include <memory>
+
+class SceneEditorWindow;
 
 class ImGuiLayer : public arv::Layer {
 public:
@@ -23,4 +26,6 @@ private:
     arv::Canvas* m_Canvas;
     arv::RenderingAPI* m_RenderingAPI;
     bool m_Initialized = false;
+
+    std::unique_ptr<SceneEditorWindow> m_SceneEditorWindow;
 };

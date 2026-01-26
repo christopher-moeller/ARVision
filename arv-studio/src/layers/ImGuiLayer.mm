@@ -1,5 +1,6 @@
 #include "ImGuiLayer.h"
 #include "ARVBase.h"
+#include "../imgui/SceneEditorWindow.h"
 
 #include "../events/StudioActionEvents.h"
 
@@ -82,6 +83,9 @@ void ImGuiLayer::OnAttach()
     else {
         ARV_LOG_ERROR("ImGuiLayer::OnAttach() - Unknown rendering backend");
     }
+
+    // Create example window
+    m_SceneEditorWindow = std::make_unique<SceneEditorWindow>("Scene Editor");
 
     ARV_LOG_INFO("ImGuiLayer::OnAttach() - ImGui initialized successfully");
 }
@@ -224,6 +228,12 @@ void ImGuiLayer::OnRender()
     }
 
     ImGui::End();
+
+    // Render scene editor window
+    if (m_SceneEditorWindow) {
+        ImGui::SetNextWindowPos(ImVec2(500, 50));
+        m_SceneEditorWindow->Render();
+    }
 
     End();
 }
