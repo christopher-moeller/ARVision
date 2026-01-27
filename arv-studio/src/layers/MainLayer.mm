@@ -1,6 +1,7 @@
 #include "MainLayer.h"
 #include "ARVBase.h"
 #include "../objects/SimpleTriangleRO.h"
+#include "../objects/SelectionCubeRO.h"
 #include "../events/StudioActionEvents.h"
 #include "rendering/Scene.h"
 #include "utils/Timestep.h"
@@ -75,6 +76,9 @@ void MainLayer::OnAttach()
 
     ARV_LOG_INFO("MainLayer: Loaded {} objects from scene file", m_Objects.size());
 
+    // Create selection cube overlay
+    m_SelectionCube = std::make_unique<arv::SelectionCubeRO>();
+
     m_StartTime = std::chrono::high_resolution_clock::now();
 }
 
@@ -122,6 +126,13 @@ void MainLayer::RenderSceneToFramebuffer()
         for (auto& object : m_Objects) {
             scene.Submit(*object);
         }
+
+        // Render selection cube overlay
+        if (m_SelectedObjectIndex >= 0 && m_SelectedObjectIndex < static_cast<int>(m_Objects.size())) {
+            m_SelectionCube->SetPosition(m_Objects[m_SelectedObjectIndex]->GetPosition());
+            scene.Submit(*m_SelectionCube);
+        }
+
         scene.Render();
 
         // End framebuffer render pass
@@ -140,6 +151,13 @@ void MainLayer::RenderSceneToFramebuffer()
         for (auto& object : m_Objects) {
             scene.Submit(*object);
         }
+
+        // Render selection cube overlay
+        if (m_SelectedObjectIndex >= 0 && m_SelectedObjectIndex < static_cast<int>(m_Objects.size())) {
+            m_SelectionCube->SetPosition(m_Objects[m_SelectedObjectIndex]->GetPosition());
+            scene.Submit(*m_SelectionCube);
+        }
+
         scene.Render();
 
         m_SceneFramebuffer->Unbind();

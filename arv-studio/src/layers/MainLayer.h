@@ -13,6 +13,8 @@
 #include <chrono>
 #include <glm/glm.hpp>
 
+namespace arv { class SelectionCubeRO; }
+
 class MainLayer : public arv::Layer {
 public:
     MainLayer(arv::Renderer* renderer, arv::Canvas* canvas,
@@ -54,6 +56,9 @@ private:
     // ImGui state
     bool m_ImGuiInitialized = false;
     int m_SelectedObjectIndex = -1;  // -1 means no selection
+
+    // Selection overlay
+    std::unique_ptr<arv::SelectionCubeRO> m_SelectionCube;
 
     // Animation
     std::chrono::high_resolution_clock::time_point m_StartTime;

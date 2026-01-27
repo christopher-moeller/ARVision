@@ -69,12 +69,13 @@ namespace arv
 
     void MacosOpenGlRenderingAPI::FlushDrawCommands()
     {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
         for (const auto& cmd : m_drawCommands)
         {
             if (cmd.texture)
             {
-                glEnable(GL_BLEND);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 cmd.texture->Bind(0);
             }
 
@@ -88,6 +89,7 @@ namespace arv
             }
         }
 
+        glDisable(GL_BLEND);
         m_drawCommands.clear();
     }
 
