@@ -67,6 +67,10 @@ namespace arv {
                 float4x4 u_inverseVP;
             };
 
+            struct FragmentUniforms {
+                float4x4 u_inverseVP;
+            };
+
             struct VertexIn {
                 float3 position [[attribute(0)]];
             };
@@ -85,7 +89,7 @@ namespace arv {
             }
 
             fragment float4 fragmentMain(VertexOut in [[stage_in]],
-                                         constant VertexUniforms& uniforms [[buffer(1)]],
+                                         constant FragmentUniforms& uniforms [[buffer(0)]],
                                          texture2d<float> tex [[texture(0)]],
                                          sampler texSampler [[sampler(0)]]) {
                 float4 clipPos = float4(in.ndc, 1.0, 1.0);
@@ -95,6 +99,7 @@ namespace arv {
                 constexpr float PI = 3.14159265358979323846;
                 float u = atan2(dir.z, dir.x) / (2.0 * PI) + 0.5;
                 float v = asin(clamp(dir.y, -1.0f, 1.0f)) / PI + 0.5;
+                v = 1.0 - v;
 
                 float3 hdrColor = tex.sample(texSampler, float2(u, v)).rgb;
 
