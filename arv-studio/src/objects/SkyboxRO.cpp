@@ -45,6 +45,7 @@ namespace arv {
 
                 float u = atan(dir.z, dir.x) / (2.0 * PI) + 0.5;
                 float v = asin(clamp(dir.y, -1.0, 1.0)) / PI + 0.5;
+                v = 1.0 - v;
 
                 vec3 hdrColor = texture(u_Texture, vec2(u, v)).rgb;
 
