@@ -99,6 +99,9 @@ namespace arv {
             -0.5f,  0.5f, 0.0f,    0.0f, 1.0f   // Top-left
         };
 
+        m_boundsMin = glm::vec3(-0.5f, -0.5f, 0.0f);
+        m_boundsMax = glm::vec3(0.5f, 0.5f, 0.0f);
+
         auto vertexBuffer = app->GetRenderer()->CreateVertexBuffer(vertices, sizeof(vertices));
         arv::BufferLayout layout = {
             { arv::ShaderDataType::Float3, "a_Position" },

@@ -107,6 +107,19 @@ namespace arv {
         ARV_LOG_INFO("ObjAssetRO: Built {} unique vertices, {} indices",
                      vertices.size() / 8, indices.size());
 
+        // Compute axis-aligned bounding box from vertex positions
+        if (vertices.size() >= 8) {
+            m_boundsMin = glm::vec3(vertices[0], vertices[1], vertices[2]);
+            m_boundsMax = m_boundsMin;
+            for (size_t i = 0; i < vertices.size() / 8; i++) {
+                float x = vertices[i * 8 + 0];
+                float y = vertices[i * 8 + 1];
+                float z = vertices[i * 8 + 2];
+                m_boundsMin = glm::min(m_boundsMin, glm::vec3(x, y, z));
+                m_boundsMax = glm::max(m_boundsMax, glm::vec3(x, y, z));
+            }
+        }
+
         // Shader with position, texcoord, and normal support
         std::string fullSource = R"(
 

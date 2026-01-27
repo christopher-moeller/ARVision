@@ -14,6 +14,7 @@
 #include <imgui_impl_metal.h>
 #include <GLFW/glfw3.h>
 #include <cmath>
+#include <glm/gtc/matrix_transform.hpp>
 
 #ifdef __APPLE__
 #import <Metal/Metal.h>
@@ -127,10 +128,21 @@ void MainLayer::RenderSceneToFramebuffer()
             scene.Submit(*object);
         }
 
-        // Render selection cube overlay
+        // Render selection cube overlay scaled to object's bounding box
         if (m_SelectedObjectIndex >= 0 && m_SelectedObjectIndex < static_cast<int>(m_Objects.size())) {
-            m_SelectionCube->SetPosition(m_Objects[m_SelectedObjectIndex]->GetPosition());
-            scene.Submit(*m_SelectionCube);
+            auto& selectedObj = m_Objects[m_SelectedObjectIndex];
+            glm::vec3 objPos = selectedObj->GetPosition();
+            glm::vec3 boundsCenter = selectedObj->GetBoundsCenter();
+            glm::vec3 boundsSize = selectedObj->GetBoundsSize();
+
+            glm::mat4 projection = m_Camera->GetProjectionMatrix();
+            glm::mat4 view = m_Camera->GetViewMatrix();
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), objPos + boundsCenter);
+            model = glm::scale(model, boundsSize);
+            glm::mat4 mvp = projection * view * model;
+
+            m_SelectionCube->GetShader()->UploadUniformMat4("u_mvp", mvp);
+            m_RenderingAPI->Draw(m_SelectionCube->GetShader(), m_SelectionCube->GetVertexArray());
         }
 
         scene.Render();
@@ -152,10 +164,21 @@ void MainLayer::RenderSceneToFramebuffer()
             scene.Submit(*object);
         }
 
-        // Render selection cube overlay
+        // Render selection cube overlay scaled to object's bounding box
         if (m_SelectedObjectIndex >= 0 && m_SelectedObjectIndex < static_cast<int>(m_Objects.size())) {
-            m_SelectionCube->SetPosition(m_Objects[m_SelectedObjectIndex]->GetPosition());
-            scene.Submit(*m_SelectionCube);
+            auto& selectedObj = m_Objects[m_SelectedObjectIndex];
+            glm::vec3 objPos = selectedObj->GetPosition();
+            glm::vec3 boundsCenter = selectedObj->GetBoundsCenter();
+            glm::vec3 boundsSize = selectedObj->GetBoundsSize();
+
+            glm::mat4 projection = m_Camera->GetProjectionMatrix();
+            glm::mat4 view = m_Camera->GetViewMatrix();
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), objPos + boundsCenter);
+            model = glm::scale(model, boundsSize);
+            glm::mat4 mvp = projection * view * model;
+
+            m_SelectionCube->GetShader()->UploadUniformMat4("u_mvp", mvp);
+            m_RenderingAPI->Draw(m_SelectionCube->GetShader(), m_SelectionCube->GetVertexArray());
         }
 
         scene.Render();
