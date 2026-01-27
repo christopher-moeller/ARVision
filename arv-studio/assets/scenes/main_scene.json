@@ -1,29 +1,55 @@
 {
-    "backgroundColor": [0.2, 0.3, 0.3, 1.0],
+    "backgroundColor": [
+        0.2,
+        0.3,
+        0.3,
+        1.0
+    ],
     "objects": [
         {
-            "type": "ImageTextureRO",
             "name": "ImageTextureRO 1",
-            "position": [1.0, 0.0, 0.0],
-            "texturePath": "fc-logo.png"
+            "position": [
+                1.0,
+                0.0,
+                0.0
+            ],
+            "texturePath": "fc-logo.png",
+            "type": "ImageTextureRO"
         },
         {
-            "type": "SimpleTriangleRO",
+            "color": [
+                1.0,
+                0.0,
+                0.0,
+                1.0
+            ],
             "name": "SimpleTriangleRO 1",
-            "position": [-1.0, 0.0, -1.0],
-            "color": [1.0, 0.0, 0.0, 1.0]
+            "position": [
+                -1.0,
+                0.0,
+                -1.0
+            ],
+            "type": "SimpleTriangleRO"
         },
         {
-            "type": "ObjAssetRO",
             "name": "ObjAssetRO 1",
-            "position": [0.0, 0.0, -2.0],
-            "pathFragment": "SMG"
+            "pathFragment": "SMG",
+            "position": [
+                0.0,
+                0.0,
+                -2.0
+            ],
+            "type": "ObjAssetRO"
         },
         {
-            "type": "ObjAssetRO",
             "name": "ObjAssetRO 2",
-            "position": [4.0, 0.0, -2.0],
-            "pathFragment": "SMG"
+            "pathFragment": "SMG",
+            "position": [
+                4.0,
+                0.0,
+                -2.0
+            ],
+            "type": "ObjAssetRO"
         }
     ]
 }

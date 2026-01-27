@@ -95,6 +95,14 @@ void ControlSection::RenderImGuiPanel()
             }
         }
 
+        ImGui::SameLine();
+
+        if (ImGui::Button("Save Scene")) {
+            if (m_SaveSceneCallback) {
+                m_SaveSceneCallback();
+            }
+        }
+
         if (m_CurrentScenePath && !m_CurrentScenePath->empty()) {
             // Show just the filename
             std::string filename = *m_CurrentScenePath;

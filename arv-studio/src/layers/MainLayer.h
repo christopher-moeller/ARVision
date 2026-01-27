@@ -32,6 +32,7 @@ private:
     void BeginImGui();
     void EndImGui();
     void LoadScene(const std::string& path);
+    void SaveScene();
 
     // Core references
     arv::Renderer* m_Renderer;

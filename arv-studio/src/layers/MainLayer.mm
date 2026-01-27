@@ -2,6 +2,8 @@
 #include "ARVBase.h"
 #include "utils/AssetPath.h"
 #include "utils/JsonSceneParser.h"
+#include <nlohmann/json.hpp>
+#include <fstream>
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -62,6 +64,9 @@ void MainLayer::OnAttach()
     m_ControlSection->SetLoadSceneCallback([this](const std::string& path) {
         LoadScene(path);
     });
+    m_ControlSection->SetSaveSceneCallback([this]() {
+        SaveScene();
+    });
 
     m_StartTime = std::chrono::high_resolution_clock::now();
 }
@@ -87,6 +92,44 @@ void MainLayer::LoadScene(const std::string& path)
     m_SceneDisplay->SetBackgroundColor(parsedScene.backgroundColor);
 
     ARV_LOG_INFO("MainLayer::LoadScene() - Loaded {} objects", m_Objects.size());
+}
+
+void MainLayer::SaveScene()
+{
+    if (m_CurrentScenePath.empty()) {
+        ARV_LOG_WARN("MainLayer::SaveScene() - No scene path set");
+        return;
+    }
+
+    ARV_LOG_INFO("MainLayer::SaveScene() - Saving to: {}", m_CurrentScenePath);
+
+    // Read existing JSON to preserve all fields
+    std::ifstream inFile(m_CurrentScenePath);
+    if (!inFile) {
+        ARV_LOG_ERROR("MainLayer::SaveScene() - Failed to open file for reading: {}", m_CurrentScenePath);
+        return;
+    }
+
+    nlohmann::json j;
+    inFile >> j;
+    inFile.close();
+
+    // Update positions in the JSON objects array
+    auto& jsonObjects = j["objects"];
+    for (size_t i = 0; i < m_Objects.size() && i < jsonObjects.size(); i++) {
+        const glm::vec3& pos = m_Objects[i]->GetPosition();
+        jsonObjects[i]["position"] = { pos.x, pos.y, pos.z };
+    }
+
+    // Write back
+    std::ofstream outFile(m_CurrentScenePath);
+    if (!outFile) {
+        ARV_LOG_ERROR("MainLayer::SaveScene() - Failed to open file for writing: {}", m_CurrentScenePath);
+        return;
+    }
+
+    outFile << j.dump(4) << std::endl;
+    ARV_LOG_INFO("MainLayer::SaveScene() - Scene saved successfully");
 }
 
 void MainLayer::OnUpdate(float deltaTime)
