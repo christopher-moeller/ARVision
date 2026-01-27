@@ -25,23 +25,39 @@ def do_grey_edge_transformation(im):
     edges = cv2.Canny(blurred, threshold1=50, threshold2=150)
     return edges
 
+def sort_lines(lines):
+    # lines must be shape (N, 4)
+    dx = lines[:, 2] - lines[:, 0]
+    dy = lines[:, 3] - lines[:, 1]
+    lengths = np.hypot(dx, dy)
+
+    order = np.argsort(-lengths)  # descending
+    lines_sorted = lines[order]
+    return lines_sorted
+
 def find_vectors_in_edges(im):
     lines = cv2.HoughLinesP(
         im,
         rho=1,  # distance resolution in pixels
         theta=np.pi / 180,  # angle resolution in radians
         threshold=100,  # minimum votes
-        minLineLength=10,  # minimum length of line
+        minLineLength=50,  # minimum length of line
         maxLineGap=20  # maximum gap between line segments
     )
 
     # This will hold your list of line vectors
     line_vectors = []
 
-    if lines is not None:
-        for line in lines:
-            x1, y1, x2, y2 = line[0]
-            line_vectors.append(((x1, y1), (x2, y2)))
+    if lines is None:
+        return line_vectors
+
+    # FIX: reshape from (N, 1, 4) to (N, 4)
+    lines = lines.reshape(-1, 4)
+
+    lines = sort_lines(lines)
+    lines = lines[:50]
+    for x1, y1, x2, y2 in lines:
+        line_vectors.append(((x1, y1), (x2, y2)))
 
     return line_vectors
 

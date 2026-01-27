@@ -30,7 +30,7 @@ def open_webcam():
         compare_results = np.concatenate((im, frame), axis=1)
 
         # Write the frame to the output file
-        out.write(im)
+        #out.write(im)
 
         # Display the captured frame
         cv2.imshow('Camera', compare_results)
