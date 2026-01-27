@@ -1,8 +1,10 @@
 #include "SceneDisplaySection.h"
 #include "ARVBase.h"
 #include "../objects/SelectionCubeRO.h"
+#include "../objects/SkyboxRO.h"
 #include "rendering/Scene.h"
 #include "utils/Timestep.h"
+#include "utils/AssetPath.h"
 
 #include <imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -47,10 +49,16 @@ void SceneDisplaySection::Init(int width, int height, const glm::vec4& backgroun
     m_ViewportSize = { static_cast<float>(fbSpec.width), static_cast<float>(fbSpec.height) };
 
     m_SelectionCube = std::make_unique<arv::SelectionCubeRO>();
+
+    m_Skybox = std::make_unique<arv::SkyboxRO>();
+    m_SkyboxTexture = m_RenderingAPI->CreateHDRTexture2D(
+        arv::AssetPath::Resolve("backgrounds/autumn_hilly_field_4k.exr"));
 }
 
 void SceneDisplaySection::Shutdown()
 {
+    m_Skybox.reset();
+    m_SkyboxTexture.reset();
     m_SelectionCube.reset();
     m_SceneFramebuffer.reset();
 }
@@ -70,6 +78,13 @@ void SceneDisplaySection::RenderSceneToFramebuffer()
     if (backend == arv::RenderingBackend::Metal) {
         arv::MacosMetalRenderingAPI* metalAPI = static_cast<arv::MacosMetalRenderingAPI*>(m_RenderingAPI);
         metalAPI->BeginFramebufferPass(m_SceneFramebuffer, m_BackgroundColor);
+
+        // Render skybox first (no depth write)
+        if (m_Skybox && m_SkyboxTexture) {
+            glm::mat4 inverseVP = glm::inverse(m_Camera->GetProjectionMatrix() * m_Camera->GetViewMatrix());
+            m_Skybox->GetShader()->UploadUniformMat4("u_inverseVP", inverseVP);
+            m_RenderingAPI->Draw(m_Skybox->GetShader(), m_Skybox->GetVertexArray(), m_SkyboxTexture);
+        }
 
         arv::Scene scene = m_Renderer->NewScene(m_Camera.get());
         for (auto& object : *m_Objects) {
@@ -110,6 +125,13 @@ void SceneDisplaySection::RenderSceneToFramebuffer()
 
         m_RenderingAPI->SetClearColor(m_BackgroundColor);
         m_RenderingAPI->Clear();
+
+        // Render skybox first (disable depth write so objects draw over it)
+        if (m_Skybox && m_SkyboxTexture) {
+            glm::mat4 inverseVP = glm::inverse(m_Camera->GetProjectionMatrix() * m_Camera->GetViewMatrix());
+            m_Skybox->GetShader()->UploadUniformMat4("u_inverseVP", inverseVP);
+            m_RenderingAPI->Draw(m_Skybox->GetShader(), m_Skybox->GetVertexArray(), m_SkyboxTexture);
+        }
 
         arv::Scene scene = m_Renderer->NewScene(m_Camera.get());
         for (auto& object : *m_Objects) {

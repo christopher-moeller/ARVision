@@ -63,7 +63,8 @@ project "arv-studio"
         "CoreFoundation.framework",
         "QuartzCore.framework",
         "Metal.framework",
-        "MetalKit.framework"
+        "MetalKit.framework",
+        "z"
     }
 
     dependson { "ImGui" }

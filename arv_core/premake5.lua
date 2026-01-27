@@ -17,7 +17,8 @@ project "arv_core"
         GLM_INCLUDE_DIR,
         STB_INCLUDE_DIR,
         TINYOBJLOADER_INCLUDE_DIR,
-        path.getabsolute("vendor/nlohmann")
+        path.getabsolute("vendor/nlohmann"),
+        path.getabsolute("vendor/tinyexr")
     }
 
     filter "configurations:Debug"

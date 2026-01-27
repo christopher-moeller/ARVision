@@ -7,6 +7,7 @@
 #include "OpenGLShader.h"
 #include "OpenGLVertexArray.h"
 #include "OpenGLTexture.h"
+#include "OpenGLHDRTexture.h"
 #include "OpenGLFramebuffer.h"
 
 namespace arv
@@ -134,6 +135,12 @@ namespace arv
     {
         ARV_LOG_INFO("MacosOpenGlRenderingAPI::CreateTexture2D() - Creating texture from path: {}", path);
         return std::make_shared<OpenGLTexture2D>(path);
+    }
+
+    std::shared_ptr<Texture2D> MacosOpenGlRenderingAPI::CreateHDRTexture2D(const std::string& path)
+    {
+        ARV_LOG_INFO("MacosOpenGlRenderingAPI::CreateHDRTexture2D() - Creating HDR texture from path: {}", path);
+        return std::make_shared<OpenGLHDRTexture2D>(path);
     }
 
     std::shared_ptr<Framebuffer> MacosOpenGlRenderingAPI::CreateFramebuffer(const FramebufferSpecification& spec)

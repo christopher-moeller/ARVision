@@ -10,7 +10,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-namespace arv { class SelectionCubeRO; }
+namespace arv { class SelectionCubeRO; class SkyboxRO; }
 
 class SceneDisplaySection {
 public:
@@ -43,6 +43,8 @@ private:
     std::unique_ptr<arv::CameraController<arv::StandardCamera>> m_CameraController;
     std::shared_ptr<arv::Framebuffer> m_SceneFramebuffer;
     std::unique_ptr<arv::SelectionCubeRO> m_SelectionCube;
+    std::unique_ptr<arv::SkyboxRO> m_Skybox;
+    std::shared_ptr<arv::Texture2D> m_SkyboxTexture;
     glm::vec2 m_ViewportSize{0.0f, 0.0f};
     glm::vec4 m_BackgroundColor{0.2f, 0.3f, 0.3f, 1.0f};
 };
