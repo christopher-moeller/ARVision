@@ -47,6 +47,7 @@ void MainLayer::OnAttach()
         arv::AssetPath::Resolve("scenes/main_scene.json")
     );
 
+    m_CurrentScenePath = arv::AssetPath::Resolve("scenes/main_scene.json");
     m_Objects = std::move(parsedScene.objects);
     ARV_LOG_INFO("MainLayer: Loaded {} objects from scene file", m_Objects.size());
 
@@ -57,6 +58,10 @@ void MainLayer::OnAttach()
 
     m_ControlSection = std::make_unique<ControlSection>(
         m_RenderingAPI, &m_Objects, &m_SelectedObjectIndex, &m_SceneDisplay->GetViewportSize());
+    m_ControlSection->SetCurrentScenePath(&m_CurrentScenePath);
+    m_ControlSection->SetLoadSceneCallback([this](const std::string& path) {
+        LoadScene(path);
+    });
 
     m_StartTime = std::chrono::high_resolution_clock::now();
 }
@@ -67,6 +72,21 @@ void MainLayer::OnDetach()
     m_SceneDisplay->Shutdown();
     m_Objects.clear();
     ShutdownImGui();
+}
+
+void MainLayer::LoadScene(const std::string& path)
+{
+    ARV_LOG_INFO("MainLayer::LoadScene() - Loading scene from: {}", path);
+
+    arv::JsonSceneParser parser;
+    arv::ParsedScene parsedScene = parser.parseFromFile(path);
+
+    m_CurrentScenePath = path;
+    m_Objects = std::move(parsedScene.objects);
+    m_SelectedObjectIndex = -1;
+    m_SceneDisplay->SetBackgroundColor(parsedScene.backgroundColor);
+
+    ARV_LOG_INFO("MainLayer::LoadScene() - Loaded {} objects", m_Objects.size());
 }
 
 void MainLayer::OnUpdate(float deltaTime)

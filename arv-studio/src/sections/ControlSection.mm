@@ -5,6 +5,32 @@
 #include <imgui.h>
 #include <string>
 
+#ifdef __APPLE__
+#import <Cocoa/Cocoa.h>
+#endif
+
+static std::string OpenFileDialog()
+{
+#ifdef __APPLE__
+    @autoreleasepool {
+        NSOpenPanel* panel = [NSOpenPanel openPanel];
+        [panel setCanChooseFiles:YES];
+        [panel setCanChooseDirectories:NO];
+        [panel setAllowsMultipleSelection:NO];
+        [panel setTitle:@"Select Scene File"];
+
+        NSArray* fileTypes = @[@"json"];
+        [panel setAllowedFileTypes:fileTypes];
+
+        if ([panel runModal] == NSModalResponseOK) {
+            NSURL* url = [[panel URLs] objectAtIndex:0];
+            return std::string([[url path] UTF8String]);
+        }
+    }
+#endif
+    return "";
+}
+
 ControlSection::ControlSection(arv::RenderingAPI* renderingAPI,
                                std::vector<std::unique_ptr<arv::RenderingObject>>* objects,
                                int* selectedObjectIndex,
@@ -49,6 +75,34 @@ void ControlSection::RenderImGuiPanel()
             ImGui::Text("Rendering Backend: Metal");
         } else if (backend == arv::RenderingBackend::OpenGL) {
             ImGui::Text("Rendering Backend: OpenGL");
+        }
+
+        ImGui::Separator();
+
+        // Scene loading controls
+        if (ImGui::Button("Load Scene")) {
+            std::string path = OpenFileDialog();
+            if (!path.empty() && m_LoadSceneCallback) {
+                m_LoadSceneCallback(path);
+            }
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Reload Scene")) {
+            if (m_CurrentScenePath && !m_CurrentScenePath->empty() && m_LoadSceneCallback) {
+                m_LoadSceneCallback(*m_CurrentScenePath);
+            }
+        }
+
+        if (m_CurrentScenePath && !m_CurrentScenePath->empty()) {
+            // Show just the filename
+            std::string filename = *m_CurrentScenePath;
+            auto pos = filename.find_last_of('/');
+            if (pos != std::string::npos) {
+                filename = filename.substr(pos + 1);
+            }
+            ImGui::Text("Scene: %s", filename.c_str());
         }
 
         ImGui::Separator();

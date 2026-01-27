@@ -28,6 +28,7 @@ public:
     void RenderImGuiPanel();
 
     const glm::vec2& GetViewportSize() const { return m_ViewportSize; }
+    void SetBackgroundColor(const glm::vec4& color) { m_BackgroundColor = color; }
 
 private:
     // Non-owning references

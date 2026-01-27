@@ -11,6 +11,7 @@
 #include <memory>
 #include <vector>
 #include <chrono>
+#include <string>
 #include <glm/glm.hpp>
 
 class MainLayer : public arv::Layer {
@@ -30,6 +31,7 @@ private:
     void ShutdownImGui();
     void BeginImGui();
     void EndImGui();
+    void LoadScene(const std::string& path);
 
     // Core references
     arv::Renderer* m_Renderer;
@@ -42,6 +44,7 @@ private:
     // Shared scene data
     std::vector<std::unique_ptr<arv::RenderingObject>> m_Objects;
     int m_SelectedObjectIndex = -1;
+    std::string m_CurrentScenePath;
 
     // Sections
     std::unique_ptr<SceneDisplaySection> m_SceneDisplay;
