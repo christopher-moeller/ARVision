@@ -35,6 +35,65 @@ def sort_lines(lines):
     lines_sorted = lines[order]
     return lines_sorted
 
+def line_features(lines):
+    """
+    lines: (N, 4) array of x1,y1,x2,y2
+    returns: angles, midpoints, lengths
+    """
+    dx = lines[:, 2] - lines[:, 0]
+    dy = lines[:, 3] - lines[:, 1]
+
+    angles = np.arctan2(dy, dx)  # in radians
+    lengths = np.hypot(dx, dy)
+
+    mx = (lines[:, 0] + lines[:, 2]) / 2
+    my = (lines[:, 1] + lines[:, 3]) / 2
+    midpoints = np.stack([mx, my], axis=1)
+
+    return angles, midpoints, lengths
+
+def reduce_similar_lines(lines, angle_thresh=np.deg2rad(5), dist_thresh=20):
+    """
+    lines: (N, 4) array
+    returns: reduced set of lines
+    """
+    angles, midpoints, lengths = line_features(lines)
+
+    used = np.zeros(len(lines), dtype=bool)
+    reduced = []
+
+    for i in range(len(lines)):
+        if used[i]:
+            continue
+
+        # Start a new cluster with line i
+        cluster = [i]
+        used[i] = True
+
+        for j in range(i + 1, len(lines)):
+            if used[j]:
+                continue
+
+            # Angle similarity
+            if abs(angles[i] - angles[j]) > angle_thresh:
+                continue
+
+            # Spatial proximity
+            dist = np.linalg.norm(midpoints[i] - midpoints[j])
+            if dist > dist_thresh:
+                continue
+
+            cluster.append(j)
+            used[j] = True
+
+        # Keep the longest line in this cluster
+        cluster_lengths = lengths[cluster]
+        best_idx = cluster[np.argmax(cluster_lengths)]
+        reduced.append(lines[best_idx])
+
+    return np.array(reduced)
+
+
 def find_vectors_in_edges(im):
     lines = cv2.HoughLinesP(
         im,
@@ -55,7 +114,14 @@ def find_vectors_in_edges(im):
     lines = lines.reshape(-1, 4)
 
     lines = sort_lines(lines)
-    lines = lines[:50]
+
+    # Reduce similar ones
+    lines = reduce_similar_lines(
+        lines,
+        angle_thresh=np.deg2rad(5),  # allow 5° difference
+        dist_thresh=30  # allow 30px midpoint distance
+    )
+
     for x1, y1, x2, y2 in lines:
         line_vectors.append(((x1, y1), (x2, y2)))
 

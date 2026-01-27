@@ -10,6 +10,7 @@ if __name__ == "__main__":
     im = et.do_grey_edge_transformation(im)
 
     vectors = et.find_vectors_in_edges(im)
+    vectors = vectors[:30]
     print(f"Found {len(vectors)} lines")
 
     blank_img = np.zeros_like(original)
