@@ -164,6 +164,8 @@ void ControlSection::RenderImGuiPanel()
             {
                 selectedObj->SetRotation(rot);
             }
+
+            selectedObj->RenderCustomImGui();
         }
 
         ImGui::Separator();

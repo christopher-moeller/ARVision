@@ -3,6 +3,7 @@
 #include "rendering/ShaderSource.h"
 #include "rendering/CoreShaderSource.h"
 #include <string>
+#include <imgui.h>
 
 namespace arv {
 
@@ -117,6 +118,13 @@ namespace arv {
     void SimpleTriangleRO::SetColor(const glm::vec4& color) {
         m_Color = color;
         m_Shader->UploadUniformFloat4("u_Color", m_Color);
+    }
+
+    void SimpleTriangleRO::RenderCustomImGui() {
+        glm::vec4 color = m_Color;
+        if (ImGui::ColorEdit4("Color", &color.x)) {
+            SetColor(color);
+        }
     }
 
 }

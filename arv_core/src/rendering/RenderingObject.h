@@ -6,7 +6,6 @@
 #include "rendering/Shader.h"
 #include "rendering/VertexArray.h"
 #include "rendering/Texture.h"
-
 namespace arv {
 
     class RenderingObject {
@@ -37,6 +36,8 @@ namespace arv {
         const glm::vec3& GetBoundsMax() const { return m_boundsMax; }
         glm::vec3 GetBoundsSize() const { return m_boundsMax - m_boundsMin; }
         glm::vec3 GetBoundsCenter() const { return (m_boundsMin + m_boundsMax) * 0.5f; }
+
+        virtual void RenderCustomImGui() {}
 
     protected:
         glm::vec3 position{0.0f, 0.0f, 0.0f};

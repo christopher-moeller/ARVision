@@ -18,6 +18,8 @@ namespace arv {
         void SetColor(const glm::vec4& color);
         const glm::vec4& GetColor() const { return m_Color; }
 
+        void RenderCustomImGui() override;
+
     private:
         std::unique_ptr<CoreShaderSource> m_ShaderSource;
         std::shared_ptr<Shader> m_Shader;

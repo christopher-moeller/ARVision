@@ -1,5 +1,6 @@
 #include "MainLayer.h"
 #include "ARVBase.h"
+#include "../objects/SimpleTriangleRO.h"
 #include "utils/AssetPath.h"
 #include "utils/JsonSceneParser.h"
 #include <nlohmann/json.hpp>
@@ -123,6 +124,10 @@ void MainLayer::SaveScene()
         jsonObjects[i]["scale"] = { scl.x, scl.y, scl.z };
         const glm::vec3& rot = m_Objects[i]->GetRotation();
         jsonObjects[i]["rotation"] = { rot.x, rot.y, rot.z };
+        if (auto* tri = dynamic_cast<arv::SimpleTriangleRO*>(m_Objects[i].get())) {
+            const glm::vec4& col = tri->GetColor();
+            jsonObjects[i]["color"] = { col.x, col.y, col.z, col.w };
+        }
     }
 
     // Write back
