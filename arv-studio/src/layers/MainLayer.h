@@ -1,19 +1,17 @@
 #pragma once
 
 #include "Layer.h"
-#include "camera/StandardCamera.h"
-#include "camera/StandardCameraController.h"
 #include "rendering/Renderer.h"
 #include "rendering/RenderingObject.h"
-#include "rendering/Framebuffer.h"
+#include "rendering/RenderingAPI.h"
 #include "platform/Canvas.h"
 #include "events/EventManager.h"
+#include "../sections/SceneDisplaySection.h"
+#include "../sections/ControlSection.h"
 #include <memory>
 #include <vector>
 #include <chrono>
 #include <glm/glm.hpp>
-
-namespace arv { class SelectionCubeRO; }
 
 class MainLayer : public arv::Layer {
 public:
@@ -32,10 +30,8 @@ private:
     void ShutdownImGui();
     void BeginImGui();
     void EndImGui();
-    void RenderSceneToFramebuffer();
-    void RenderImGuiUI();
 
-    // Renderer and API references
+    // Core references
     arv::Renderer* m_Renderer;
     arv::Canvas* m_Canvas;
     arv::RenderingAPI* m_RenderingAPI;
@@ -43,22 +39,16 @@ private:
     int m_WindowWidth;
     int m_WindowHeight;
 
-    // Scene components
-    std::unique_ptr<arv::StandardCamera> m_Camera;
-    std::unique_ptr<arv::CameraController<arv::StandardCamera>> m_CameraController;
+    // Shared scene data
     std::vector<std::unique_ptr<arv::RenderingObject>> m_Objects;
-    glm::vec4 m_BackgroundColor{0.2f, 0.3f, 0.3f, 1.0f};
+    int m_SelectedObjectIndex = -1;
 
-    // Framebuffer for scene rendering
-    std::shared_ptr<arv::Framebuffer> m_SceneFramebuffer;
-    glm::vec2 m_ViewportSize{0.0f, 0.0f};
+    // Sections
+    std::unique_ptr<SceneDisplaySection> m_SceneDisplay;
+    std::unique_ptr<ControlSection> m_ControlSection;
 
     // ImGui state
     bool m_ImGuiInitialized = false;
-    int m_SelectedObjectIndex = -1;  // -1 means no selection
-
-    // Selection overlay
-    std::unique_ptr<arv::SelectionCubeRO> m_SelectionCube;
 
     // Animation
     std::chrono::high_resolution_clock::time_point m_StartTime;

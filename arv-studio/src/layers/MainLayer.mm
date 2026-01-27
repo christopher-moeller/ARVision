@@ -1,10 +1,5 @@
 #include "MainLayer.h"
 #include "ARVBase.h"
-#include "../objects/SimpleTriangleRO.h"
-#include "../objects/SelectionCubeRO.h"
-#include "../events/StudioActionEvents.h"
-#include "rendering/Scene.h"
-#include "utils/Timestep.h"
 #include "utils/AssetPath.h"
 #include "utils/JsonSceneParser.h"
 
@@ -14,14 +9,12 @@
 #include <imgui_impl_metal.h>
 #include <GLFW/glfw3.h>
 #include <cmath>
-#include <glm/gtc/matrix_transform.hpp>
 
 #ifdef __APPLE__
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
 #include "MacosMetalPlatformProvider.h"
 #include "rendering/MacosMetalRenderingAPI.h"
-#include "rendering/MetalFramebuffer.h"
 #include "platform/MacosMetalGlfwCanvas.h"
 #endif
 
@@ -46,25 +39,7 @@ void MainLayer::OnAttach()
 {
     ARV_LOG_INFO("MainLayer::OnAttach() - Initializing");
 
-    // Initialize ImGui first
     InitImGui();
-
-    // Create camera with viewport dimensions (will be updated later)
-    m_Camera = std::make_unique<arv::StandardCamera>(m_WindowWidth / 2, m_WindowHeight);
-
-    // Create camera controller
-    m_CameraController = arv::CreateStandardCameraController(m_Camera.get(), true);
-    m_CameraController->Init();
-
-    // Create framebuffer for scene rendering
-    arv::FramebufferSpecification fbSpec;
-    fbSpec.width = m_WindowWidth / 2;
-    fbSpec.height = m_WindowHeight;
-    fbSpec.colorAttachments = { arv::FramebufferTextureFormat::RGBA8 };
-    fbSpec.hasDepthAttachment = true;
-    m_SceneFramebuffer = m_RenderingAPI->CreateFramebuffer(fbSpec);
-
-    m_ViewportSize = { static_cast<float>(fbSpec.width), static_cast<float>(fbSpec.height) };
 
     // Load scene from JSON file
     arv::JsonSceneParser parser;
@@ -72,13 +47,16 @@ void MainLayer::OnAttach()
         arv::AssetPath::Resolve("scenes/main_scene.json")
     );
 
-    m_BackgroundColor = parsedScene.backgroundColor;
     m_Objects = std::move(parsedScene.objects);
-
     ARV_LOG_INFO("MainLayer: Loaded {} objects from scene file", m_Objects.size());
 
-    // Create selection cube overlay
-    m_SelectionCube = std::make_unique<arv::SelectionCubeRO>();
+    // Create sections
+    m_SceneDisplay = std::make_unique<SceneDisplaySection>(
+        m_Renderer, m_RenderingAPI, m_EventManager, &m_Objects, &m_SelectedObjectIndex);
+    m_SceneDisplay->Init(m_WindowWidth, m_WindowHeight, parsedScene.backgroundColor);
+
+    m_ControlSection = std::make_unique<ControlSection>(
+        m_RenderingAPI, &m_Objects, &m_SelectedObjectIndex, &m_SceneDisplay->GetViewportSize());
 
     m_StartTime = std::chrono::high_resolution_clock::now();
 }
@@ -86,110 +64,25 @@ void MainLayer::OnAttach()
 void MainLayer::OnDetach()
 {
     ARV_LOG_INFO("MainLayer::OnDetach()");
+    m_SceneDisplay->Shutdown();
     m_Objects.clear();
-    m_SceneFramebuffer.reset();
     ShutdownImGui();
 }
 
 void MainLayer::OnUpdate(float deltaTime)
 {
-    // Update camera controller
-    arv::Timestep timestep(deltaTime);
-    arv::CameraControllerAppContext context(m_EventManager, timestep);
-    m_CameraController->UpdateOnStep(context);
+    m_SceneDisplay->Update(deltaTime);
 }
 
 void MainLayer::OnRender()
 {
     if (!m_ImGuiInitialized) return;
 
-    // Render scene to framebuffer
-    RenderSceneToFramebuffer();
+    m_SceneDisplay->RenderSceneToFramebuffer();
 
-    // Render ImGui UI
     BeginImGui();
-    RenderImGuiUI();
-    EndImGui();
-}
 
-void MainLayer::RenderSceneToFramebuffer()
-{
-    arv::RenderingBackend backend = m_RenderingAPI->GetBackendType();
-
-#ifdef __APPLE__
-    if (backend == arv::RenderingBackend::Metal) {
-        // For Metal, we need to start a render pass targeting the framebuffer
-        arv::MacosMetalRenderingAPI* metalAPI = static_cast<arv::MacosMetalRenderingAPI*>(m_RenderingAPI);
-        metalAPI->BeginFramebufferPass(m_SceneFramebuffer, m_BackgroundColor);
-
-        // Render scene
-        arv::Scene scene = m_Renderer->NewScene(m_Camera.get());
-        for (auto& object : m_Objects) {
-            scene.Submit(*object);
-        }
-
-        // Render selection cube overlay scaled to object's bounding box
-        if (m_SelectedObjectIndex >= 0 && m_SelectedObjectIndex < static_cast<int>(m_Objects.size())) {
-            auto& selectedObj = m_Objects[m_SelectedObjectIndex];
-            glm::vec3 objPos = selectedObj->GetPosition();
-            glm::vec3 boundsCenter = selectedObj->GetBoundsCenter();
-            glm::vec3 boundsSize = selectedObj->GetBoundsSize();
-
-            glm::mat4 projection = m_Camera->GetProjectionMatrix();
-            glm::mat4 view = m_Camera->GetViewMatrix();
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), objPos + boundsCenter);
-            model = glm::scale(model, boundsSize);
-            glm::mat4 mvp = projection * view * model;
-
-            m_SelectionCube->GetShader()->UploadUniformMat4("u_mvp", mvp);
-            m_RenderingAPI->Draw(m_SelectionCube->GetShader(), m_SelectionCube->GetVertexArray());
-        }
-
-        scene.Render();
-
-        // End framebuffer render pass
-        metalAPI->EndFramebufferPass();
-    }
-    else
-#endif
-    {
-        // OpenGL path
-        m_SceneFramebuffer->Bind();
-
-        m_RenderingAPI->SetClearColor(m_BackgroundColor);
-        m_RenderingAPI->Clear();
-
-        arv::Scene scene = m_Renderer->NewScene(m_Camera.get());
-        for (auto& object : m_Objects) {
-            scene.Submit(*object);
-        }
-
-        // Render selection cube overlay scaled to object's bounding box
-        if (m_SelectedObjectIndex >= 0 && m_SelectedObjectIndex < static_cast<int>(m_Objects.size())) {
-            auto& selectedObj = m_Objects[m_SelectedObjectIndex];
-            glm::vec3 objPos = selectedObj->GetPosition();
-            glm::vec3 boundsCenter = selectedObj->GetBoundsCenter();
-            glm::vec3 boundsSize = selectedObj->GetBoundsSize();
-
-            glm::mat4 projection = m_Camera->GetProjectionMatrix();
-            glm::mat4 view = m_Camera->GetViewMatrix();
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), objPos + boundsCenter);
-            model = glm::scale(model, boundsSize);
-            glm::mat4 mvp = projection * view * model;
-
-            m_SelectionCube->GetShader()->UploadUniformMat4("u_mvp", mvp);
-            m_RenderingAPI->Draw(m_SelectionCube->GetShader(), m_SelectionCube->GetVertexArray());
-        }
-
-        scene.Render();
-
-        m_SceneFramebuffer->Unbind();
-    }
-}
-
-void MainLayer::RenderImGuiUI()
-{
-    // Create a fullscreen dockspace-like layout
+    // Create fullscreen layout window
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
@@ -207,129 +100,13 @@ void MainLayer::RenderImGuiUI()
     ImGui::Begin("MainWindow", nullptr, windowFlags);
     ImGui::PopStyleVar(3);
 
-    // Calculate layout: left side for scene, right side for controls
-    float sceneWidth = viewport->WorkSize.x * 0.65f;
-    float controlsWidth = viewport->WorkSize.x * 0.35f;
-
-    // Left panel: Scene viewport (no border, no padding for seamless scene display)
-    ImGuiWindowFlags childFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::BeginChild("SceneViewport", ImVec2(sceneWidth, 0), false, childFlags);
-    ImGui::PopStyleVar();
-    {
-        ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-
-        // Check if viewport size changed
-        if (viewportSize.x != m_ViewportSize.x || viewportSize.y != m_ViewportSize.y) {
-            m_ViewportSize = { viewportSize.x, viewportSize.y };
-            if (m_ViewportSize.x > 0 && m_ViewportSize.y > 0) {
-                m_SceneFramebuffer->Resize(static_cast<uint32_t>(m_ViewportSize.x),
-                                           static_cast<uint32_t>(m_ViewportSize.y));
-                m_Camera->SetAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
-            }
-        }
-
-        // Display the scene texture
-        arv::RenderingBackend backend = m_RenderingAPI->GetBackendType();
-        if (backend == arv::RenderingBackend::OpenGL) {
-            uint32_t textureID = m_SceneFramebuffer->GetColorAttachmentID();
-            // Flip UV vertically for OpenGL
-            ImGui::Image((ImTextureID)(intptr_t)textureID, viewportSize, ImVec2(0, 1), ImVec2(1, 0));
-        }
-#ifdef __APPLE__
-        else if (backend == arv::RenderingBackend::Metal) {
-            arv::MetalFramebuffer* metalFB = static_cast<arv::MetalFramebuffer*>(m_SceneFramebuffer.get());
-            id<MTLTexture> texture = metalFB->GetColorTexture();
-            ImGui::Image((__bridge ImTextureID)texture, viewportSize);
-        }
-#endif
-    }
-    ImGui::EndChild();
-
+    m_SceneDisplay->RenderImGuiPanel();
     ImGui::SameLine();
-
-    // Right panel: Controls (no horizontal scrolling)
-    ImGui::BeginChild("ControlsPanel", ImVec2(controlsWidth, 0), true, childFlags);
-    {
-        // ARVision controls
-        ImGui::Text("ARVision Controls");
-        ImGui::Separator();
-
-        if (ImGui::Button("Restart with OpenGL")) {
-            arv::EventDataOnPlatformChange data;
-            data.changeTo = PROVIDER_OPENGL;
-            arv::CustomActionEvent event(EVENT_ON_PLATFORM_CHANGE, &data);
-            arv::ARVApplication::Get()->GetEventManager()->PushEvent(event);
-        }
-
-        ImGui::SameLine();
-
-        if (ImGui::Button("Restart with Metal")) {
-            arv::EventDataOnPlatformChange data;
-            data.changeTo = PROVIDER_METAL;
-            arv::CustomActionEvent event(EVENT_ON_PLATFORM_CHANGE, &data);
-            arv::ARVApplication::Get()->GetEventManager()->PushEvent(event);
-        }
-
-        // Show which backend is active
-        arv::RenderingBackend backend = m_RenderingAPI->GetBackendType();
-        if (backend == arv::RenderingBackend::Metal) {
-            ImGui::Text("Rendering Backend: Metal");
-        } else if (backend == arv::RenderingBackend::OpenGL) {
-            ImGui::Text("Rendering Backend: OpenGL");
-        }
-        
-        ImGui::Separator();
-
-        // Scene objects list
-        ImGui::Text("Scene Objects (%zu)", m_Objects.size());
-
-        if (ImGui::BeginListBox("##objectslist", ImVec2(-FLT_MIN, 8 * ImGui::GetTextLineHeightWithSpacing())))
-        {
-            for (int i = 0; i < static_cast<int>(m_Objects.size()); i++)
-            {
-                const auto& obj = m_Objects[i];
-                std::string label = obj->GetName();
-                if (label.empty()) {
-                    label = "Object " + std::to_string(i);
-                }
-
-                bool is_selected = (m_SelectedObjectIndex == i);
-                if (ImGui::Selectable(label.c_str(), is_selected))
-                {
-                    m_SelectedObjectIndex = i;
-                }
-
-                if (is_selected)
-                    ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndListBox();
-        }
-
-        // Show selected object properties
-        if (m_SelectedObjectIndex >= 0 && m_SelectedObjectIndex < static_cast<int>(m_Objects.size()))
-        {
-            ImGui::Separator();
-            ImGui::Text("Selected Object Properties");
-
-            auto& selectedObj = m_Objects[m_SelectedObjectIndex];
-            glm::vec3 pos = selectedObj->GetPosition();
-
-            ImGui::Text("Name: %s", selectedObj->GetName().c_str());
-            if (ImGui::DragFloat3("Position", &pos.x, 0.1f))
-            {
-                selectedObj->SetPosition(pos);
-            }
-        }
-
-        ImGui::Separator();
-        ImGui::Text("Viewport: %.0f x %.0f", m_ViewportSize.x, m_ViewportSize.y);
-
-        ImGui::Separator();
-    }
-    ImGui::EndChild();
+    m_ControlSection->RenderImGuiPanel();
 
     ImGui::End();
+
+    EndImGui();
 }
 
 void MainLayer::InitImGui()
@@ -456,8 +233,6 @@ void MainLayer::EndImGui()
             return;
         }
 
-        // During resize, drawable size may differ from ImGui's expected size
-        // Update ImGui's draw data to match actual drawable dimensions to prevent scissor rect errors
         ImDrawData* drawData = ImGui::GetDrawData();
         id<CAMetalDrawable> drawable = metalAPI->GetCurrentDrawable();
         if (drawable && drawData) {
@@ -466,9 +241,7 @@ void MainLayer::EndImGui()
             float expectedWidth = drawData->DisplaySize.x * drawData->FramebufferScale.x;
             float expectedHeight = drawData->DisplaySize.y * drawData->FramebufferScale.y;
 
-            // If there's a size mismatch, adjust the draw data
             if (std::abs(expectedWidth - drawableWidth) > 1.0f || std::abs(expectedHeight - drawableHeight) > 1.0f) {
-                // Scale the framebuffer scale to match actual drawable size
                 if (drawData->DisplaySize.x > 0 && drawData->DisplaySize.y > 0) {
                     drawData->FramebufferScale.x = drawableWidth / drawData->DisplaySize.x;
                     drawData->FramebufferScale.y = drawableHeight / drawData->DisplaySize.y;
