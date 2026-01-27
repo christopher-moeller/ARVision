@@ -60,6 +60,18 @@ namespace arv {
                     ));
                 }
 
+                // Set scale from JSON if present
+                if (objJson.contains("scale") && objJson["scale"].is_array()) {
+                    auto s = objJson.at("scale");
+                    obj->SetScale(glm::vec3(s.at(0).get<float>(), s.at(1).get<float>(), s.at(2).get<float>()));
+                }
+
+                // Set rotation from JSON if present
+                if (objJson.contains("rotation") && objJson["rotation"].is_array()) {
+                    auto r = objJson.at("rotation");
+                    obj->SetRotation(glm::vec3(r.at(0).get<float>(), r.at(1).get<float>(), r.at(2).get<float>()));
+                }
+
                 // Set name from JSON if present
                 if (objJson.contains("name")) {
                     obj->SetName(objJson.at("name").get<std::string>());

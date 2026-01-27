@@ -152,6 +152,18 @@ void ControlSection::RenderImGuiPanel()
             {
                 selectedObj->SetPosition(pos);
             }
+
+            glm::vec3 scl = selectedObj->GetScale();
+            if (ImGui::DragFloat3("Scale", &scl.x, 0.01f))
+            {
+                selectedObj->SetScale(scl);
+            }
+
+            glm::vec3 rot = selectedObj->GetRotation();
+            if (ImGui::DragFloat3("Rotation", &rot.x, 1.0f))
+            {
+                selectedObj->SetRotation(rot);
+            }
         }
 
         ImGui::Separator();

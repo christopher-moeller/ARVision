@@ -119,6 +119,10 @@ void MainLayer::SaveScene()
     for (size_t i = 0; i < m_Objects.size() && i < jsonObjects.size(); i++) {
         const glm::vec3& pos = m_Objects[i]->GetPosition();
         jsonObjects[i]["position"] = { pos.x, pos.y, pos.z };
+        const glm::vec3& scl = m_Objects[i]->GetScale();
+        jsonObjects[i]["scale"] = { scl.x, scl.y, scl.z };
+        const glm::vec3& rot = m_Objects[i]->GetRotation();
+        jsonObjects[i]["rotation"] = { rot.x, rot.y, rot.z };
     }
 
     // Write back

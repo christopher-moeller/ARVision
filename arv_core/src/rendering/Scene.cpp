@@ -21,6 +21,11 @@ namespace arv {
         glm::mat4 projection = m_Camera->GetProjectionMatrix();
         glm::mat4 view = m_Camera->GetViewMatrix();
         glm::mat4 transform = glm::translate(glm::mat4(1.0f), object.GetPosition());
+        const glm::vec3& rot = object.GetRotation();
+        transform = glm::rotate(transform, glm::radians(rot.y), glm::vec3(0, 1, 0));
+        transform = glm::rotate(transform, glm::radians(rot.x), glm::vec3(1, 0, 0));
+        transform = glm::rotate(transform, glm::radians(rot.z), glm::vec3(0, 0, 1));
+        transform = glm::scale(transform, object.GetScale());
 
         glm::mat4 mvp = projection * view * transform;
 

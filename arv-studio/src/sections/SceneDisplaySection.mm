@@ -85,8 +85,14 @@ void SceneDisplaySection::RenderSceneToFramebuffer()
 
             glm::mat4 projection = m_Camera->GetProjectionMatrix();
             glm::mat4 view = m_Camera->GetViewMatrix();
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), objPos + boundsCenter);
-            model = glm::scale(model, boundsSize);
+            const glm::vec3& rot = selectedObj->GetRotation();
+            const glm::vec3& scl = selectedObj->GetScale();
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), objPos);
+            model = glm::rotate(model, glm::radians(rot.y), glm::vec3(0, 1, 0));
+            model = glm::rotate(model, glm::radians(rot.x), glm::vec3(1, 0, 0));
+            model = glm::rotate(model, glm::radians(rot.z), glm::vec3(0, 0, 1));
+            model = glm::translate(model, boundsCenter * scl);
+            model = glm::scale(model, boundsSize * scl);
             glm::mat4 mvp = projection * view * model;
 
             m_SelectionCube->GetShader()->UploadUniformMat4("u_mvp", mvp);
@@ -119,8 +125,14 @@ void SceneDisplaySection::RenderSceneToFramebuffer()
 
             glm::mat4 projection = m_Camera->GetProjectionMatrix();
             glm::mat4 view = m_Camera->GetViewMatrix();
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), objPos + boundsCenter);
-            model = glm::scale(model, boundsSize);
+            const glm::vec3& rot = selectedObj->GetRotation();
+            const glm::vec3& scl = selectedObj->GetScale();
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), objPos);
+            model = glm::rotate(model, glm::radians(rot.y), glm::vec3(0, 1, 0));
+            model = glm::rotate(model, glm::radians(rot.x), glm::vec3(1, 0, 0));
+            model = glm::rotate(model, glm::radians(rot.z), glm::vec3(0, 0, 1));
+            model = glm::translate(model, boundsCenter * scl);
+            model = glm::scale(model, boundsSize * scl);
             glm::mat4 mvp = projection * view * model;
 
             m_SelectionCube->GetShader()->UploadUniformMat4("u_mvp", mvp);
