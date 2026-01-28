@@ -31,6 +31,9 @@ public:
     void LoadSkyboxTexture(const std::string& path);
 
 private:
+    void RenderSkybox();
+    void SubmitScene();
+    void RenderSelectionCube();
     // Non-owning references
     arv::Renderer* m_Renderer;
     arv::RenderingAPI* m_RenderingAPI;

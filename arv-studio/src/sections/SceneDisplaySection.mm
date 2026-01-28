@@ -72,99 +72,71 @@ void SceneDisplaySection::Update(float deltaTime)
     m_CameraController->UpdateOnStep(context);
 }
 
+void SceneDisplaySection::RenderSkybox()
+{
+    if (m_State->background.mode != BackgroundSettings::Mode::Skybox || !m_Skybox || !m_SkyboxTexture)
+        return;
+
+    glm::mat4 inverseVP = glm::inverse(m_Camera->GetProjectionMatrix() * m_Camera->GetViewMatrix());
+    m_Skybox->GetShader()->UploadUniformMat4("u_inverseVP", inverseVP);
+    m_RenderingAPI->Draw(m_Skybox->GetShader(), m_Skybox->GetVertexArray(), m_SkyboxTexture);
+}
+
+void SceneDisplaySection::SubmitScene()
+{
+    arv::Scene scene = m_Renderer->NewScene(m_Camera.get());
+    for (auto& object : m_State->objects) {
+        scene.Submit(*object);
+    }
+    RenderSelectionCube();
+    scene.Render();
+}
+
+void SceneDisplaySection::RenderSelectionCube()
+{
+    if (m_State->selectedObjectIndex < 0 ||
+        m_State->selectedObjectIndex >= static_cast<int>(m_State->objects.size()))
+        return;
+
+    auto& selectedObj = m_State->objects[m_State->selectedObjectIndex];
+    glm::vec3 objPos = selectedObj->GetPosition();
+    glm::vec3 boundsCenter = selectedObj->GetBoundsCenter();
+    glm::vec3 boundsSize = selectedObj->GetBoundsSize();
+
+    glm::mat4 projection = m_Camera->GetProjectionMatrix();
+    glm::mat4 view = m_Camera->GetViewMatrix();
+    const glm::vec3& rot = selectedObj->GetRotation();
+    const glm::vec3& scl = selectedObj->GetScale();
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), objPos);
+    model = glm::rotate(model, glm::radians(rot.y), glm::vec3(0, 1, 0));
+    model = glm::rotate(model, glm::radians(rot.x), glm::vec3(1, 0, 0));
+    model = glm::rotate(model, glm::radians(rot.z), glm::vec3(0, 0, 1));
+    model = glm::translate(model, boundsCenter * scl);
+    model = glm::scale(model, boundsSize * scl);
+    glm::mat4 mvp = projection * view * model;
+
+    m_SelectionCube->GetShader()->UploadUniformMat4("u_mvp", mvp);
+    m_RenderingAPI->Draw(m_SelectionCube->GetShader(), m_SelectionCube->GetVertexArray());
+}
+
 void SceneDisplaySection::RenderSceneToFramebuffer()
 {
-    arv::RenderingBackend backend = m_RenderingAPI->GetBackendType();
-
 #ifdef __APPLE__
-    if (backend == arv::RenderingBackend::Metal) {
+    if (m_RenderingAPI->GetBackendType() == arv::RenderingBackend::Metal) {
         arv::MacosMetalRenderingAPI* metalAPI = static_cast<arv::MacosMetalRenderingAPI*>(m_RenderingAPI);
         metalAPI->BeginFramebufferPass(m_SceneFramebuffer, m_State->background.color);
-
-        // Render skybox if in skybox mode
-        if (m_State->background.mode == BackgroundSettings::Mode::Skybox && m_Skybox && m_SkyboxTexture) {
-            glm::mat4 inverseVP = glm::inverse(m_Camera->GetProjectionMatrix() * m_Camera->GetViewMatrix());
-            m_Skybox->GetShader()->UploadUniformMat4("u_inverseVP", inverseVP);
-            m_RenderingAPI->Draw(m_Skybox->GetShader(), m_Skybox->GetVertexArray(), m_SkyboxTexture);
-        }
-
-        arv::Scene scene = m_Renderer->NewScene(m_Camera.get());
-        for (auto& object : m_State->objects) {
-            scene.Submit(*object);
-        }
-
-        // Render selection cube overlay scaled to object's bounding box
-        if (m_State->selectedObjectIndex >= 0 && m_State->selectedObjectIndex < static_cast<int>(m_State->objects.size())) {
-            auto& selectedObj = (m_State->objects)[m_State->selectedObjectIndex];
-            glm::vec3 objPos = selectedObj->GetPosition();
-            glm::vec3 boundsCenter = selectedObj->GetBoundsCenter();
-            glm::vec3 boundsSize = selectedObj->GetBoundsSize();
-
-            glm::mat4 projection = m_Camera->GetProjectionMatrix();
-            glm::mat4 view = m_Camera->GetViewMatrix();
-            const glm::vec3& rot = selectedObj->GetRotation();
-            const glm::vec3& scl = selectedObj->GetScale();
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), objPos);
-            model = glm::rotate(model, glm::radians(rot.y), glm::vec3(0, 1, 0));
-            model = glm::rotate(model, glm::radians(rot.x), glm::vec3(1, 0, 0));
-            model = glm::rotate(model, glm::radians(rot.z), glm::vec3(0, 0, 1));
-            model = glm::translate(model, boundsCenter * scl);
-            model = glm::scale(model, boundsSize * scl);
-            glm::mat4 mvp = projection * view * model;
-
-            m_SelectionCube->GetShader()->UploadUniformMat4("u_mvp", mvp);
-            m_RenderingAPI->Draw(m_SelectionCube->GetShader(), m_SelectionCube->GetVertexArray());
-        }
-
-        scene.Render();
-
+        RenderSkybox();
+        SubmitScene();
         metalAPI->EndFramebufferPass();
     }
     else
 #endif
     {
         m_SceneFramebuffer->Bind();
-
         m_RenderingAPI->SetClearColor(m_State->background.color);
         m_RenderingAPI->Clear();
-
-        // Render skybox if in skybox mode
-        if (m_State->background.mode == BackgroundSettings::Mode::Skybox && m_Skybox && m_SkyboxTexture) {
-            glm::mat4 inverseVP = glm::inverse(m_Camera->GetProjectionMatrix() * m_Camera->GetViewMatrix());
-            m_Skybox->GetShader()->UploadUniformMat4("u_inverseVP", inverseVP);
-            m_RenderingAPI->Draw(m_Skybox->GetShader(), m_Skybox->GetVertexArray(), m_SkyboxTexture);
-        }
-
-        arv::Scene scene = m_Renderer->NewScene(m_Camera.get());
-        for (auto& object : m_State->objects) {
-            scene.Submit(*object);
-        }
-
-        // Render selection cube overlay scaled to object's bounding box
-        if (m_State->selectedObjectIndex >= 0 && m_State->selectedObjectIndex < static_cast<int>(m_State->objects.size())) {
-            auto& selectedObj = (m_State->objects)[m_State->selectedObjectIndex];
-            glm::vec3 objPos = selectedObj->GetPosition();
-            glm::vec3 boundsCenter = selectedObj->GetBoundsCenter();
-            glm::vec3 boundsSize = selectedObj->GetBoundsSize();
-
-            glm::mat4 projection = m_Camera->GetProjectionMatrix();
-            glm::mat4 view = m_Camera->GetViewMatrix();
-            const glm::vec3& rot = selectedObj->GetRotation();
-            const glm::vec3& scl = selectedObj->GetScale();
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), objPos);
-            model = glm::rotate(model, glm::radians(rot.y), glm::vec3(0, 1, 0));
-            model = glm::rotate(model, glm::radians(rot.x), glm::vec3(1, 0, 0));
-            model = glm::rotate(model, glm::radians(rot.z), glm::vec3(0, 0, 1));
-            model = glm::translate(model, boundsCenter * scl);
-            model = glm::scale(model, boundsSize * scl);
-            glm::mat4 mvp = projection * view * model;
-
-            m_SelectionCube->GetShader()->UploadUniformMat4("u_mvp", mvp);
-            m_RenderingAPI->Draw(m_SelectionCube->GetShader(), m_SelectionCube->GetVertexArray());
-        }
-
-        scene.Render();
-
+        RenderSkybox();
+        SubmitScene();
         m_SceneFramebuffer->Unbind();
     }
 }
