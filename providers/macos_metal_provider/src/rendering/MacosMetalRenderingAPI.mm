@@ -7,6 +7,7 @@
 #include "MetalShader.h"
 #include "MetalVertexArray.h"
 #include "MetalTexture.h"
+#include "MetalHDRTexture.h"
 #include "MetalFramebuffer.h"
 
 #include "ARVBase.h"
@@ -422,6 +423,12 @@ namespace arv
     {
         ARV_LOG_INFO("MacosMetalRenderingAPI::CreateTexture2D() - Creating texture from path: {}", path);
         return std::make_shared<MetalTexture2D>(m_device, path);
+    }
+
+    std::shared_ptr<Texture2D> MacosMetalRenderingAPI::CreateHDRTexture2D(const std::string& path)
+    {
+        ARV_LOG_INFO("MacosMetalRenderingAPI::CreateHDRTexture2D() - Creating HDR texture from path: {}", path);
+        return std::make_shared<MetalHDRTexture2D>(m_device, path);
     }
 
     void MacosMetalRenderingAPI::Draw(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray, const std::shared_ptr<Texture2D>& texture)

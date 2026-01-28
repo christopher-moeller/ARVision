@@ -9,8 +9,10 @@
 #include <memory>
 #include <vector>
 #include <glm/glm.hpp>
+#include <functional>
 
-namespace arv { class SelectionCubeRO; }
+struct BackgroundSettings;
+namespace arv { class SelectionCubeRO; class SkyboxRO; }
 
 class SceneDisplaySection {
 public:
@@ -21,14 +23,14 @@ public:
 
     ~SceneDisplaySection();
 
-    void Init(int width, int height, const glm::vec4& backgroundColor);
+    void Init(int width, int height, BackgroundSettings* background);
     void Shutdown();
     void Update(float deltaTime);
     void RenderSceneToFramebuffer();
     void RenderImGuiPanel();
 
     const glm::vec2& GetViewportSize() const { return m_ViewportSize; }
-    void SetBackgroundColor(const glm::vec4& color) { m_BackgroundColor = color; }
+    void LoadSkyboxTexture(const std::string& path);
 
 private:
     // Non-owning references
@@ -43,6 +45,8 @@ private:
     std::unique_ptr<arv::CameraController<arv::StandardCamera>> m_CameraController;
     std::shared_ptr<arv::Framebuffer> m_SceneFramebuffer;
     std::unique_ptr<arv::SelectionCubeRO> m_SelectionCube;
+    std::unique_ptr<arv::SkyboxRO> m_Skybox;
+    std::shared_ptr<arv::Texture2D> m_SkyboxTexture;
     glm::vec2 m_ViewportSize{0.0f, 0.0f};
-    glm::vec4 m_BackgroundColor{0.2f, 0.3f, 0.3f, 1.0f};
+    BackgroundSettings* m_Background = nullptr;
 };

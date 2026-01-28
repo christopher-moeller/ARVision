@@ -1,6 +1,8 @@
 #include "ControlSection.h"
+#include "../layers/MainLayer.h"
 #include "ARVBase.h"
 #include "../events/StudioActionEvents.h"
+#include "utils/AssetPath.h"
 
 #include <imgui.h>
 #include <string>
@@ -9,7 +11,7 @@
 #import <Cocoa/Cocoa.h>
 #endif
 
-static std::string OpenFileDialog()
+static std::string OpenFileDialog(NSString* title, NSArray* fileTypes)
 {
 #ifdef __APPLE__
     @autoreleasepool {
@@ -17,9 +19,7 @@ static std::string OpenFileDialog()
         [panel setCanChooseFiles:YES];
         [panel setCanChooseDirectories:NO];
         [panel setAllowsMultipleSelection:NO];
-        [panel setTitle:@"Select Scene File"];
-
-        NSArray* fileTypes = @[@"json"];
+        [panel setTitle:title];
         [panel setAllowedFileTypes:fileTypes];
 
         if ([panel runModal] == NSModalResponseOK) {
@@ -81,7 +81,7 @@ void ControlSection::RenderImGuiPanel()
 
         // Scene loading controls
         if (ImGui::Button("Load Scene")) {
-            std::string path = OpenFileDialog();
+            std::string path = OpenFileDialog(@"Select Scene File", @[@"json"]);
             if (!path.empty() && m_LoadSceneCallback) {
                 m_LoadSceneCallback(path);
             }
@@ -166,6 +166,52 @@ void ControlSection::RenderImGuiPanel()
             }
 
             selectedObj->RenderCustomImGui();
+        }
+
+        ImGui::Separator();
+
+        // Background settings
+        if (m_Background) {
+            ImGui::Text("Background");
+
+            const char* modeItems[] = { "Color", "Skybox" };
+            int currentMode = static_cast<int>(m_Background->mode);
+            if (ImGui::Combo("Mode", &currentMode, modeItems, IM_ARRAYSIZE(modeItems))) {
+                m_Background->mode = static_cast<BackgroundSettings::Mode>(currentMode);
+                if (m_Background->mode == BackgroundSettings::Mode::Skybox &&
+                    !m_Background->skyboxPath.empty() && m_LoadSkyboxCallback) {
+                    m_LoadSkyboxCallback(m_Background->skyboxPath);
+                }
+            }
+
+            if (m_Background->mode == BackgroundSettings::Mode::Color) {
+                ImGui::ColorEdit4("Background Color", &m_Background->color.x);
+            } else {
+                // Show current skybox filename
+                std::string filename = m_Background->skyboxPath;
+                auto pos = filename.find_last_of('/');
+                if (pos != std::string::npos) {
+                    filename = filename.substr(pos + 1);
+                }
+                if (filename.empty()) filename = "(none)";
+                ImGui::Text("Skybox: %s", filename.c_str());
+
+                if (ImGui::Button("Browse EXR...")) {
+                    std::string path = OpenFileDialog(@"Select EXR File", @[@"exr"]);
+                    if (!path.empty()) {
+                        // Convert absolute path to relative assets path
+                        std::string assetsDir = arv::AssetPath::Resolve("");
+                        if (path.find(assetsDir) == 0) {
+                            m_Background->skyboxPath = path.substr(assetsDir.length());
+                        } else {
+                            m_Background->skyboxPath = path;
+                        }
+                        if (m_LoadSkyboxCallback) {
+                            m_LoadSkyboxCallback(m_Background->skyboxPath);
+                        }
+                    }
+                }
+            }
         }
 
         ImGui::Separator();

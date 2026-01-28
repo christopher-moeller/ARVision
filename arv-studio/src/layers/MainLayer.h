@@ -14,6 +14,13 @@
 #include <string>
 #include <glm/glm.hpp>
 
+struct BackgroundSettings {
+    enum class Mode { Color, Skybox };
+    Mode mode = Mode::Color;
+    glm::vec4 color{0.2f, 0.3f, 0.3f, 1.0f};
+    std::string skyboxPath;
+};
+
 class MainLayer : public arv::Layer {
 public:
     MainLayer(arv::Renderer* renderer, arv::Canvas* canvas,
@@ -46,6 +53,7 @@ private:
     std::vector<std::unique_ptr<arv::RenderingObject>> m_Objects;
     int m_SelectedObjectIndex = -1;
     std::string m_CurrentScenePath;
+    BackgroundSettings m_BackgroundSettings;
 
     // Sections
     std::unique_ptr<SceneDisplaySection> m_SceneDisplay;

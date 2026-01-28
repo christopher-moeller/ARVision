@@ -1,4 +1,14 @@
 {
+    "background": {
+        "color": [
+            0.0214580949395895,
+            0.09313726425170898,
+            0.09313726425170898,
+            1.0
+        ],
+        "mode": "skybox",
+        "skyboxPath": "backgrounds/autumn_hilly_field_4k.exr"
+    },
     "backgroundColor": [
         0.2,
         0.3,

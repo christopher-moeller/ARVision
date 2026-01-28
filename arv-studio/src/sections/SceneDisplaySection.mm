@@ -1,8 +1,11 @@
 #include "SceneDisplaySection.h"
+#include "../layers/MainLayer.h"
 #include "ARVBase.h"
 #include "../objects/SelectionCubeRO.h"
+#include "../objects/SkyboxRO.h"
 #include "rendering/Scene.h"
 #include "utils/Timestep.h"
+#include "utils/AssetPath.h"
 
 #include <imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -28,9 +31,9 @@ SceneDisplaySection::SceneDisplaySection(arv::Renderer* renderer, arv::Rendering
 
 SceneDisplaySection::~SceneDisplaySection() = default;
 
-void SceneDisplaySection::Init(int width, int height, const glm::vec4& backgroundColor)
+void SceneDisplaySection::Init(int width, int height, BackgroundSettings* background)
 {
-    m_BackgroundColor = backgroundColor;
+    m_Background = background;
 
     m_Camera = std::make_unique<arv::StandardCamera>(width / 2, height);
 
@@ -47,10 +50,23 @@ void SceneDisplaySection::Init(int width, int height, const glm::vec4& backgroun
     m_ViewportSize = { static_cast<float>(fbSpec.width), static_cast<float>(fbSpec.height) };
 
     m_SelectionCube = std::make_unique<arv::SelectionCubeRO>();
+
+    m_Skybox = std::make_unique<arv::SkyboxRO>();
+    if (m_Background->mode == BackgroundSettings::Mode::Skybox && !m_Background->skyboxPath.empty()) {
+        LoadSkyboxTexture(m_Background->skyboxPath);
+    }
+}
+
+void SceneDisplaySection::LoadSkyboxTexture(const std::string& path)
+{
+    m_SkyboxTexture = m_RenderingAPI->CreateHDRTexture2D(
+        arv::AssetPath::Resolve(path));
 }
 
 void SceneDisplaySection::Shutdown()
 {
+    m_Skybox.reset();
+    m_SkyboxTexture.reset();
     m_SelectionCube.reset();
     m_SceneFramebuffer.reset();
 }
@@ -69,7 +85,14 @@ void SceneDisplaySection::RenderSceneToFramebuffer()
 #ifdef __APPLE__
     if (backend == arv::RenderingBackend::Metal) {
         arv::MacosMetalRenderingAPI* metalAPI = static_cast<arv::MacosMetalRenderingAPI*>(m_RenderingAPI);
-        metalAPI->BeginFramebufferPass(m_SceneFramebuffer, m_BackgroundColor);
+        metalAPI->BeginFramebufferPass(m_SceneFramebuffer, m_Background->color);
+
+        // Render skybox if in skybox mode
+        if (m_Background->mode == BackgroundSettings::Mode::Skybox && m_Skybox && m_SkyboxTexture) {
+            glm::mat4 inverseVP = glm::inverse(m_Camera->GetProjectionMatrix() * m_Camera->GetViewMatrix());
+            m_Skybox->GetShader()->UploadUniformMat4("u_inverseVP", inverseVP);
+            m_RenderingAPI->Draw(m_Skybox->GetShader(), m_Skybox->GetVertexArray(), m_SkyboxTexture);
+        }
 
         arv::Scene scene = m_Renderer->NewScene(m_Camera.get());
         for (auto& object : *m_Objects) {
@@ -108,8 +131,15 @@ void SceneDisplaySection::RenderSceneToFramebuffer()
     {
         m_SceneFramebuffer->Bind();
 
-        m_RenderingAPI->SetClearColor(m_BackgroundColor);
+        m_RenderingAPI->SetClearColor(m_Background->color);
         m_RenderingAPI->Clear();
+
+        // Render skybox if in skybox mode
+        if (m_Background->mode == BackgroundSettings::Mode::Skybox && m_Skybox && m_SkyboxTexture) {
+            glm::mat4 inverseVP = glm::inverse(m_Camera->GetProjectionMatrix() * m_Camera->GetViewMatrix());
+            m_Skybox->GetShader()->UploadUniformMat4("u_inverseVP", inverseVP);
+            m_RenderingAPI->Draw(m_Skybox->GetShader(), m_Skybox->GetVertexArray(), m_SkyboxTexture);
+        }
 
         arv::Scene scene = m_Renderer->NewScene(m_Camera.get());
         for (auto& object : *m_Objects) {
