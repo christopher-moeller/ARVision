@@ -4,6 +4,7 @@
 #include "rendering/CoreShaderSource.h"
 #include <string>
 #include <imgui.h>
+#include <nlohmann/json.hpp>
 
 namespace arv {
 
@@ -125,6 +126,10 @@ namespace arv {
         if (ImGui::ColorEdit4("Color", &color.x)) {
             SetColor(color);
         }
+    }
+
+    void SimpleTriangleRO::SaveCustomProperties(nlohmann::json& j) const {
+        j["color"] = { m_Color.x, m_Color.y, m_Color.z, m_Color.w };
     }
 
 }

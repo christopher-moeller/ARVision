@@ -1,12 +1,12 @@
 {
     "background": {
         "color": [
-            0.0214580949395895,
-            0.09313726425170898,
-            0.09313726425170898,
+            0.41089963912963867,
+            0.8823529481887817,
+            0.8823529481887817,
             1.0
         ],
-        "mode": "skybox",
+        "mode": "color",
         "skyboxPath": "backgrounds/autumn_hilly_field_4k.exr"
     },
     "backgroundColor": [
@@ -65,7 +65,7 @@
             "name": "ObjAssetRO 1",
             "pathFragment": "SMG",
             "position": [
-                0.10000000149011612,
+                7.800000190734863,
                 0.0,
                 -2.0
             ],

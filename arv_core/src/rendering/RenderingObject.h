@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <glm/glm.hpp>
+#include <nlohmann/json.hpp>
 #include "rendering/Shader.h"
 #include "rendering/VertexArray.h"
 #include "rendering/Texture.h"
@@ -38,6 +39,7 @@ namespace arv {
         glm::vec3 GetBoundsCenter() const { return (m_boundsMin + m_boundsMax) * 0.5f; }
 
         virtual void RenderCustomImGui() {}
+        virtual void SaveCustomProperties(nlohmann::json& j) const {}
 
     protected:
         glm::vec3 position{0.0f, 0.0f, 0.0f};

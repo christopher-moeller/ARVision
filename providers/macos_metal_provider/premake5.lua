@@ -19,7 +19,8 @@ project "arv_macos_metal_provider"
         "vendor/GLFW/src/include",
         GLM_INCLUDE_DIR,
         STB_INCLUDE_DIR,
-        path.getabsolute("../../arv_core/vendor/tinyexr")
+        path.getabsolute("../../arv_core/vendor/tinyexr"),
+        path.getabsolute("../../arv_core/vendor/nlohmann")
     }
 
     links {

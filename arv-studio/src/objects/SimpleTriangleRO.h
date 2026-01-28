@@ -19,6 +19,7 @@ namespace arv {
         const glm::vec4& GetColor() const { return m_Color; }
 
         void RenderCustomImGui() override;
+        void SaveCustomProperties(nlohmann::json& j) const override;
 
     private:
         std::unique_ptr<CoreShaderSource> m_ShaderSource;

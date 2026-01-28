@@ -21,7 +21,8 @@ project "arv_macos_opengl_provider"
         "vendor/glad/include",
         GLM_INCLUDE_DIR,
         STB_INCLUDE_DIR,
-        path.getabsolute("../../arv_core/vendor/tinyexr")
+        path.getabsolute("../../arv_core/vendor/tinyexr"),
+        path.getabsolute("../../arv_core/vendor/nlohmann")
     }
 
     dependson { "GLFW", "glad" }
