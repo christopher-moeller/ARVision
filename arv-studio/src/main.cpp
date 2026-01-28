@@ -92,7 +92,7 @@ int start(int platformType) {
         canvas->SwapBuffers();
 
         // FPS cap
-        int maxFPS = mainLayerPtr->GetMaxFPS();
+        int maxFPS = mainLayerPtr->GetState().maxFPS;
         if (maxFPS > 0) {
             auto frameEnd = std::chrono::steady_clock::now();
             auto elapsed = frameEnd - frameStart;

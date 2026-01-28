@@ -50,27 +50,23 @@ void MainLayer::OnAttach()
         arv::AssetPath::Resolve("scenes/main_scene.json")
     );
 
-    m_CurrentScenePath = arv::AssetPath::Resolve("scenes/main_scene.json");
-    m_Objects = std::move(parsedScene.objects);
-    ARV_LOG_INFO("MainLayer: Loaded {} objects from scene file", m_Objects.size());
+    m_State.currentScenePath = arv::AssetPath::Resolve("scenes/main_scene.json");
+    m_State.objects = std::move(parsedScene.objects);
+    ARV_LOG_INFO("MainLayer: Loaded {} objects from scene file", m_State.objects.size());
 
     // Apply background settings from parsed scene
-    m_BackgroundSettings.color = parsedScene.backgroundColor;
-    m_BackgroundSettings.skyboxPath = parsedScene.skyboxPath;
-    m_BackgroundSettings.mode = (parsedScene.backgroundMode == "skybox")
+    m_State.background.color = parsedScene.backgroundColor;
+    m_State.background.skyboxPath = parsedScene.skyboxPath;
+    m_State.background.mode = (parsedScene.backgroundMode == "skybox")
         ? BackgroundSettings::Mode::Skybox : BackgroundSettings::Mode::Color;
 
     // Create sections
     m_SceneDisplay = std::make_unique<SceneDisplaySection>(
-        m_Renderer, m_RenderingAPI, m_EventManager, &m_Objects, &m_SelectedObjectIndex);
-    m_SceneDisplay->Init(m_WindowWidth, m_WindowHeight, &m_BackgroundSettings);
+        m_Renderer, m_RenderingAPI, m_EventManager, &m_State);
+    m_SceneDisplay->Init(m_WindowWidth, m_WindowHeight);
 
     m_ControlSection = std::make_unique<ControlSection>(
-        m_RenderingAPI, &m_Objects, &m_SelectedObjectIndex, &m_SceneDisplay->GetViewportSize());
-    m_ControlSection->SetCurrentScenePath(&m_CurrentScenePath);
-    m_ControlSection->SetBackgroundSettings(&m_BackgroundSettings);
-    m_ControlSection->SetDeltaTime(&m_DeltaTime);
-    m_ControlSection->SetMaxFPS(&m_MaxFPS);
+        m_RenderingAPI, &m_State, &m_SceneDisplay->GetViewportSize());
     m_ControlSection->SetLoadSkyboxCallback([this](const std::string& path) {
         m_SceneDisplay->LoadSkyboxTexture(path);
     });
@@ -88,7 +84,7 @@ void MainLayer::OnDetach()
 {
     ARV_LOG_INFO("MainLayer::OnDetach()");
     m_SceneDisplay->Shutdown();
-    m_Objects.clear();
+    m_State.objects.clear();
     ShutdownImGui();
 }
 
@@ -99,35 +95,35 @@ void MainLayer::LoadScene(const std::string& path)
     arv::JsonSceneParser parser;
     arv::ParsedScene parsedScene = parser.parseFromFile(path);
 
-    m_CurrentScenePath = path;
-    m_Objects = std::move(parsedScene.objects);
-    m_SelectedObjectIndex = -1;
+    m_State.currentScenePath = path;
+    m_State.objects = std::move(parsedScene.objects);
+    m_State.selectedObjectIndex = -1;
 
-    m_BackgroundSettings.color = parsedScene.backgroundColor;
-    m_BackgroundSettings.skyboxPath = parsedScene.skyboxPath;
-    m_BackgroundSettings.mode = (parsedScene.backgroundMode == "skybox")
+    m_State.background.color = parsedScene.backgroundColor;
+    m_State.background.skyboxPath = parsedScene.skyboxPath;
+    m_State.background.mode = (parsedScene.backgroundMode == "skybox")
         ? BackgroundSettings::Mode::Skybox : BackgroundSettings::Mode::Color;
 
-    if (m_BackgroundSettings.mode == BackgroundSettings::Mode::Skybox && !m_BackgroundSettings.skyboxPath.empty()) {
-        m_SceneDisplay->LoadSkyboxTexture(m_BackgroundSettings.skyboxPath);
+    if (m_State.background.mode == BackgroundSettings::Mode::Skybox && !m_State.background.skyboxPath.empty()) {
+        m_SceneDisplay->LoadSkyboxTexture(m_State.background.skyboxPath);
     }
 
-    ARV_LOG_INFO("MainLayer::LoadScene() - Loaded {} objects", m_Objects.size());
+    ARV_LOG_INFO("MainLayer::LoadScene() - Loaded {} objects", m_State.objects.size());
 }
 
 void MainLayer::SaveScene()
 {
-    if (m_CurrentScenePath.empty()) {
+    if (m_State.currentScenePath.empty()) {
         ARV_LOG_WARN("MainLayer::SaveScene() - No scene path set");
         return;
     }
 
-    ARV_LOG_INFO("MainLayer::SaveScene() - Saving to: {}", m_CurrentScenePath);
+    ARV_LOG_INFO("MainLayer::SaveScene() - Saving to: {}", m_State.currentScenePath);
 
     // Read existing JSON to preserve all fields
-    std::ifstream inFile(m_CurrentScenePath);
+    std::ifstream inFile(m_State.currentScenePath);
     if (!inFile) {
-        ARV_LOG_ERROR("MainLayer::SaveScene() - Failed to open file for reading: {}", m_CurrentScenePath);
+        ARV_LOG_ERROR("MainLayer::SaveScene() - Failed to open file for reading: {}", m_State.currentScenePath);
         return;
     }
 
@@ -137,31 +133,31 @@ void MainLayer::SaveScene()
 
     // Update background settings
     nlohmann::json bgJson;
-    bgJson["mode"] = (m_BackgroundSettings.mode == BackgroundSettings::Mode::Skybox) ? "skybox" : "color";
-    bgJson["color"] = { m_BackgroundSettings.color.x, m_BackgroundSettings.color.y,
-                         m_BackgroundSettings.color.z, m_BackgroundSettings.color.w };
-    bgJson["skyboxPath"] = m_BackgroundSettings.skyboxPath;
+    bgJson["mode"] = (m_State.background.mode == BackgroundSettings::Mode::Skybox) ? "skybox" : "color";
+    bgJson["color"] = { m_State.background.color.x, m_State.background.color.y,
+                         m_State.background.color.z, m_State.background.color.w };
+    bgJson["skyboxPath"] = m_State.background.skyboxPath;
     j["background"] = bgJson;
 
     // Update positions in the JSON objects array
     auto& jsonObjects = j["objects"];
-    for (size_t i = 0; i < m_Objects.size() && i < jsonObjects.size(); i++) {
-        const glm::vec3& pos = m_Objects[i]->GetPosition();
+    for (size_t i = 0; i < m_State.objects.size() && i < jsonObjects.size(); i++) {
+        const glm::vec3& pos = m_State.objects[i]->GetPosition();
         jsonObjects[i]["position"] = { pos.x, pos.y, pos.z };
-        const glm::vec3& scl = m_Objects[i]->GetScale();
+        const glm::vec3& scl = m_State.objects[i]->GetScale();
         jsonObjects[i]["scale"] = { scl.x, scl.y, scl.z };
-        const glm::vec3& rot = m_Objects[i]->GetRotation();
+        const glm::vec3& rot = m_State.objects[i]->GetRotation();
         jsonObjects[i]["rotation"] = { rot.x, rot.y, rot.z };
-        if (auto* tri = dynamic_cast<arv::SimpleTriangleRO*>(m_Objects[i].get())) {
+        if (auto* tri = dynamic_cast<arv::SimpleTriangleRO*>(m_State.objects[i].get())) {
             const glm::vec4& col = tri->GetColor();
             jsonObjects[i]["color"] = { col.x, col.y, col.z, col.w };
         }
     }
 
     // Write back
-    std::ofstream outFile(m_CurrentScenePath);
+    std::ofstream outFile(m_State.currentScenePath);
     if (!outFile) {
-        ARV_LOG_ERROR("MainLayer::SaveScene() - Failed to open file for writing: {}", m_CurrentScenePath);
+        ARV_LOG_ERROR("MainLayer::SaveScene() - Failed to open file for writing: {}", m_State.currentScenePath);
         return;
     }
 
@@ -171,7 +167,7 @@ void MainLayer::SaveScene()
 
 void MainLayer::OnUpdate(float deltaTime)
 {
-    m_DeltaTime = deltaTime;
+    m_State.deltaTime = deltaTime;
     m_SceneDisplay->Update(deltaTime);
 }
 

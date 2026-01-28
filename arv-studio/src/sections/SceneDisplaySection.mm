@@ -1,5 +1,4 @@
 #include "SceneDisplaySection.h"
-#include "../layers/MainLayer.h"
 #include "ARVBase.h"
 #include "../objects/SelectionCubeRO.h"
 #include "../objects/SkyboxRO.h"
@@ -18,23 +17,18 @@
 #endif
 
 SceneDisplaySection::SceneDisplaySection(arv::Renderer* renderer, arv::RenderingAPI* renderingAPI,
-                                         arv::EventManager* eventManager,
-                                         std::vector<std::unique_ptr<arv::RenderingObject>>* objects,
-                                         int* selectedObjectIndex)
+                                         arv::EventManager* eventManager, EditorState* state)
     : m_Renderer(renderer)
     , m_RenderingAPI(renderingAPI)
     , m_EventManager(eventManager)
-    , m_Objects(objects)
-    , m_SelectedObjectIndex(selectedObjectIndex)
+    , m_State(state)
 {
 }
 
 SceneDisplaySection::~SceneDisplaySection() = default;
 
-void SceneDisplaySection::Init(int width, int height, BackgroundSettings* background)
+void SceneDisplaySection::Init(int width, int height)
 {
-    m_Background = background;
-
     m_Camera = std::make_unique<arv::StandardCamera>(width / 2, height);
 
     m_CameraController = arv::CreateStandardCameraController(m_Camera.get(), true);
@@ -52,8 +46,8 @@ void SceneDisplaySection::Init(int width, int height, BackgroundSettings* backgr
     m_SelectionCube = std::make_unique<arv::SelectionCubeRO>();
 
     m_Skybox = std::make_unique<arv::SkyboxRO>();
-    if (m_Background->mode == BackgroundSettings::Mode::Skybox && !m_Background->skyboxPath.empty()) {
-        LoadSkyboxTexture(m_Background->skyboxPath);
+    if (m_State->background.mode == BackgroundSettings::Mode::Skybox && !m_State->background.skyboxPath.empty()) {
+        LoadSkyboxTexture(m_State->background.skyboxPath);
     }
 }
 
@@ -85,23 +79,23 @@ void SceneDisplaySection::RenderSceneToFramebuffer()
 #ifdef __APPLE__
     if (backend == arv::RenderingBackend::Metal) {
         arv::MacosMetalRenderingAPI* metalAPI = static_cast<arv::MacosMetalRenderingAPI*>(m_RenderingAPI);
-        metalAPI->BeginFramebufferPass(m_SceneFramebuffer, m_Background->color);
+        metalAPI->BeginFramebufferPass(m_SceneFramebuffer, m_State->background.color);
 
         // Render skybox if in skybox mode
-        if (m_Background->mode == BackgroundSettings::Mode::Skybox && m_Skybox && m_SkyboxTexture) {
+        if (m_State->background.mode == BackgroundSettings::Mode::Skybox && m_Skybox && m_SkyboxTexture) {
             glm::mat4 inverseVP = glm::inverse(m_Camera->GetProjectionMatrix() * m_Camera->GetViewMatrix());
             m_Skybox->GetShader()->UploadUniformMat4("u_inverseVP", inverseVP);
             m_RenderingAPI->Draw(m_Skybox->GetShader(), m_Skybox->GetVertexArray(), m_SkyboxTexture);
         }
 
         arv::Scene scene = m_Renderer->NewScene(m_Camera.get());
-        for (auto& object : *m_Objects) {
+        for (auto& object : m_State->objects) {
             scene.Submit(*object);
         }
 
         // Render selection cube overlay scaled to object's bounding box
-        if (*m_SelectedObjectIndex >= 0 && *m_SelectedObjectIndex < static_cast<int>(m_Objects->size())) {
-            auto& selectedObj = (*m_Objects)[*m_SelectedObjectIndex];
+        if (m_State->selectedObjectIndex >= 0 && m_State->selectedObjectIndex < static_cast<int>(m_State->objects.size())) {
+            auto& selectedObj = (m_State->objects)[m_State->selectedObjectIndex];
             glm::vec3 objPos = selectedObj->GetPosition();
             glm::vec3 boundsCenter = selectedObj->GetBoundsCenter();
             glm::vec3 boundsSize = selectedObj->GetBoundsSize();
@@ -131,24 +125,24 @@ void SceneDisplaySection::RenderSceneToFramebuffer()
     {
         m_SceneFramebuffer->Bind();
 
-        m_RenderingAPI->SetClearColor(m_Background->color);
+        m_RenderingAPI->SetClearColor(m_State->background.color);
         m_RenderingAPI->Clear();
 
         // Render skybox if in skybox mode
-        if (m_Background->mode == BackgroundSettings::Mode::Skybox && m_Skybox && m_SkyboxTexture) {
+        if (m_State->background.mode == BackgroundSettings::Mode::Skybox && m_Skybox && m_SkyboxTexture) {
             glm::mat4 inverseVP = glm::inverse(m_Camera->GetProjectionMatrix() * m_Camera->GetViewMatrix());
             m_Skybox->GetShader()->UploadUniformMat4("u_inverseVP", inverseVP);
             m_RenderingAPI->Draw(m_Skybox->GetShader(), m_Skybox->GetVertexArray(), m_SkyboxTexture);
         }
 
         arv::Scene scene = m_Renderer->NewScene(m_Camera.get());
-        for (auto& object : *m_Objects) {
+        for (auto& object : m_State->objects) {
             scene.Submit(*object);
         }
 
         // Render selection cube overlay scaled to object's bounding box
-        if (*m_SelectedObjectIndex >= 0 && *m_SelectedObjectIndex < static_cast<int>(m_Objects->size())) {
-            auto& selectedObj = (*m_Objects)[*m_SelectedObjectIndex];
+        if (m_State->selectedObjectIndex >= 0 && m_State->selectedObjectIndex < static_cast<int>(m_State->objects.size())) {
+            auto& selectedObj = (m_State->objects)[m_State->selectedObjectIndex];
             glm::vec3 objPos = selectedObj->GetPosition();
             glm::vec3 boundsCenter = selectedObj->GetBoundsCenter();
             glm::vec3 boundsSize = selectedObj->GetBoundsSize();

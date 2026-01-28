@@ -13,13 +13,7 @@
 #include <chrono>
 #include <string>
 #include <glm/glm.hpp>
-
-struct BackgroundSettings {
-    enum class Mode { Color, Skybox };
-    Mode mode = Mode::Color;
-    glm::vec4 color{0.2f, 0.3f, 0.3f, 1.0f};
-    std::string skyboxPath;
-};
+#include "../EditorState.h"
 
 class MainLayer : public arv::Layer {
 public:
@@ -33,7 +27,7 @@ public:
     void OnUpdate(float deltaTime) override;
     void OnRender() override;
 
-    int GetMaxFPS() const { return m_MaxFPS; }
+    const EditorState& GetState() const { return m_State; }
 
 private:
     void InitImGui();
@@ -51,13 +45,8 @@ private:
     int m_WindowWidth;
     int m_WindowHeight;
 
-    // Shared scene data
-    std::vector<std::unique_ptr<arv::RenderingObject>> m_Objects;
-    int m_SelectedObjectIndex = -1;
-    std::string m_CurrentScenePath;
-    BackgroundSettings m_BackgroundSettings;
-    float m_DeltaTime = 0.0f;
-    int m_MaxFPS = 0; // 0 = unlimited
+    // Shared editor state
+    EditorState m_State;
 
     // Sections
     std::unique_ptr<SceneDisplaySection> m_SceneDisplay;

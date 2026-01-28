@@ -1,5 +1,4 @@
 #include "ControlSection.h"
-#include "../layers/MainLayer.h"
 #include "ARVBase.h"
 #include "../events/StudioActionEvents.h"
 #include "utils/AssetPath.h"
@@ -32,12 +31,10 @@ static std::string OpenFileDialog(NSString* title, NSArray* fileTypes)
 }
 
 ControlSection::ControlSection(arv::RenderingAPI* renderingAPI,
-                               std::vector<std::unique_ptr<arv::RenderingObject>>* objects,
-                               int* selectedObjectIndex,
+                               EditorState* state,
                                const glm::vec2* viewportSize)
     : m_RenderingAPI(renderingAPI)
-    , m_Objects(objects)
-    , m_SelectedObjectIndex(selectedObjectIndex)
+    , m_State(state)
     , m_ViewportSize(viewportSize)
 {
 }
@@ -90,8 +87,8 @@ void ControlSection::RenderImGuiPanel()
         ImGui::SameLine();
 
         if (ImGui::Button("Reload Scene")) {
-            if (m_CurrentScenePath && !m_CurrentScenePath->empty() && m_LoadSceneCallback) {
-                m_LoadSceneCallback(*m_CurrentScenePath);
+            if (!m_State->currentScenePath.empty() && m_LoadSceneCallback) {
+                m_LoadSceneCallback(m_State->currentScenePath);
             }
         }
 
@@ -103,9 +100,9 @@ void ControlSection::RenderImGuiPanel()
             }
         }
 
-        if (m_CurrentScenePath && !m_CurrentScenePath->empty()) {
+        if (!m_State->currentScenePath.empty()) {
             // Show just the filename
-            std::string filename = *m_CurrentScenePath;
+            std::string filename = m_State->currentScenePath;
             auto pos = filename.find_last_of('/');
             if (pos != std::string::npos) {
                 filename = filename.substr(pos + 1);
@@ -115,22 +112,22 @@ void ControlSection::RenderImGuiPanel()
 
         ImGui::Separator();
 
-        ImGui::Text("Scene Objects (%zu)", m_Objects->size());
+        ImGui::Text("Scene Objects (%zu)", m_State->objects.size());
 
         if (ImGui::BeginListBox("##objectslist", ImVec2(-FLT_MIN, 8 * ImGui::GetTextLineHeightWithSpacing())))
         {
-            for (int i = 0; i < static_cast<int>(m_Objects->size()); i++)
+            for (int i = 0; i < static_cast<int>(m_State->objects.size()); i++)
             {
-                const auto& obj = (*m_Objects)[i];
+                const auto& obj = m_State->objects[i];
                 std::string label = obj->GetName();
                 if (label.empty()) {
                     label = "Object " + std::to_string(i);
                 }
 
-                bool is_selected = (*m_SelectedObjectIndex == i);
+                bool is_selected = (m_State->selectedObjectIndex == i);
                 if (ImGui::Selectable(label.c_str(), is_selected))
                 {
-                    *m_SelectedObjectIndex = i;
+                    m_State->selectedObjectIndex = i;
                 }
 
                 if (is_selected)
@@ -139,12 +136,12 @@ void ControlSection::RenderImGuiPanel()
             ImGui::EndListBox();
         }
 
-        if (*m_SelectedObjectIndex >= 0 && *m_SelectedObjectIndex < static_cast<int>(m_Objects->size()))
+        if (m_State->selectedObjectIndex >= 0 && m_State->selectedObjectIndex < static_cast<int>(m_State->objects.size()))
         {
             ImGui::Separator();
             ImGui::Text("Selected Object Properties");
 
-            auto& selectedObj = (*m_Objects)[*m_SelectedObjectIndex];
+            auto& selectedObj = m_State->objects[m_State->selectedObjectIndex];
             glm::vec3 pos = selectedObj->GetPosition();
 
             ImGui::Text("Name: %s", selectedObj->GetName().c_str());
@@ -171,24 +168,24 @@ void ControlSection::RenderImGuiPanel()
         ImGui::Separator();
 
         // Background settings
-        if (m_Background) {
+        {
             ImGui::Text("Background");
 
             const char* modeItems[] = { "Color", "Skybox" };
-            int currentMode = static_cast<int>(m_Background->mode);
+            int currentMode = static_cast<int>(m_State->background.mode);
             if (ImGui::Combo("Mode", &currentMode, modeItems, IM_ARRAYSIZE(modeItems))) {
-                m_Background->mode = static_cast<BackgroundSettings::Mode>(currentMode);
-                if (m_Background->mode == BackgroundSettings::Mode::Skybox &&
-                    !m_Background->skyboxPath.empty() && m_LoadSkyboxCallback) {
-                    m_LoadSkyboxCallback(m_Background->skyboxPath);
+                m_State->background.mode = static_cast<BackgroundSettings::Mode>(currentMode);
+                if (m_State->background.mode == BackgroundSettings::Mode::Skybox &&
+                    !m_State->background.skyboxPath.empty() && m_LoadSkyboxCallback) {
+                    m_LoadSkyboxCallback(m_State->background.skyboxPath);
                 }
             }
 
-            if (m_Background->mode == BackgroundSettings::Mode::Color) {
-                ImGui::ColorEdit4("Background Color", &m_Background->color.x);
+            if (m_State->background.mode == BackgroundSettings::Mode::Color) {
+                ImGui::ColorEdit4("Background Color", &m_State->background.color.x);
             } else {
                 // Show current skybox filename
-                std::string filename = m_Background->skyboxPath;
+                std::string filename = m_State->background.skyboxPath;
                 auto pos = filename.find_last_of('/');
                 if (pos != std::string::npos) {
                     filename = filename.substr(pos + 1);
@@ -202,12 +199,12 @@ void ControlSection::RenderImGuiPanel()
                         // Convert absolute path to relative assets path
                         std::string assetsDir = arv::AssetPath::Resolve("");
                         if (path.find(assetsDir) == 0) {
-                            m_Background->skyboxPath = path.substr(assetsDir.length());
+                            m_State->background.skyboxPath = path.substr(assetsDir.length());
                         } else {
-                            m_Background->skyboxPath = path;
+                            m_State->background.skyboxPath = path;
                         }
                         if (m_LoadSkyboxCallback) {
-                            m_LoadSkyboxCallback(m_Background->skyboxPath);
+                            m_LoadSkyboxCallback(m_State->background.skyboxPath);
                         }
                     }
                 }
@@ -218,13 +215,11 @@ void ControlSection::RenderImGuiPanel()
         ImGui::Text("Viewport: %.0f x %.0f", m_ViewportSize->x, m_ViewportSize->y);
 
         // FPS display and cap
-        if (m_DeltaTime && *m_DeltaTime > 0.0f) {
-            float fps = 1.0f / *m_DeltaTime;
-            ImGui::Text("FPS: %.1f (%.2f ms)", fps, *m_DeltaTime * 1000.0f);
+        if (m_State->deltaTime > 0.0f) {
+            float fps = 1.0f / m_State->deltaTime;
+            ImGui::Text("FPS: %.1f (%.2f ms)", fps, m_State->deltaTime * 1000.0f);
         }
-        if (m_MaxFPS) {
-            ImGui::SliderInt("Max FPS", m_MaxFPS, 0, 240, *m_MaxFPS == 0 ? "Unlimited" : "%d");
-        }
+        ImGui::SliderInt("Max FPS", &m_State->maxFPS, 0, 240, m_State->maxFPS == 0 ? "Unlimited" : "%d");
 
         ImGui::Separator();
     }
