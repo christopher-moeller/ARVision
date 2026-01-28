@@ -13,6 +13,8 @@ namespace arv {
 
     struct ParsedScene {
         glm::vec4 backgroundColor;
+        std::string backgroundMode; // "color" or "skybox"
+        std::string skyboxPath;
         std::vector<std::unique_ptr<RenderingObject>> objects;
     };
 

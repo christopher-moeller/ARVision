@@ -34,17 +34,29 @@ namespace arv {
     ParsedScene JsonSceneParser::parseScene(const json& j) {
         ParsedScene scene;
 
-        // Validate required fields
-        if (!j.contains("backgroundColor") || !j["backgroundColor"].is_array()) {
-            throw std::runtime_error("Scene missing 'backgroundColor'");
-        }
-
         if (!j.contains("objects") || !j["objects"].is_array()) {
             throw std::runtime_error("Scene missing 'objects' array");
         }
 
-        // Background color
-        scene.backgroundColor = parseVec4(j.at("backgroundColor"));
+        // Parse background settings
+        if (j.contains("background") && j["background"].is_object()) {
+            auto& bg = j["background"];
+            if (bg.contains("mode") && bg["mode"].is_string()) {
+                scene.backgroundMode = bg["mode"].get<std::string>();
+            }
+            if (bg.contains("color") && bg["color"].is_array()) {
+                scene.backgroundColor = parseVec4(bg["color"]);
+            }
+            if (bg.contains("skyboxPath") && bg["skyboxPath"].is_string()) {
+                scene.skyboxPath = bg["skyboxPath"].get<std::string>();
+            }
+        } else if (j.contains("backgroundColor") && j["backgroundColor"].is_array()) {
+            // Legacy fallback
+            scene.backgroundColor = parseVec4(j.at("backgroundColor"));
+            scene.backgroundMode = "color";
+        } else {
+            scene.backgroundMode = "color";
+        }
 
         // Create objects via factory
         for (const auto& objJson : j.at("objects")) {

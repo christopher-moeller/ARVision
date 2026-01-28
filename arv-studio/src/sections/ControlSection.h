@@ -9,10 +9,13 @@
 #include <string>
 #include <glm/glm.hpp>
 
+struct BackgroundSettings;
+
 class ControlSection {
 public:
     using LoadSceneCallback = std::function<void(const std::string&)>;
     using SaveSceneCallback = std::function<void()>;
+    using LoadSkyboxCallback = std::function<void(const std::string&)>;
 
     ControlSection(arv::RenderingAPI* renderingAPI,
                    std::vector<std::unique_ptr<arv::RenderingObject>>* objects,
@@ -22,6 +25,8 @@ public:
     void SetLoadSceneCallback(LoadSceneCallback callback) { m_LoadSceneCallback = std::move(callback); }
     void SetSaveSceneCallback(SaveSceneCallback callback) { m_SaveSceneCallback = std::move(callback); }
     void SetCurrentScenePath(const std::string* path) { m_CurrentScenePath = path; }
+    void SetBackgroundSettings(BackgroundSettings* bg) { m_Background = bg; }
+    void SetLoadSkyboxCallback(LoadSkyboxCallback callback) { m_LoadSkyboxCallback = std::move(callback); }
 
     void RenderImGuiPanel();
 
@@ -33,5 +38,7 @@ private:
 
     LoadSceneCallback m_LoadSceneCallback;
     SaveSceneCallback m_SaveSceneCallback;
+    LoadSkyboxCallback m_LoadSkyboxCallback;
     const std::string* m_CurrentScenePath = nullptr;
+    BackgroundSettings* m_Background = nullptr;
 };

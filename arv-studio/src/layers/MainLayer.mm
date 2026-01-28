@@ -54,14 +54,24 @@ void MainLayer::OnAttach()
     m_Objects = std::move(parsedScene.objects);
     ARV_LOG_INFO("MainLayer: Loaded {} objects from scene file", m_Objects.size());
 
+    // Apply background settings from parsed scene
+    m_BackgroundSettings.color = parsedScene.backgroundColor;
+    m_BackgroundSettings.skyboxPath = parsedScene.skyboxPath;
+    m_BackgroundSettings.mode = (parsedScene.backgroundMode == "skybox")
+        ? BackgroundSettings::Mode::Skybox : BackgroundSettings::Mode::Color;
+
     // Create sections
     m_SceneDisplay = std::make_unique<SceneDisplaySection>(
         m_Renderer, m_RenderingAPI, m_EventManager, &m_Objects, &m_SelectedObjectIndex);
-    m_SceneDisplay->Init(m_WindowWidth, m_WindowHeight, parsedScene.backgroundColor);
+    m_SceneDisplay->Init(m_WindowWidth, m_WindowHeight, &m_BackgroundSettings);
 
     m_ControlSection = std::make_unique<ControlSection>(
         m_RenderingAPI, &m_Objects, &m_SelectedObjectIndex, &m_SceneDisplay->GetViewportSize());
     m_ControlSection->SetCurrentScenePath(&m_CurrentScenePath);
+    m_ControlSection->SetBackgroundSettings(&m_BackgroundSettings);
+    m_ControlSection->SetLoadSkyboxCallback([this](const std::string& path) {
+        m_SceneDisplay->LoadSkyboxTexture(path);
+    });
     m_ControlSection->SetLoadSceneCallback([this](const std::string& path) {
         LoadScene(path);
     });
@@ -90,7 +100,15 @@ void MainLayer::LoadScene(const std::string& path)
     m_CurrentScenePath = path;
     m_Objects = std::move(parsedScene.objects);
     m_SelectedObjectIndex = -1;
-    m_SceneDisplay->SetBackgroundColor(parsedScene.backgroundColor);
+
+    m_BackgroundSettings.color = parsedScene.backgroundColor;
+    m_BackgroundSettings.skyboxPath = parsedScene.skyboxPath;
+    m_BackgroundSettings.mode = (parsedScene.backgroundMode == "skybox")
+        ? BackgroundSettings::Mode::Skybox : BackgroundSettings::Mode::Color;
+
+    if (m_BackgroundSettings.mode == BackgroundSettings::Mode::Skybox && !m_BackgroundSettings.skyboxPath.empty()) {
+        m_SceneDisplay->LoadSkyboxTexture(m_BackgroundSettings.skyboxPath);
+    }
 
     ARV_LOG_INFO("MainLayer::LoadScene() - Loaded {} objects", m_Objects.size());
 }
@@ -114,6 +132,14 @@ void MainLayer::SaveScene()
     nlohmann::json j;
     inFile >> j;
     inFile.close();
+
+    // Update background settings
+    nlohmann::json bgJson;
+    bgJson["mode"] = (m_BackgroundSettings.mode == BackgroundSettings::Mode::Skybox) ? "skybox" : "color";
+    bgJson["color"] = { m_BackgroundSettings.color.x, m_BackgroundSettings.color.y,
+                         m_BackgroundSettings.color.z, m_BackgroundSettings.color.w };
+    bgJson["skyboxPath"] = m_BackgroundSettings.skyboxPath;
+    j["background"] = bgJson;
 
     // Update positions in the JSON objects array
     auto& jsonObjects = j["objects"];
