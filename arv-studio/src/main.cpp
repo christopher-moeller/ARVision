@@ -1,5 +1,7 @@
 #include <iostream>
 #include <memory>
+#include <thread>
+#include <chrono>
 #include "ARVBase.h"
 #include "MacosMetalPlatformProvider.h"
 #include "MacosOpenGlPlatformProvider.h"
@@ -49,14 +51,16 @@ int start(int platformType) {
 
     // Push the main layer (combines scene rendering and ImGui)
     arv::PlatformProvider* provider = app->GetPlatformProvider();
-    app->PushLayer(std::make_unique<MainLayer>(
+    auto mainLayer = std::make_unique<MainLayer>(
         app->GetRenderer(),
         provider->GetCanvas(),
         provider->GetRenderingAPI(),
         app->GetEventManager().get(),
         WINDOW_WIDTH,
         WINDOW_HEIGHT
-    ));
+    );
+    MainLayer* mainLayerPtr = mainLayer.get();
+    app->PushLayer(std::move(mainLayer));
 
     // Track platform switch requests
     int nextPlatform = 0;
@@ -75,6 +79,8 @@ int start(int platformType) {
     arv::RenderingAPI* renderingAPI = provider->GetRenderingAPI();
 
     while (!canvas->ShouldClose() && !stopApplication) {
+        auto frameStart = std::chrono::steady_clock::now();
+
         arv::Timestep timestep = app->CalculateNextTimestep();
         app->GetLayerStack().OnUpdate(timestep.GetSeconds());
 
@@ -84,6 +90,17 @@ int start(int platformType) {
 
         canvas->PollEvents();
         canvas->SwapBuffers();
+
+        // FPS cap
+        int maxFPS = mainLayerPtr->GetMaxFPS();
+        if (maxFPS > 0) {
+            auto frameEnd = std::chrono::steady_clock::now();
+            auto elapsed = frameEnd - frameStart;
+            auto targetDuration = std::chrono::duration<double>(1.0 / maxFPS);
+            if (elapsed < targetDuration) {
+                std::this_thread::sleep_for(targetDuration - elapsed);
+            }
+        }
     }
 
     // Determine what to return

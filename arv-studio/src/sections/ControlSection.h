@@ -27,6 +27,8 @@ public:
     void SetCurrentScenePath(const std::string* path) { m_CurrentScenePath = path; }
     void SetBackgroundSettings(BackgroundSettings* bg) { m_Background = bg; }
     void SetLoadSkyboxCallback(LoadSkyboxCallback callback) { m_LoadSkyboxCallback = std::move(callback); }
+    void SetDeltaTime(const float* dt) { m_DeltaTime = dt; }
+    void SetMaxFPS(int* maxFPS) { m_MaxFPS = maxFPS; }
 
     void RenderImGuiPanel();
 
@@ -41,4 +43,6 @@ private:
     LoadSkyboxCallback m_LoadSkyboxCallback;
     const std::string* m_CurrentScenePath = nullptr;
     BackgroundSettings* m_Background = nullptr;
+    const float* m_DeltaTime = nullptr;
+    int* m_MaxFPS = nullptr;
 };

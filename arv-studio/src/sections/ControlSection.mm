@@ -217,6 +217,15 @@ void ControlSection::RenderImGuiPanel()
         ImGui::Separator();
         ImGui::Text("Viewport: %.0f x %.0f", m_ViewportSize->x, m_ViewportSize->y);
 
+        // FPS display and cap
+        if (m_DeltaTime && *m_DeltaTime > 0.0f) {
+            float fps = 1.0f / *m_DeltaTime;
+            ImGui::Text("FPS: %.1f (%.2f ms)", fps, *m_DeltaTime * 1000.0f);
+        }
+        if (m_MaxFPS) {
+            ImGui::SliderInt("Max FPS", m_MaxFPS, 0, 240, *m_MaxFPS == 0 ? "Unlimited" : "%d");
+        }
+
         ImGui::Separator();
     }
     ImGui::EndChild();

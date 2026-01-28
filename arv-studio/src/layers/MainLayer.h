@@ -33,6 +33,8 @@ public:
     void OnUpdate(float deltaTime) override;
     void OnRender() override;
 
+    int GetMaxFPS() const { return m_MaxFPS; }
+
 private:
     void InitImGui();
     void ShutdownImGui();
@@ -54,6 +56,8 @@ private:
     int m_SelectedObjectIndex = -1;
     std::string m_CurrentScenePath;
     BackgroundSettings m_BackgroundSettings;
+    float m_DeltaTime = 0.0f;
+    int m_MaxFPS = 0; // 0 = unlimited
 
     // Sections
     std::unique_ptr<SceneDisplaySection> m_SceneDisplay;

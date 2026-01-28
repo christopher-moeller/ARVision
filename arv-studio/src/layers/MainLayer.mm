@@ -69,6 +69,8 @@ void MainLayer::OnAttach()
         m_RenderingAPI, &m_Objects, &m_SelectedObjectIndex, &m_SceneDisplay->GetViewportSize());
     m_ControlSection->SetCurrentScenePath(&m_CurrentScenePath);
     m_ControlSection->SetBackgroundSettings(&m_BackgroundSettings);
+    m_ControlSection->SetDeltaTime(&m_DeltaTime);
+    m_ControlSection->SetMaxFPS(&m_MaxFPS);
     m_ControlSection->SetLoadSkyboxCallback([this](const std::string& path) {
         m_SceneDisplay->LoadSkyboxTexture(path);
     });
@@ -169,6 +171,7 @@ void MainLayer::SaveScene()
 
 void MainLayer::OnUpdate(float deltaTime)
 {
+    m_DeltaTime = deltaTime;
     m_SceneDisplay->Update(deltaTime);
 }
 
