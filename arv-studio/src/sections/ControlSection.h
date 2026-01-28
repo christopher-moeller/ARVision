@@ -27,6 +27,13 @@ public:
     void RenderImGuiPanel();
 
 private:
+    void RenderPlatformSwitcher();
+    void RenderSceneControls();
+    void RenderObjectList();
+    void RenderObjectProperties();
+    void RenderBackgroundSettings();
+    void RenderPerformanceInfo();
+
     arv::RenderingAPI* m_RenderingAPI;
     EditorState* m_State;
     const glm::vec2* m_ViewportSize;
