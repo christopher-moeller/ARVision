@@ -1,7 +1,5 @@
 #include "ObjAssetRO.h"
 #include "rendering/Renderer.h"
-#include "rendering/ShaderSource.h"
-#include "CoreShaderSource.h"
 #include "utils/AssetPath.h"
 #include "ARVBase.h"
 
@@ -14,8 +12,89 @@
 
 namespace arv {
 
-    ObjAssetRO::ObjAssetRO(Renderer* renderer, const std::string& pathFragment) {
+    static const char* kShaderSource = R"(
 
+        ### GLSL_VERTEX_SHADER ###
+
+        #version 330 core
+
+        layout(location = 0) in vec3 a_Position;
+        layout(location = 1) in vec2 a_TexCoord;
+        layout(location = 2) in vec3 a_Normal;
+
+        uniform mat4 u_mvp;
+
+        out vec2 v_TexCoord;
+        out vec3 v_Normal;
+
+        void main()
+        {
+            v_TexCoord = a_TexCoord;
+            v_Normal = a_Normal;
+            gl_Position = u_mvp * vec4(a_Position, 1.0);
+        }
+
+        ### GLSL_FRAGMENT_SHADER ###
+
+        #version 330 core
+
+        layout(location = 0) out vec4 color;
+
+        in vec2 v_TexCoord;
+        in vec3 v_Normal;
+
+        uniform sampler2D u_Texture;
+
+        void main()
+        {
+            // Simple directional lighting
+            vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
+            float diff = max(dot(normalize(v_Normal), lightDir), 0.3);
+            vec4 texColor = texture(u_Texture, v_TexCoord);
+            color = vec4(texColor.rgb * diff, texColor.a);
+        }
+
+        ### MSL_SHADER ###
+
+        #include <metal_stdlib>
+        using namespace metal;
+
+        struct VertexUniforms {
+            float4x4 u_mvp;
+        };
+
+        struct VertexIn {
+            float3 position [[attribute(0)]];
+            float2 texCoord [[attribute(1)]];
+            float3 normal [[attribute(2)]];
+        };
+
+        struct VertexOut {
+            float4 position [[position]];
+            float2 texCoord;
+            float3 normal;
+        };
+
+        vertex VertexOut vertexMain(VertexIn in [[stage_in]],
+                                    constant VertexUniforms& uniforms [[buffer(1)]]) {
+            VertexOut out;
+            out.position = uniforms.u_mvp * float4(in.position, 1.0);
+            out.texCoord = float2(in.texCoord.x, 1.0 - in.texCoord.y);
+            out.normal = in.normal;
+            return out;
+        }
+
+        fragment float4 fragmentMain(VertexOut in [[stage_in]],
+                                     texture2d<float> tex [[texture(0)]],
+                                     sampler texSampler [[sampler(0)]]) {
+            float3 lightDir = normalize(float3(1.0, 1.0, 1.0));
+            float diff = max(dot(normalize(in.normal), lightDir), 0.3);
+            float4 texColor = tex.sample(texSampler, in.texCoord);
+            return float4(texColor.rgb * diff, texColor.a);
+        }
+    )";
+
+    ObjAssetRO::ObjAssetRO(Renderer* renderer, const std::string& pathFragment) {
         // Build paths - use lowercase for the obj filename
         m_AssetPath = AssetPath::Resolve("objects/" + pathFragment);
         std::string lowercaseName = pathFragment;
@@ -118,110 +197,19 @@ namespace arv {
             }
         }
 
-        // Shader with position, texcoord, and normal support
-        std::string fullSource = R"(
-
-            ### GLSL_VERTEX_SHADER ###
-
-            #version 330 core
-
-            layout(location = 0) in vec3 a_Position;
-            layout(location = 1) in vec2 a_TexCoord;
-            layout(location = 2) in vec3 a_Normal;
-
-            uniform mat4 u_mvp;
-
-            out vec2 v_TexCoord;
-            out vec3 v_Normal;
-
-            void main()
-            {
-                v_TexCoord = a_TexCoord;
-                v_Normal = a_Normal;
-                gl_Position = u_mvp * vec4(a_Position, 1.0);
-            }
-
-            ### GLSL_FRAGMENT_SHADER ###
-
-            #version 330 core
-
-            layout(location = 0) out vec4 color;
-
-            in vec2 v_TexCoord;
-            in vec3 v_Normal;
-
-            uniform sampler2D u_Texture;
-
-            void main()
-            {
-                // Simple directional lighting
-                vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
-                float diff = max(dot(normalize(v_Normal), lightDir), 0.3);
-                vec4 texColor = texture(u_Texture, v_TexCoord);
-                color = vec4(texColor.rgb * diff, texColor.a);
-            }
-
-            ### MSL_SHADER ###
-
-            #include <metal_stdlib>
-            using namespace metal;
-
-            struct VertexUniforms {
-                float4x4 u_mvp;
-            };
-
-            struct VertexIn {
-                float3 position [[attribute(0)]];
-                float2 texCoord [[attribute(1)]];
-                float3 normal [[attribute(2)]];
-            };
-
-            struct VertexOut {
-                float4 position [[position]];
-                float2 texCoord;
-                float3 normal;
-            };
-
-            vertex VertexOut vertexMain(VertexIn in [[stage_in]],
-                                        constant VertexUniforms& uniforms [[buffer(1)]]) {
-                VertexOut out;
-                out.position = uniforms.u_mvp * float4(in.position, 1.0);
-                out.texCoord = float2(in.texCoord.x, 1.0 - in.texCoord.y);
-                out.normal = in.normal;
-                return out;
-            }
-
-            fragment float4 fragmentMain(VertexOut in [[stage_in]],
-                                         texture2d<float> tex [[texture(0)]],
-                                         sampler texSampler [[sampler(0)]]) {
-                float3 lightDir = normalize(float3(1.0, 1.0, 1.0));
-                float diff = max(dot(normalize(in.normal), lightDir), 0.3);
-                float4 texColor = tex.sample(texSampler, in.texCoord);
-                return float4(texColor.rgb * diff, texColor.a);
-            }
-        )";
-
-        m_ShaderSource = std::make_unique<CoreShaderSource>(fullSource);
-        m_Shader = renderer->CreateShader(m_ShaderSource.get());
-        m_Shader->Compile();
-
-        m_VertexArray = renderer->CreateVertexArray();
-
-        auto vertexBuffer = renderer->CreateVertexBuffer(vertices.data(),
-                                                                    vertices.size() * sizeof(float));
         BufferLayout layout = {
             { ShaderDataType::Float3, "a_Position" },
             { ShaderDataType::Float2, "a_TexCoord" },
             { ShaderDataType::Float3, "a_Normal" }
         };
-        vertexBuffer->SetLayout(layout);
-        m_VertexArray->AddVertexBuffer(vertexBuffer);
 
-        auto indexBuffer = renderer->CreateIndexBuffer(indices.data(),
-                                                                  static_cast<unsigned int>(indices.size()));
-        m_VertexArray->SetIndexBuffer(indexBuffer);
+        auto resources = SetupRendering(renderer, kShaderSource,
+            vertices.data(), vertices.size() * sizeof(float),
+            indices.data(), indices.size(), layout);
 
-        m_VertexArray->Unbind();
+        m_ShaderSource = std::move(resources.shaderSource);
+        m_Shader = std::move(resources.shader);
+        m_VertexArray = std::move(resources.vertexArray);
 
         // Load texture - try to find diffuse texture from materials
         std::string texturePath;

@@ -7,7 +7,11 @@
 #include "rendering/Shader.h"
 #include "rendering/VertexArray.h"
 #include "rendering/Texture.h"
+#include "rendering/CoreShaderSource.h"
+
 namespace arv {
+
+    class Renderer;
 
     class RenderingObject {
 
@@ -42,6 +46,22 @@ namespace arv {
         virtual void SaveCustomProperties(nlohmann::json& j) const {}
 
     protected:
+        // Helper struct for common rendering resources
+        struct RenderingResources {
+            std::unique_ptr<CoreShaderSource> shaderSource;
+            std::shared_ptr<Shader> shader;
+            std::shared_ptr<VertexArray> vertexArray;
+        };
+
+        // Creates shader and vertex array from source code and geometry data
+        // This eliminates ~70% boilerplate across RenderingObject subclasses
+        static RenderingResources SetupRendering(
+            Renderer* renderer,
+            const std::string& shaderSourceCode,
+            const float* vertices, size_t verticesSizeBytes,
+            const uint32_t* indices, size_t indexCount,
+            const BufferLayout& layout);
+
         glm::vec3 position{0.0f, 0.0f, 0.0f};
         glm::vec3 m_scale{1.0f, 1.0f, 1.0f};
         glm::vec3 m_rotation{0.0f, 0.0f, 0.0f};
