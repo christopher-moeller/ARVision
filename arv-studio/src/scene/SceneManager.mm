@@ -1,6 +1,7 @@
 #include "SceneManager.h"
 #include "ARVBase.h"
 #include "utils/JsonSceneParser.h"
+#include "ARVApplication.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
 
@@ -30,6 +31,9 @@ void SceneManager::LoadScene(const std::string& path)
     m_State->selectedObjectIndex = -1;
 
     ApplyBackground(parsedScene.backgroundMode, parsedScene.backgroundColor, parsedScene.skyboxPath);
+
+    // Apply maxFPS setting
+    arv::ARVApplication::Get()->SetMaxFPS(parsedScene.maxFPS);
 
     if (m_State->background.mode == BackgroundSettings::Mode::Skybox &&
         !m_State->background.skyboxPath.empty() && m_SkyboxLoadCallback) {
@@ -66,6 +70,9 @@ void SceneManager::SaveScene()
                          m_State->background.color.z, m_State->background.color.w };
     bgJson["skyboxPath"] = m_State->background.skyboxPath;
     j["background"] = bgJson;
+
+    // Update maxFPS setting
+    j["maxFPS"] = arv::ARVApplication::Get()->GetMaxFPS();
 
     // Update object properties in the JSON objects array
     auto& jsonObjects = j["objects"];

@@ -17,6 +17,7 @@ namespace arv {
         glm::vec4 backgroundColor;
         std::string backgroundMode; // "color" or "skybox"
         std::string skyboxPath;
+        int maxFPS = 0; // 0 means unlimited
         std::vector<std::unique_ptr<RenderingObject>> objects;
     };
 

@@ -58,6 +58,11 @@ namespace arv {
             scene.backgroundMode = "color";
         }
 
+        // Parse maxFPS setting
+        if (j.contains("maxFPS") && j["maxFPS"].is_number_integer()) {
+            scene.maxFPS = j["maxFPS"].get<int>();
+        }
+
         // Create objects via factory
         for (const auto& objJson : j.at("objects")) {
             auto obj = RenderingObjectFactory::Instance().Create(renderer, objJson);
