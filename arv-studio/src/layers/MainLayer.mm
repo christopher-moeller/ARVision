@@ -3,6 +3,10 @@
 #include "utils/AssetPath.h"
 
 #include <imgui.h>
+#include <sstream>
+#include <iomanip>
+#include <ctime>
+#include <filesystem>
 
 MainLayer::MainLayer(arv::Renderer* renderer, arv::Canvas* canvas,
                      arv::RenderingAPI* renderingAPI, arv::EventManager* eventManager,
@@ -51,6 +55,40 @@ void MainLayer::OnAttach()
     });
     m_ControlSection->SetSaveSceneCallback([this]() {
         m_SceneManager->SaveScene();
+    });
+    m_ControlSection->SetTakeScreenshotCallback([this]() {
+        // Extract scene name from path
+        std::string sceneName = "screenshot";
+        if (!m_State.currentScenePath.empty()) {
+            std::string filename = m_State.currentScenePath;
+            auto pos = filename.find_last_of('/');
+            if (pos != std::string::npos) {
+                filename = filename.substr(pos + 1);
+            }
+            // Remove .json extension
+            auto extPos = filename.find_last_of('.');
+            if (extPos != std::string::npos) {
+                sceneName = filename.substr(0, extPos);
+            } else {
+                sceneName = filename;
+            }
+        }
+
+        // Generate timestamp
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        std::tm tm = *std::localtime(&time);
+        std::ostringstream timestamp;
+        timestamp << std::put_time(&tm, "%Y%m%d_%H%M%S");
+
+        // Build filepath (relative to the assets directory's parent)
+        std::string assetsDir = arv::AssetPath::GetAssetDirectory();
+        // Go up from assets to arv-studio, then into recordings/screenshots
+        std::filesystem::path basePath(assetsDir);
+        std::filesystem::path screenshotDir = basePath.parent_path() / "recordings" / "screenshots";
+        std::string filepath = (screenshotDir / (sceneName + "_" + timestamp.str() + ".png")).string();
+
+        m_SceneDisplay->TakeScreenshot(filepath);
     });
 
     m_StartTime = std::chrono::high_resolution_clock::now();

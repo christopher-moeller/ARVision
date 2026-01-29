@@ -20,6 +20,7 @@ project "arv-studio"
 
     sysincludedirs {
         GLM_INCLUDE_DIR,
+        STB_INCLUDE_DIR,
         IMGUI_INCLUDE_DIR,
         IMGUI_BACKENDS_DIR,
         -- GLFW headers for ImGui layer

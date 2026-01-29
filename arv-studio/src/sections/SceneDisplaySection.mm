@@ -8,10 +8,14 @@
 
 #include <imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include <stb_image_write.h>
+#include <vector>
+#include <algorithm>
 
 #ifdef __APPLE__
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
+#import <OpenGL/gl.h>
 #include "rendering/MacosMetalRenderingAPI.h"
 #include "rendering/MetalFramebuffer.h"
 #endif
@@ -177,4 +181,93 @@ void SceneDisplaySection::RenderImGuiPanel()
 #endif
     }
     ImGui::EndChild();
+}
+
+bool SceneDisplaySection::TakeScreenshot(const std::string& filepath)
+{
+    uint32_t width = m_SceneFramebuffer->GetWidth();
+    uint32_t height = m_SceneFramebuffer->GetHeight();
+
+    if (width == 0 || height == 0) {
+        ARV_LOG_ERROR("TakeScreenshot: Invalid framebuffer dimensions");
+        return false;
+    }
+
+    std::vector<unsigned char> pixels(width * height * 4);
+    bool needsVerticalFlip = false;
+
+    arv::RenderingBackend backend = m_RenderingAPI->GetBackendType();
+
+    if (backend == arv::RenderingBackend::OpenGL) {
+        m_SceneFramebuffer->Bind();
+        glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+        m_SceneFramebuffer->Unbind();
+        needsVerticalFlip = true; // OpenGL has origin at bottom-left
+    }
+#ifdef __APPLE__
+    else if (backend == arv::RenderingBackend::Metal) {
+        arv::MacosMetalRenderingAPI* metalAPI = static_cast<arv::MacosMetalRenderingAPI*>(m_RenderingAPI);
+        arv::MetalFramebuffer* metalFB = static_cast<arv::MetalFramebuffer*>(m_SceneFramebuffer.get());
+
+        id<MTLDevice> device = metalAPI->GetDevice();
+        id<MTLCommandQueue> commandQueue = metalAPI->GetCommandQueue();
+        id<MTLTexture> texture = metalFB->GetColorTexture();
+
+        NSUInteger bytesPerRow = width * 4;
+        NSUInteger bufferSize = bytesPerRow * height;
+
+        // Create a buffer with shared storage mode for CPU access
+        id<MTLBuffer> readBuffer = [device newBufferWithLength:bufferSize
+                                                       options:MTLResourceStorageModeShared];
+
+        // Create command buffer and blit encoder to copy texture to buffer
+        id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+        id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer blitCommandEncoder];
+
+        [blitEncoder copyFromTexture:texture
+                         sourceSlice:0
+                         sourceLevel:0
+                        sourceOrigin:MTLOriginMake(0, 0, 0)
+                          sourceSize:MTLSizeMake(width, height, 1)
+                            toBuffer:readBuffer
+                   destinationOffset:0
+              destinationBytesPerRow:bytesPerRow
+            destinationBytesPerImage:bufferSize];
+
+        [blitEncoder endEncoding];
+        [commandBuffer commit];
+        [commandBuffer waitUntilCompleted];
+
+        // Copy data from buffer to our pixel array
+        memcpy(pixels.data(), [readBuffer contents], bufferSize);
+
+        // Convert BGRA to RGBA (Metal uses BGRA format)
+        for (uint32_t i = 0; i < width * height; i++) {
+            std::swap(pixels[i * 4 + 0], pixels[i * 4 + 2]); // Swap B and R
+        }
+        needsVerticalFlip = false; // Metal has origin at top-left
+    }
+#endif
+
+    // Write PNG (flip vertically if needed for OpenGL)
+    int result;
+    if (needsVerticalFlip) {
+        result = stbi_write_png(filepath.c_str(),
+                                width, height, 4,
+                                pixels.data() + (width * 4 * (height - 1)),
+                                -static_cast<int>(width * 4));
+    } else {
+        result = stbi_write_png(filepath.c_str(),
+                                width, height, 4,
+                                pixels.data(),
+                                static_cast<int>(width * 4));
+    }
+
+    if (result) {
+        ARV_LOG_INFO("Screenshot saved to: {}", filepath);
+    } else {
+        ARV_LOG_ERROR("Failed to save screenshot to: {}", filepath);
+    }
+
+    return result != 0;
 }

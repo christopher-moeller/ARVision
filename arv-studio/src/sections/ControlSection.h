@@ -15,6 +15,7 @@ public:
     using LoadSceneCallback = std::function<void(const std::string&)>;
     using SaveSceneCallback = std::function<void()>;
     using LoadSkyboxCallback = std::function<void(const std::string&)>;
+    using TakeScreenshotCallback = std::function<void()>;
 
     ControlSection(arv::RenderingAPI* renderingAPI,
                    EditorState* state,
@@ -23,6 +24,7 @@ public:
     void SetLoadSceneCallback(LoadSceneCallback callback) { m_LoadSceneCallback = std::move(callback); }
     void SetSaveSceneCallback(SaveSceneCallback callback) { m_SaveSceneCallback = std::move(callback); }
     void SetLoadSkyboxCallback(LoadSkyboxCallback callback) { m_LoadSkyboxCallback = std::move(callback); }
+    void SetTakeScreenshotCallback(TakeScreenshotCallback callback) { m_TakeScreenshotCallback = std::move(callback); }
 
     void RenderImGuiPanel();
 
@@ -33,6 +35,7 @@ private:
     void RenderObjectProperties();
     void RenderBackgroundSettings();
     void RenderPerformanceInfo();
+    void RenderRecordingControls();
 
     arv::RenderingAPI* m_RenderingAPI;
     EditorState* m_State;
@@ -41,4 +44,5 @@ private:
     LoadSceneCallback m_LoadSceneCallback;
     SaveSceneCallback m_SaveSceneCallback;
     LoadSkyboxCallback m_LoadSkyboxCallback;
+    TakeScreenshotCallback m_TakeScreenshotCallback;
 };

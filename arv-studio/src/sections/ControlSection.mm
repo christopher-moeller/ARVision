@@ -62,6 +62,8 @@ void ControlSection::RenderImGuiPanel()
         ImGui::Separator();
         RenderPerformanceInfo();
         ImGui::Separator();
+        RenderRecordingControls();
+        ImGui::Separator();
     }
     ImGui::EndChild();
 }
@@ -241,5 +243,14 @@ void ControlSection::RenderPerformanceInfo()
     int maxFPS = arv::ARVApplication::Get()->GetMaxFPS();
     if (ImGui::SliderInt("Max FPS", &maxFPS, 0, 240, maxFPS == 0 ? "Unlimited" : "%d")) {
         arv::ARVApplication::Get()->SetMaxFPS(maxFPS);
+    }
+}
+
+void ControlSection::RenderRecordingControls() {
+    ImGui::Text("Recording Controls");
+    if (ImGui::Button("Take Screenshot")) {
+        if (m_TakeScreenshotCallback) {
+            m_TakeScreenshotCallback();
+        }
     }
 }

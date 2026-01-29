@@ -29,6 +29,7 @@ public:
 
     const glm::vec2& GetViewportSize() const { return m_ViewportSize; }
     void LoadSkyboxTexture(const std::string& path);
+    bool TakeScreenshot(const std::string& filepath);
 
 private:
     void RenderSkybox();
