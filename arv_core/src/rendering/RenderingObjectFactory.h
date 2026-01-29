@@ -9,8 +9,10 @@
 
 namespace arv {
 
-    // Factory function signature: takes JSON object, returns RenderingObject
-    using RenderingObjectCreator = std::function<std::unique_ptr<RenderingObject>(const nlohmann::json&)>;
+    class Renderer;
+
+    // Factory function signature: takes Renderer and JSON object, returns RenderingObject
+    using RenderingObjectCreator = std::function<std::unique_ptr<RenderingObject>(Renderer*, const nlohmann::json&)>;
 
     class RenderingObjectFactory {
     public:
@@ -22,7 +24,7 @@ namespace arv {
 
         // Create a RenderingObject from JSON
         // Returns nullptr if type is not registered
-        std::unique_ptr<RenderingObject> Create(const nlohmann::json& json) const;
+        std::unique_ptr<RenderingObject> Create(Renderer* renderer, const nlohmann::json& json) const;
 
         // Check if a type is registered
         bool IsRegistered(const std::string& typeName) const;

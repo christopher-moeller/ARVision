@@ -29,7 +29,7 @@ void MainLayer::OnAttach()
     m_ImGuiManager->Init();
 
     // Load initial scene
-    m_SceneManager = std::make_unique<SceneManager>(&m_State);
+    m_SceneManager = std::make_unique<SceneManager>(m_Renderer, &m_State);
     m_SceneManager->LoadScene(arv::AssetPath::Resolve("scenes/main_scene.json"));
 
     // Create sections

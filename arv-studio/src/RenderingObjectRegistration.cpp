@@ -12,8 +12,8 @@ namespace arv {
         auto& factory = RenderingObjectFactory::Instance();
 
         // SimpleTriangleRO
-        factory.Register("SimpleTriangleRO", [](const nlohmann::json& json) -> std::unique_ptr<RenderingObject> {
-            auto obj = std::make_unique<SimpleTriangleRO>();
+        factory.Register("SimpleTriangleRO", [](Renderer* renderer, const nlohmann::json& json) -> std::unique_ptr<RenderingObject> {
+            auto obj = std::make_unique<SimpleTriangleRO>(renderer);
 
             // Set color if provided
             if (json.contains("color") && json["color"].is_array()) {
@@ -30,24 +30,24 @@ namespace arv {
         });
 
         // ImageTextureRO
-        factory.Register("ImageTextureRO", [](const nlohmann::json& json) -> std::unique_ptr<RenderingObject> {
+        factory.Register("ImageTextureRO", [](Renderer* renderer, const nlohmann::json& json) -> std::unique_ptr<RenderingObject> {
             std::string texturePath;
             if (json.contains("texturePath")) {
                 texturePath = json.at("texturePath").get<std::string>();
             }
 
             // Resolve the asset path
-            return std::make_unique<ImageTextureRO>(AssetPath::Resolve(texturePath));
+            return std::make_unique<ImageTextureRO>(renderer, AssetPath::Resolve(texturePath));
         });
 
         // ObjAssetRO
-        factory.Register("ObjAssetRO", [](const nlohmann::json& json) -> std::unique_ptr<RenderingObject> {
+        factory.Register("ObjAssetRO", [](Renderer* renderer, const nlohmann::json& json) -> std::unique_ptr<RenderingObject> {
             std::string pathFragment;
             if (json.contains("pathFragment")) {
                 pathFragment = json.at("pathFragment").get<std::string>();
             }
 
-            return std::make_unique<ObjAssetRO>(pathFragment);
+            return std::make_unique<ObjAssetRO>(renderer, pathFragment);
         });
     }
 

@@ -16,7 +16,7 @@ namespace arv {
         ARV_LOG_INFO("RenderingObjectFactory: Registered type '{}'", typeName);
     }
 
-    std::unique_ptr<RenderingObject> RenderingObjectFactory::Create(const nlohmann::json& json) const {
+    std::unique_ptr<RenderingObject> RenderingObjectFactory::Create(Renderer* renderer, const nlohmann::json& json) const {
         if (!json.contains("type")) {
             ARV_LOG_ERROR("RenderingObjectFactory: JSON object missing 'type' field");
             return nullptr;
@@ -30,7 +30,7 @@ namespace arv {
             return nullptr;
         }
 
-        return it->second(json);
+        return it->second(renderer, json);
     }
 
     bool RenderingObjectFactory::IsRegistered(const std::string& typeName) const {

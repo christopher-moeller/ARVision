@@ -7,10 +7,12 @@
 
 namespace arv {
 
+    class Renderer;
+
     class SimpleTriangleRO : public RenderingObject {
 
     public:
-        SimpleTriangleRO();
+        SimpleTriangleRO(Renderer* renderer);
 
         std::shared_ptr<Shader>& GetShader() override;
         std::shared_ptr<VertexArray>& GetVertexArray() override;

@@ -1,5 +1,5 @@
 #include "ObjAssetRO.h"
-#include "ARVApplication.h"
+#include "rendering/Renderer.h"
 #include "rendering/ShaderSource.h"
 #include "CoreShaderSource.h"
 #include "utils/AssetPath.h"
@@ -14,9 +14,7 @@
 
 namespace arv {
 
-    ObjAssetRO::ObjAssetRO(const std::string& pathFragment) {
-
-        ARVApplication* app = ARVApplication::Get();
+    ObjAssetRO::ObjAssetRO(Renderer* renderer, const std::string& pathFragment) {
 
         // Build paths - use lowercase for the obj filename
         m_AssetPath = AssetPath::Resolve("objects/" + pathFragment);
@@ -204,12 +202,12 @@ namespace arv {
         )";
 
         m_ShaderSource = std::make_unique<CoreShaderSource>(fullSource);
-        m_Shader = app->GetRenderer()->CreateShader(m_ShaderSource.get());
+        m_Shader = renderer->CreateShader(m_ShaderSource.get());
         m_Shader->Compile();
 
-        m_VertexArray = app->GetRenderer()->CreateVertexArray();
+        m_VertexArray = renderer->CreateVertexArray();
 
-        auto vertexBuffer = app->GetRenderer()->CreateVertexBuffer(vertices.data(),
+        auto vertexBuffer = renderer->CreateVertexBuffer(vertices.data(),
                                                                     vertices.size() * sizeof(float));
         BufferLayout layout = {
             { ShaderDataType::Float3, "a_Position" },
@@ -219,7 +217,7 @@ namespace arv {
         vertexBuffer->SetLayout(layout);
         m_VertexArray->AddVertexBuffer(vertexBuffer);
 
-        auto indexBuffer = app->GetRenderer()->CreateIndexBuffer(indices.data(),
+        auto indexBuffer = renderer->CreateIndexBuffer(indices.data(),
                                                                   static_cast<unsigned int>(indices.size()));
         m_VertexArray->SetIndexBuffer(indexBuffer);
 
@@ -236,7 +234,7 @@ namespace arv {
             ARV_LOG_INFO("ObjAssetRO: Using fallback texture: {}", texturePath);
         }
 
-        m_Texture = app->GetRenderer()->CreateTexture2D(texturePath);
+        m_Texture = renderer->CreateTexture2D(texturePath);
     }
 
     std::shared_ptr<Shader>& ObjAssetRO::GetShader() {

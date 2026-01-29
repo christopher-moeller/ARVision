@@ -12,7 +12,7 @@ namespace arv {
 
     // ----- Public API -----
 
-    ParsedScene JsonSceneParser::parseFromFile(const std::string& filePath) {
+    ParsedScene JsonSceneParser::parseFromFile(Renderer* renderer, const std::string& filePath) {
         std::ifstream file(filePath);
         if (!file) {
             throw std::runtime_error("Failed to open file: " + filePath);
@@ -21,17 +21,17 @@ namespace arv {
         json j;
         file >> j;
 
-        return parseScene(j);
+        return parseScene(renderer, j);
     }
 
-    ParsedScene JsonSceneParser::parseFromString(const std::string& jsonText) {
+    ParsedScene JsonSceneParser::parseFromString(Renderer* renderer, const std::string& jsonText) {
         json j = json::parse(jsonText);
-        return parseScene(j);
+        return parseScene(renderer, j);
     }
 
     // ----- Core Scene Parsing -----
 
-    ParsedScene JsonSceneParser::parseScene(const json& j) {
+    ParsedScene JsonSceneParser::parseScene(Renderer* renderer, const json& j) {
         ParsedScene scene;
 
         if (!j.contains("objects") || !j["objects"].is_array()) {
@@ -60,7 +60,7 @@ namespace arv {
 
         // Create objects via factory
         for (const auto& objJson : j.at("objects")) {
-            auto obj = RenderingObjectFactory::Instance().Create(objJson);
+            auto obj = RenderingObjectFactory::Instance().Create(renderer, objJson);
             if (obj) {
                 // Set position from JSON if present
                 if (objJson.contains("position") && objJson["position"].is_array()) {

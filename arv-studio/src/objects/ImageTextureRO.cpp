@@ -1,14 +1,12 @@
 #include "ImageTextureRO.h"
-#include "ARVApplication.h"
+#include "rendering/Renderer.h"
 #include "rendering/ShaderSource.h"
 #include "rendering/CoreShaderSource.h"
 #include <string>
 
 namespace arv {
 
-    ImageTextureRO::ImageTextureRO(const std::string& texturePath) {
-
-        ARVApplication* app = ARVApplication::Get();
+    ImageTextureRO::ImageTextureRO(Renderer* renderer, const std::string& texturePath) {
 
         std::string fullSource = R"(
 
@@ -85,10 +83,10 @@ namespace arv {
         )";
 
         m_ShaderSource = std::make_unique<CoreShaderSource>(fullSource);
-        m_Shader = app->GetRenderer()->CreateShader(m_ShaderSource.get());
+        m_Shader = renderer->CreateShader(m_ShaderSource.get());
         m_Shader->Compile();
 
-        m_VertexArray = app->GetRenderer()->CreateVertexArray();
+        m_VertexArray = renderer->CreateVertexArray();
 
         // Quad vertices: position (xyz) + texture coordinates (uv)
         float vertices[] = {
@@ -102,7 +100,7 @@ namespace arv {
         m_boundsMin = glm::vec3(-0.5f, -0.5f, 0.0f);
         m_boundsMax = glm::vec3(0.5f, 0.5f, 0.0f);
 
-        auto vertexBuffer = app->GetRenderer()->CreateVertexBuffer(vertices, sizeof(vertices));
+        auto vertexBuffer = renderer->CreateVertexBuffer(vertices, sizeof(vertices));
         arv::BufferLayout layout = {
             { arv::ShaderDataType::Float3, "a_Position" },
             { arv::ShaderDataType::Float2, "a_TexCoord" }
@@ -111,13 +109,13 @@ namespace arv {
         m_VertexArray->AddVertexBuffer(vertexBuffer);
 
         uint32_t indices[] = { 0, 1, 2, 2, 3, 0 };
-        auto indexBuffer = app->GetRenderer()->CreateIndexBuffer(indices, sizeof(indices) / sizeof(uint32_t));
+        auto indexBuffer = renderer->CreateIndexBuffer(indices, sizeof(indices) / sizeof(uint32_t));
         m_VertexArray->SetIndexBuffer(indexBuffer);
 
         m_VertexArray->Unbind();
 
         // Load the texture
-        m_Texture = app->GetRenderer()->CreateTexture2D(texturePath);
+        m_Texture = renderer->CreateTexture2D(texturePath);
     };
 
     std::shared_ptr<Shader>& ImageTextureRO::GetShader() {

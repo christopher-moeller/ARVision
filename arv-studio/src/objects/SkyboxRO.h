@@ -6,9 +6,11 @@
 
 namespace arv {
 
+    class Renderer;
+
     class SkyboxRO : public RenderingObject {
     public:
-        SkyboxRO();
+        SkyboxRO(Renderer* renderer);
 
         std::shared_ptr<Shader>& GetShader() override;
         std::shared_ptr<VertexArray>& GetVertexArray() override;

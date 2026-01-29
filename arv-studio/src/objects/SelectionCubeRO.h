@@ -7,10 +7,12 @@
 
 namespace arv {
 
+    class Renderer;
+
     class SelectionCubeRO : public RenderingObject {
 
     public:
-        SelectionCubeRO();
+        SelectionCubeRO(Renderer* renderer);
 
         std::shared_ptr<Shader>& GetShader() override;
         std::shared_ptr<VertexArray>& GetVertexArray() override;

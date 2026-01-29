@@ -10,11 +10,13 @@
 
 namespace arv {
 
+    class Renderer;
+
     class ObjAssetRO : public RenderingObject {
 
     public:
         // pathFragment is the folder name inside assets/objects/, e.g. "SMG"
-        ObjAssetRO(const std::string& pathFragment);
+        ObjAssetRO(Renderer* renderer, const std::string& pathFragment);
 
         std::shared_ptr<Shader>& GetShader() override;
         std::shared_ptr<VertexArray>& GetVertexArray() override;

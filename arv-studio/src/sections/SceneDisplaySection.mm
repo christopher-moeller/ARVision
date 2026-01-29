@@ -43,9 +43,9 @@ void SceneDisplaySection::Init(int width, int height)
 
     m_ViewportSize = { static_cast<float>(fbSpec.width), static_cast<float>(fbSpec.height) };
 
-    m_SelectionCube = std::make_unique<arv::SelectionCubeRO>();
+    m_SelectionCube = std::make_unique<arv::SelectionCubeRO>(m_Renderer);
 
-    m_Skybox = std::make_unique<arv::SkyboxRO>();
+    m_Skybox = std::make_unique<arv::SkyboxRO>(m_Renderer);
     if (m_State->background.mode == BackgroundSettings::Mode::Skybox && !m_State->background.skyboxPath.empty()) {
         LoadSkyboxTexture(m_State->background.skyboxPath);
     }

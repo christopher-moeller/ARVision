@@ -4,8 +4,9 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 
-SceneManager::SceneManager(EditorState* state)
-    : m_State(state)
+SceneManager::SceneManager(arv::Renderer* renderer, EditorState* state)
+    : m_Renderer(renderer)
+    , m_State(state)
 {
 }
 
@@ -22,7 +23,7 @@ void SceneManager::LoadScene(const std::string& path)
     ARV_LOG_INFO("SceneManager::LoadScene() - Loading scene from: {}", path);
 
     arv::JsonSceneParser parser;
-    arv::ParsedScene parsedScene = parser.parseFromFile(path);
+    arv::ParsedScene parsedScene = parser.parseFromFile(m_Renderer, path);
 
     m_State->currentScenePath = path;
     m_State->objects = std::move(parsedScene.objects);

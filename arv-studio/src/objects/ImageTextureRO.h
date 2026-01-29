@@ -9,10 +9,12 @@
 
 namespace arv {
 
+    class Renderer;
+
     class ImageTextureRO : public RenderingObject {
 
     public:
-        ImageTextureRO(const std::string& texturePath);
+        ImageTextureRO(Renderer* renderer, const std::string& texturePath);
 
         std::shared_ptr<Shader>& GetShader() override;
         std::shared_ptr<VertexArray>& GetVertexArray() override;

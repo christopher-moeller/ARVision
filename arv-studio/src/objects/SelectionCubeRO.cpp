@@ -1,13 +1,11 @@
 #include "SelectionCubeRO.h"
-#include "ARVApplication.h"
+#include "rendering/Renderer.h"
 #include "rendering/CoreShaderSource.h"
 #include <string>
 
 namespace arv {
 
-    SelectionCubeRO::SelectionCubeRO() {
-
-        ARVApplication* app = ARVApplication::Get();
+    SelectionCubeRO::SelectionCubeRO(Renderer* renderer) {
 
         std::string fullSource = R"(
 
@@ -65,10 +63,10 @@ namespace arv {
         )";
 
         m_ShaderSource = std::make_unique<CoreShaderSource>(fullSource);
-        m_Shader = app->GetRenderer()->CreateShader(m_ShaderSource.get());
+        m_Shader = renderer->CreateShader(m_ShaderSource.get());
         m_Shader->Compile();
 
-        m_VertexArray = app->GetRenderer()->CreateVertexArray();
+        m_VertexArray = renderer->CreateVertexArray();
 
         // Unit cube vertices: 8 corners from (-0.5, -0.5, -0.5) to (0.5, 0.5, 0.5)
         float vertices[] = {
@@ -84,7 +82,7 @@ namespace arv {
             -0.5f,  0.5f, -0.5f,
         };
 
-        auto vertexBuffer = app->GetRenderer()->CreateVertexBuffer(vertices, sizeof(vertices));
+        auto vertexBuffer = renderer->CreateVertexBuffer(vertices, sizeof(vertices));
         BufferLayout layout = {
             { ShaderDataType::Float3, "a_Position" }
         };
@@ -107,7 +105,7 @@ namespace arv {
             4, 5, 1,  1, 0, 4,
         };
 
-        auto indexBuffer = app->GetRenderer()->CreateIndexBuffer(indices, sizeof(indices) / sizeof(uint32_t));
+        auto indexBuffer = renderer->CreateIndexBuffer(indices, sizeof(indices) / sizeof(uint32_t));
         m_VertexArray->SetIndexBuffer(indexBuffer);
 
         m_VertexArray->Unbind();

@@ -4,13 +4,13 @@
 #include <string>
 #include <functional>
 
-class SceneDisplaySection;
+namespace arv { class Renderer; }
 
 class SceneManager {
 public:
     using SkyboxLoadCallback = std::function<void(const std::string&)>;
 
-    SceneManager(EditorState* state);
+    SceneManager(arv::Renderer* renderer, EditorState* state);
 
     void SetSkyboxLoadCallback(SkyboxLoadCallback callback) { m_SkyboxLoadCallback = std::move(callback); }
 
@@ -20,6 +20,7 @@ public:
 private:
     void ApplyBackground(const std::string& mode, const glm::vec4& color, const std::string& skyboxPath);
 
+    arv::Renderer* m_Renderer;
     EditorState* m_State;
     SkyboxLoadCallback m_SkyboxLoadCallback;
 };

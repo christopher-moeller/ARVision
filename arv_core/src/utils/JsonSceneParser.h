@@ -9,6 +9,8 @@
 
 namespace arv {
 
+    class Renderer;
+
     // ----- Parsed Scene Data -----
 
     struct ParsedScene {
@@ -23,13 +25,13 @@ namespace arv {
     class JsonSceneParser {
     public:
         // Parse from file path - uses RenderingObjectFactory to create objects
-        ParsedScene parseFromFile(const std::string& filePath);
+        ParsedScene parseFromFile(Renderer* renderer, const std::string& filePath);
 
         // Parse from already loaded JSON text
-        ParsedScene parseFromString(const std::string& jsonText);
+        ParsedScene parseFromString(Renderer* renderer, const std::string& jsonText);
 
     private:
-        ParsedScene parseScene(const nlohmann::json& j);
+        ParsedScene parseScene(Renderer* renderer, const nlohmann::json& j);
         glm::vec4 parseVec4(const nlohmann::json& j);
     };
 
