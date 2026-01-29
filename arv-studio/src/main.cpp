@@ -45,7 +45,7 @@ int start(int platformType) {
     // Register all RenderingObject factories before loading any scenes
     arv::RegisterRenderingObjects();
     
-    app->Initialize();
+    app->Initialize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
     // Push the main layer (combines scene rendering and ImGui)
     arv::PlatformProvider* provider = app->GetPlatformProvider();

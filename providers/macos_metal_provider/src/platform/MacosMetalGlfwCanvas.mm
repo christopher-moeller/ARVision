@@ -33,7 +33,7 @@ namespace arv
         // Tell GLFW not to create an OpenGL context
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-        m_window = glfwCreateWindow(800, 600, "ARVision (Metal)", nullptr, nullptr);
+        m_window = glfwCreateWindow(context->GetWindowWidth(), context->GetWindowHeight(), "ARVision (Metal)", nullptr, nullptr);
         if (!m_window)
         {
             ARV_LOG_ERROR("Failed to create GLFW window");

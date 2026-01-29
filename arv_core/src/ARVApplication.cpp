@@ -40,7 +40,7 @@ namespace arv
         m_Logger->Info("ARVApplication::ARVApplication() - Constructor called, Logger and EventManager initialized");
     }
 
-    void ARVApplication::Initialize()
+    void ARVApplication::Initialize(int windowWidth, int windowHeight)
     {
         ARV_LOG_INFO("ARVApplication::Initialize() - Starting initialization");
 
@@ -53,7 +53,7 @@ namespace arv
         }
 
         ARV_LOG_INFO("ARVApplication::Initialize() - Creating platform application context");
-        CorePlatformApplicationContext context(m_Logger.get(), m_EventManager.get());
+        CorePlatformApplicationContext context(m_Logger.get(), m_EventManager.get(), windowWidth, windowHeight);
 
         ARV_LOG_INFO("ARVApplication::Initialize() - Initializing platform provider");
         m_platformProvider->Init(&context);

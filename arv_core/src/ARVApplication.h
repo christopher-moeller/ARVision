@@ -21,7 +21,7 @@ namespace arv
         static ARVApplication* Get();
         ARVApplication(ARVApplication& obj) = delete;
 
-        void Initialize();
+        void Initialize(int windowWidth = 1280, int windowHeight = 720);
         PlatformProvider* GetPlatformProvider() const;
         Renderer* GetRenderer() const;
 

@@ -28,7 +28,7 @@ namespace arv
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-        m_window = glfwCreateWindow(800, 600, "ARVision (OpenGL)", nullptr, nullptr);
+        m_window = glfwCreateWindow(context->GetWindowWidth(), context->GetWindowHeight(), "ARVision (OpenGL)", nullptr, nullptr);
         if (!m_window)
         {
             ARV_LOG_ERROR("Failed to create GLFW window");
