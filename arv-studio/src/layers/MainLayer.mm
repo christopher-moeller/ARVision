@@ -150,10 +150,102 @@ void MainLayer::OnAttach()
                 mvpFile << "\n";
             }
             mvpFile.close();
-            ARV_LOG_INFO("Snapshot saved to: {}", snapshotDir.string());
         } else {
             ARV_LOG_ERROR("Failed to write MVP matrix to: {}", mvpPath);
         }
+
+        // Export world-space vertices and indices for all scene objects
+        std::vector<glm::vec3> worldVertices;
+        std::vector<uint32_t> worldIndices;
+
+        for (const auto& obj : m_State.objects) {
+            const auto& localVertices = obj->GetMeshVertices();
+            const auto& localIndices = obj->GetMeshIndices();
+
+            if (localVertices.empty()) continue;
+
+            // Compute model matrix for this object
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, obj->GetPosition());
+            const glm::vec3& rot = obj->GetRotation();
+            model = glm::rotate(model, glm::radians(rot.y), glm::vec3(0, 1, 0));
+            model = glm::rotate(model, glm::radians(rot.x), glm::vec3(1, 0, 0));
+            model = glm::rotate(model, glm::radians(rot.z), glm::vec3(0, 0, 1));
+            model = glm::scale(model, obj->GetScale());
+
+            // Track vertex offset for index adjustment
+            uint32_t vertexOffset = static_cast<uint32_t>(worldVertices.size());
+
+            // Transform vertices to world space
+            for (const auto& localPos : localVertices) {
+                glm::vec4 worldPos = model * glm::vec4(localPos, 1.0f);
+                worldVertices.emplace_back(worldPos.x, worldPos.y, worldPos.z);
+            }
+
+            // Add indices with offset
+            for (uint32_t idx : localIndices) {
+                worldIndices.push_back(vertexOffset + idx);
+            }
+        }
+
+        // Write world_3d_vertices.csv
+        std::string verticesPath = (snapshotDir / "world_3d_vertices.csv").string();
+        std::ofstream verticesFile(verticesPath);
+        if (verticesFile.is_open()) {
+            verticesFile << std::fixed << std::setprecision(6);
+            verticesFile << "x,y,z\n";
+            for (const auto& v : worldVertices) {
+                verticesFile << v.x << "," << v.y << "," << v.z << "\n";
+            }
+            verticesFile.close();
+        } else {
+            ARV_LOG_ERROR("Failed to write vertices to: {}", verticesPath);
+        }
+
+        // Write world_3d_indicies.csv
+        std::string indicesPath = (snapshotDir / "world_3d_indicies.csv").string();
+        std::ofstream indicesFile(indicesPath);
+        if (indicesFile.is_open()) {
+            indicesFile << "index\n";
+            for (uint32_t idx : worldIndices) {
+                indicesFile << idx << "\n";
+            }
+            indicesFile.close();
+        } else {
+            ARV_LOG_ERROR("Failed to write indices to: {}", indicesPath);
+        }
+
+        // Write 3d_scene.obj (standard OBJ format for viewing in other apps)
+        std::string objPath = (snapshotDir / "3d_scene.obj").string();
+        std::ofstream objFile(objPath);
+        if (objFile.is_open()) {
+            objFile << "# ARVision Scene Export\n";
+            objFile << "# Vertices: " << worldVertices.size() << "\n";
+            objFile << "# Triangles: " << (worldIndices.size() / 3) << "\n\n";
+
+            objFile << std::fixed << std::setprecision(6);
+
+            // Write vertices (v x y z)
+            for (const auto& v : worldVertices) {
+                objFile << "v " << v.x << " " << v.y << " " << v.z << "\n";
+            }
+
+            objFile << "\n";
+
+            // Write faces (f i1 i2 i3) - OBJ uses 1-based indexing
+            for (size_t i = 0; i + 2 < worldIndices.size(); i += 3) {
+                objFile << "f " << (worldIndices[i] + 1) << " "
+                               << (worldIndices[i + 1] + 1) << " "
+                               << (worldIndices[i + 2] + 1) << "\n";
+            }
+
+            objFile.close();
+        } else {
+            ARV_LOG_ERROR("Failed to write OBJ to: {}", objPath);
+        }
+
+        ARV_LOG_INFO("Snapshot saved to: {} ({} vertices, {} triangles)",
+                     snapshotDir.string(), worldVertices.size(), worldIndices.size() / 3);
     });
 
     m_StartTime = std::chrono::high_resolution_clock::now();

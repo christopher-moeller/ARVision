@@ -184,6 +184,17 @@ namespace arv {
         ARV_LOG_INFO("ObjAssetRO: Built {} unique vertices, {} indices",
                      vertices.size() / 8, indices.size());
 
+        // Store mesh data for export (extract positions from interleaved data)
+        m_MeshIndices = indices;
+        m_MeshVertices.reserve(vertices.size() / 8);
+        for (size_t i = 0; i < vertices.size() / 8; i++) {
+            m_MeshVertices.emplace_back(
+                vertices[i * 8 + 0],
+                vertices[i * 8 + 1],
+                vertices[i * 8 + 2]
+            );
+        }
+
         // Compute axis-aligned bounding box from vertex positions
         if (vertices.size() >= 8) {
             m_boundsMin = glm::vec3(vertices[0], vertices[1], vertices[2]);

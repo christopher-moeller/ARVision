@@ -22,6 +22,11 @@ namespace arv {
         virtual std::shared_ptr<VertexArray>& GetVertexArray() = 0;
         virtual std::shared_ptr<Texture2D> GetTexture() { return nullptr; }
 
+        // Returns vertex positions as vec3 (x, y, z) in local/model space
+        virtual const std::vector<glm::vec3>& GetMeshVertices() const { return s_EmptyVertices; }
+        // Returns triangle indices (3 indices per triangle)
+        virtual const std::vector<uint32_t>& GetMeshIndices() const { return s_EmptyIndices; }
+
         glm::vec3& GetPosition() { return position; }
         const glm::vec3& GetPosition() const { return position; }
         void SetPosition(const glm::vec3& pos) { position = pos; }
@@ -68,6 +73,10 @@ namespace arv {
         std::string m_name;
         glm::vec3 m_boundsMin{0.0f};
         glm::vec3 m_boundsMax{0.0f};
+
+    private:
+        static const std::vector<glm::vec3> s_EmptyVertices;
+        static const std::vector<uint32_t> s_EmptyIndices;
     };
 
 }

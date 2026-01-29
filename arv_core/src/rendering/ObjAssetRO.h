@@ -22,6 +22,9 @@ namespace arv {
         std::shared_ptr<VertexArray>& GetVertexArray() override;
         std::shared_ptr<Texture2D> GetTexture() override { return m_Texture; }
 
+        const std::vector<glm::vec3>& GetMeshVertices() const override { return m_MeshVertices; }
+        const std::vector<uint32_t>& GetMeshIndices() const override { return m_MeshIndices; }
+
     private:
         std::unique_ptr<CoreShaderSource> m_ShaderSource;
         std::shared_ptr<Shader> m_Shader;
@@ -29,6 +32,10 @@ namespace arv {
         std::shared_ptr<Texture2D> m_Texture;
 
         std::string m_AssetPath;
+
+        // Stored mesh data for export
+        std::vector<glm::vec3> m_MeshVertices;
+        std::vector<uint32_t> m_MeshIndices;
     };
 
 }

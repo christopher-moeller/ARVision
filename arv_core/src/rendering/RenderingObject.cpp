@@ -3,6 +3,10 @@
 
 namespace arv {
 
+    // Static empty vectors for default GetMeshVertices/GetMeshIndices implementations
+    const std::vector<glm::vec3> RenderingObject::s_EmptyVertices;
+    const std::vector<uint32_t> RenderingObject::s_EmptyIndices;
+
     RenderingObject::RenderingResources RenderingObject::SetupRendering(
         Renderer* renderer,
         const std::string& shaderSourceCode,
