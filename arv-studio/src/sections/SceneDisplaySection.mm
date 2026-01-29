@@ -271,3 +271,8 @@ bool SceneDisplaySection::TakeScreenshot(const std::string& filepath)
 
     return result != 0;
 }
+
+glm::mat4 SceneDisplaySection::GetViewProjectionMatrix() const
+{
+    return m_Camera->GetProjectionMatrix() * m_Camera->GetViewMatrix();
+}

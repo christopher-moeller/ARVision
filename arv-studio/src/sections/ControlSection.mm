@@ -253,4 +253,12 @@ void ControlSection::RenderRecordingControls() {
             m_TakeScreenshotCallback();
         }
     }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Take Snapshot")) {
+        if (m_TakeSnapshotCallback) {
+            m_TakeSnapshotCallback();
+        }
+    }
 }

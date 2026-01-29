@@ -7,6 +7,8 @@
 #include <iomanip>
 #include <ctime>
 #include <filesystem>
+#include <fstream>
+#include <glm/gtc/type_ptr.hpp>
 
 MainLayer::MainLayer(arv::Renderer* renderer, arv::Canvas* canvas,
                      arv::RenderingAPI* renderingAPI, arv::EventManager* eventManager,
@@ -89,6 +91,69 @@ void MainLayer::OnAttach()
         std::string filepath = (screenshotDir / (sceneName + "_" + timestamp.str() + ".png")).string();
 
         m_SceneDisplay->TakeScreenshot(filepath);
+    });
+    m_ControlSection->SetTakeSnapshotCallback([this]() {
+        // Extract scene name from path
+        std::string sceneName = "snapshot";
+        if (!m_State.currentScenePath.empty()) {
+            std::string filename = m_State.currentScenePath;
+            auto pos = filename.find_last_of('/');
+            if (pos != std::string::npos) {
+                filename = filename.substr(pos + 1);
+            }
+            // Remove .json extension
+            auto extPos = filename.find_last_of('.');
+            if (extPos != std::string::npos) {
+                sceneName = filename.substr(0, extPos);
+            } else {
+                sceneName = filename;
+            }
+        }
+
+        // Generate timestamp
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        std::tm tm = *std::localtime(&time);
+        std::ostringstream timestamp;
+        timestamp << std::put_time(&tm, "%Y%m%d_%H%M%S");
+
+        // Build snapshot folder path
+        std::string assetsDir = arv::AssetPath::GetAssetDirectory();
+        std::filesystem::path basePath(assetsDir);
+        std::filesystem::path snapshotDir = basePath.parent_path() / "recordings" / "snapshots" / (sceneName + "_" + timestamp.str());
+
+        // Create the snapshot folder
+        std::error_code ec;
+        std::filesystem::create_directories(snapshotDir, ec);
+        if (ec) {
+            ARV_LOG_ERROR("Failed to create snapshot directory: {}", snapshotDir.string());
+            return;
+        }
+
+        // Save screenshot
+        std::string screenshotPath = (snapshotDir / "screenshot.png").string();
+        m_SceneDisplay->TakeScreenshot(screenshotPath);
+
+        // Get and save MVP matrix (View-Projection matrix)
+        glm::mat4 vp = m_SceneDisplay->GetViewProjectionMatrix();
+        std::string mvpPath = (snapshotDir / "mvp.csv").string();
+        std::ofstream mvpFile(mvpPath);
+        if (mvpFile.is_open()) {
+            mvpFile << std::fixed << std::setprecision(6);
+            const float* data = glm::value_ptr(vp);
+            for (int row = 0; row < 4; row++) {
+                for (int col = 0; col < 4; col++) {
+                    // GLM stores matrices in column-major order
+                    mvpFile << data[col * 4 + row];
+                    if (col < 3) mvpFile << ",";
+                }
+                mvpFile << "\n";
+            }
+            mvpFile.close();
+            ARV_LOG_INFO("Snapshot saved to: {}", snapshotDir.string());
+        } else {
+            ARV_LOG_ERROR("Failed to write MVP matrix to: {}", mvpPath);
+        }
     });
 
     m_StartTime = std::chrono::high_resolution_clock::now();
