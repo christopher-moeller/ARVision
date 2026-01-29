@@ -102,6 +102,15 @@ namespace arv {
         m_boundsMin = glm::vec3(-0.5f, -0.5f, 0.0f);
         m_boundsMax = glm::vec3(0.5f, 0.5f, 0.0f);
 
+        // Store mesh data for export (quad = 4 vertices, 2 triangles = 6 indices)
+        m_MeshVertices = {
+            glm::vec3(-0.5f, -0.5f, 0.0f),  // Bottom-left
+            glm::vec3( 0.5f, -0.5f, 0.0f),  // Bottom-right
+            glm::vec3( 0.5f,  0.5f, 0.0f),  // Top-right
+            glm::vec3(-0.5f,  0.5f, 0.0f)   // Top-left
+        };
+        m_MeshIndices = { 0, 1, 2, 2, 3, 0 };
+
         m_Texture = renderer->CreateTexture2D(texturePath);
     }
 

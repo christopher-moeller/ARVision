@@ -90,6 +90,14 @@ namespace arv {
 
         m_boundsMin = glm::vec3(-0.5f, -0.5f, 0.0f);
         m_boundsMax = glm::vec3(0.5f, 0.5f, 0.0f);
+
+        // Store mesh data for export
+        m_MeshVertices = {
+            glm::vec3(-0.5f, -0.5f, 0.0f),
+            glm::vec3( 0.5f, -0.5f, 0.0f),
+            glm::vec3( 0.0f,  0.5f, 0.0f)
+        };
+        m_MeshIndices = { 0, 1, 2 };
     }
 
     std::shared_ptr<Shader>& SimpleTriangleRO::GetShader() {
