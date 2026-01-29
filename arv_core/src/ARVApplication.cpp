@@ -3,6 +3,7 @@
 #include "rendering/Renderer.h"
 #include <iostream>
 #include <chrono>
+#include <thread>
 
 #include "utils/StdLogger.h"
 #include "events/CoreEventManager.h"
@@ -104,5 +105,17 @@ namespace arv
 
     void ARVApplication::PushOverlay(std::unique_ptr<Layer> overlay) {
         m_LayerStack.PushOverlay(std::move(overlay));
+    }
+
+    void ARVApplication::ApplyFrameRateCap(std::chrono::steady_clock::time_point frameStart) {
+        if (m_MaxFPS <= 0) return;
+
+        auto frameEnd = std::chrono::steady_clock::now();
+        auto elapsed = frameEnd - frameStart;
+        auto targetDuration = std::chrono::duration<double>(1.0 / m_MaxFPS);
+
+        if (elapsed < targetDuration) {
+            std::this_thread::sleep_for(targetDuration - elapsed);
+        }
     }
 }

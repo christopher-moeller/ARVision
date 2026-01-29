@@ -237,5 +237,9 @@ void ControlSection::RenderPerformanceInfo()
         float fps = 1.0f / m_State->deltaTime;
         ImGui::Text("FPS: %.1f (%.2f ms)", fps, m_State->deltaTime * 1000.0f);
     }
-    ImGui::SliderInt("Max FPS", &m_State->maxFPS, 0, 240, m_State->maxFPS == 0 ? "Unlimited" : "%d");
+
+    int maxFPS = arv::ARVApplication::Get()->GetMaxFPS();
+    if (ImGui::SliderInt("Max FPS", &maxFPS, 0, 240, maxFPS == 0 ? "Unlimited" : "%d")) {
+        arv::ARVApplication::Get()->SetMaxFPS(maxFPS);
+    }
 }

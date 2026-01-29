@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <chrono>
 #include "utils/Logger.h"
 #include "events/EventManager.h"
 #include "LayerStack.h"
@@ -37,6 +38,11 @@ namespace arv
         float GetTime();
         Timestep CalculateNextTimestep();
 
+        // Frame rate control
+        void SetMaxFPS(int fps) { m_MaxFPS = fps; }
+        int GetMaxFPS() const { return m_MaxFPS; }
+        void ApplyFrameRateCap(std::chrono::steady_clock::time_point frameStart);
+
     protected:
         ARVApplication(std::unique_ptr<PlatformProvider> platformProvider);
 
@@ -51,6 +57,7 @@ namespace arv
         LayerStack m_LayerStack;
 
         float m_LastFrameTime = 0.0f;
+        int m_MaxFPS = 0;
 
         static ARVApplication* s_Instance;
     };

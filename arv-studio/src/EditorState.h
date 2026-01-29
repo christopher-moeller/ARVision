@@ -19,5 +19,4 @@ struct EditorState {
     std::string currentScenePath;
     BackgroundSettings background;
     float deltaTime = 0.0f;
-    int maxFPS = 0;
 };
