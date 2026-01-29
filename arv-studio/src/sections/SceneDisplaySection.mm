@@ -147,7 +147,7 @@ void SceneDisplaySection::RenderImGuiPanel()
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
     ImGuiViewport* viewport = ImGui::GetMainViewport();
-    float sceneWidth = viewport->WorkSize.x * 0.65f;
+    float sceneWidth = viewport->WorkSize.x * UILayout::kSceneViewportRatio;
 
     ImGui::BeginChild("SceneViewport", ImVec2(sceneWidth, 0), false, childFlags);
     ImGui::PopStyleVar();

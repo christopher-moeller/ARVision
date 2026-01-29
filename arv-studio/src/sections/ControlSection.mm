@@ -44,7 +44,7 @@ void ControlSection::RenderImGuiPanel()
     ImGuiWindowFlags childFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
 
     ImGuiViewport* viewport = ImGui::GetMainViewport();
-    float controlsWidth = viewport->WorkSize.x * 0.35f;
+    float controlsWidth = viewport->WorkSize.x * UILayout::kControlPanelRatio;
 
     ImGui::BeginChild("ControlsPanel", ImVec2(controlsWidth, 0), true, childFlags);
     {

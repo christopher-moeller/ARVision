@@ -6,6 +6,11 @@
 #include <string>
 #include <glm/glm.hpp>
 
+namespace UILayout {
+    constexpr float kSceneViewportRatio = 0.65f;
+    constexpr float kControlPanelRatio = 0.35f;
+}
+
 struct BackgroundSettings {
     enum class Mode { Color, Skybox };
     Mode mode = Mode::Color;
