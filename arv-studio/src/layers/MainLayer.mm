@@ -188,33 +188,6 @@ void MainLayer::OnAttach()
             }
         }
 
-        // Write world_3d_vertices.csv
-        std::string verticesPath = (snapshotDir / "world_3d_vertices.csv").string();
-        std::ofstream verticesFile(verticesPath);
-        if (verticesFile.is_open()) {
-            verticesFile << std::fixed << std::setprecision(6);
-            verticesFile << "x,y,z\n";
-            for (const auto& v : worldVertices) {
-                verticesFile << v.x << "," << v.y << "," << v.z << "\n";
-            }
-            verticesFile.close();
-        } else {
-            ARV_LOG_ERROR("Failed to write vertices to: {}", verticesPath);
-        }
-
-        // Write world_3d_indicies.csv
-        std::string indicesPath = (snapshotDir / "world_3d_indicies.csv").string();
-        std::ofstream indicesFile(indicesPath);
-        if (indicesFile.is_open()) {
-            indicesFile << "index\n";
-            for (uint32_t idx : worldIndices) {
-                indicesFile << idx << "\n";
-            }
-            indicesFile.close();
-        } else {
-            ARV_LOG_ERROR("Failed to write indices to: {}", indicesPath);
-        }
-
         // Write 3d_scene.obj (standard OBJ format for viewing in other apps)
         std::string objPath = (snapshotDir / "3d_scene.obj").string();
         std::ofstream objFile(objPath);
