@@ -51,6 +51,12 @@ void ControlSection::RenderImGuiPanel()
         ImGui::Text("ARVision Controls");
         ImGui::Separator();
 
+        // Disable all controls except recording controls when recording is active
+        bool isRecording = m_State->recording.isRecording;
+        if (isRecording) {
+            ImGui::BeginDisabled();
+        }
+
         RenderPlatformSwitcher();
         ImGui::Separator();
         RenderSceneControls();
@@ -62,6 +68,11 @@ void ControlSection::RenderImGuiPanel()
         ImGui::Separator();
         RenderPerformanceInfo();
         ImGui::Separator();
+
+        if (isRecording) {
+            ImGui::EndDisabled();
+        }
+
         RenderRecordingControls();
         ImGui::Separator();
     }
@@ -248,6 +259,14 @@ void ControlSection::RenderPerformanceInfo()
 
 void ControlSection::RenderRecordingControls() {
     ImGui::Text("Recording Controls");
+
+    bool isRecording = m_State->recording.isRecording;
+
+    // Disable screenshot/snapshot buttons during recording
+    if (isRecording) {
+        ImGui::BeginDisabled();
+    }
+
     if (ImGui::Button("Take Screenshot")) {
         if (m_TakeScreenshotCallback) {
             m_TakeScreenshotCallback();
@@ -260,5 +279,44 @@ void ControlSection::RenderRecordingControls() {
         if (m_TakeSnapshotCallback) {
             m_TakeSnapshotCallback();
         }
+    }
+
+    if (isRecording) {
+        ImGui::EndDisabled();
+    }
+
+    ImGui::Text("Series recording");
+
+    // Show frame counter during recording
+    if (isRecording) {
+        ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Recording: %u frames", m_State->recording.frameCount);
+    }
+
+    // Disable Start Recording when already recording
+    if (isRecording) {
+        ImGui::BeginDisabled();
+    }
+    if (ImGui::Button("Start Recording")) {
+        if (m_StartRecordingCallback) {
+            m_StartRecordingCallback();
+        }
+    }
+    if (isRecording) {
+        ImGui::EndDisabled();
+    }
+
+    ImGui::SameLine();
+
+    // Disable Stop Recording when not recording
+    if (!isRecording) {
+        ImGui::BeginDisabled();
+    }
+    if (ImGui::Button("Stop Recording")) {
+        if (m_StopRecordingCallback) {
+            m_StopRecordingCallback();
+        }
+    }
+    if (!isRecording) {
+        ImGui::EndDisabled();
     }
 }

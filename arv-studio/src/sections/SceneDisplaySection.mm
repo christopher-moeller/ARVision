@@ -183,24 +183,24 @@ void SceneDisplaySection::RenderImGuiPanel()
     ImGui::EndChild();
 }
 
-bool SceneDisplaySection::TakeScreenshot(const std::string& filepath)
+std::vector<unsigned char> SceneDisplaySection::CaptureFramebuffer(uint32_t& outWidth, uint32_t& outHeight)
 {
-    uint32_t width = m_SceneFramebuffer->GetWidth();
-    uint32_t height = m_SceneFramebuffer->GetHeight();
+    outWidth = m_SceneFramebuffer->GetWidth();
+    outHeight = m_SceneFramebuffer->GetHeight();
 
-    if (width == 0 || height == 0) {
-        ARV_LOG_ERROR("TakeScreenshot: Invalid framebuffer dimensions");
-        return false;
+    if (outWidth == 0 || outHeight == 0) {
+        ARV_LOG_ERROR("CaptureFramebuffer: Invalid framebuffer dimensions");
+        return {};
     }
 
-    std::vector<unsigned char> pixels(width * height * 4);
+    std::vector<unsigned char> pixels(outWidth * outHeight * 4);
     bool needsVerticalFlip = false;
 
     arv::RenderingBackend backend = m_RenderingAPI->GetBackendType();
 
     if (backend == arv::RenderingBackend::OpenGL) {
         m_SceneFramebuffer->Bind();
-        glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+        glReadPixels(0, 0, outWidth, outHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
         m_SceneFramebuffer->Unbind();
         needsVerticalFlip = true; // OpenGL has origin at bottom-left
     }
@@ -213,8 +213,8 @@ bool SceneDisplaySection::TakeScreenshot(const std::string& filepath)
         id<MTLCommandQueue> commandQueue = metalAPI->GetCommandQueue();
         id<MTLTexture> texture = metalFB->GetColorTexture();
 
-        NSUInteger bytesPerRow = width * 4;
-        NSUInteger bufferSize = bytesPerRow * height;
+        NSUInteger bytesPerRow = outWidth * 4;
+        NSUInteger bufferSize = bytesPerRow * outHeight;
 
         // Create a buffer with shared storage mode for CPU access
         id<MTLBuffer> readBuffer = [device newBufferWithLength:bufferSize
@@ -228,7 +228,7 @@ bool SceneDisplaySection::TakeScreenshot(const std::string& filepath)
                          sourceSlice:0
                          sourceLevel:0
                         sourceOrigin:MTLOriginMake(0, 0, 0)
-                          sourceSize:MTLSizeMake(width, height, 1)
+                          sourceSize:MTLSizeMake(outWidth, outHeight, 1)
                             toBuffer:readBuffer
                    destinationOffset:0
               destinationBytesPerRow:bytesPerRow
@@ -242,26 +242,41 @@ bool SceneDisplaySection::TakeScreenshot(const std::string& filepath)
         memcpy(pixels.data(), [readBuffer contents], bufferSize);
 
         // Convert BGRA to RGBA (Metal uses BGRA format)
-        for (uint32_t i = 0; i < width * height; i++) {
+        for (uint32_t i = 0; i < outWidth * outHeight; i++) {
             std::swap(pixels[i * 4 + 0], pixels[i * 4 + 2]); // Swap B and R
         }
         needsVerticalFlip = false; // Metal has origin at top-left
     }
 #endif
 
-    // Write PNG (flip vertically if needed for OpenGL)
-    int result;
+    // Flip vertically if needed (for OpenGL)
     if (needsVerticalFlip) {
-        result = stbi_write_png(filepath.c_str(),
-                                width, height, 4,
-                                pixels.data() + (width * 4 * (height - 1)),
-                                -static_cast<int>(width * 4));
-    } else {
-        result = stbi_write_png(filepath.c_str(),
+        std::vector<unsigned char> flipped(pixels.size());
+        size_t rowSize = outWidth * 4;
+        for (uint32_t y = 0; y < outHeight; y++) {
+            memcpy(flipped.data() + y * rowSize,
+                   pixels.data() + (outHeight - 1 - y) * rowSize,
+                   rowSize);
+        }
+        return flipped;
+    }
+
+    return pixels;
+}
+
+bool SceneDisplaySection::TakeScreenshot(const std::string& filepath)
+{
+    uint32_t width, height;
+    std::vector<unsigned char> pixels = CaptureFramebuffer(width, height);
+
+    if (pixels.empty()) {
+        return false;
+    }
+
+    int result = stbi_write_png(filepath.c_str(),
                                 width, height, 4,
                                 pixels.data(),
                                 static_cast<int>(width * 4));
-    }
 
     if (result) {
         ARV_LOG_INFO("Screenshot saved to: {}", filepath);

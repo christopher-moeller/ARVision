@@ -18,10 +18,25 @@ struct BackgroundSettings {
     std::string skyboxPath;
 };
 
+struct RecordedFrame {
+    std::vector<unsigned char> pixels;
+    glm::mat4 mvpMatrix;
+    uint32_t width;
+    uint32_t height;
+};
+
+struct RecordingState {
+    bool isRecording = false;
+    uint32_t frameCount = 0;
+    std::string recordingPath;  // Path to the current recording folder
+    std::vector<RecordedFrame> frames;  // Cached frames during recording
+};
+
 struct EditorState {
     std::vector<std::unique_ptr<arv::RenderingObject>> objects;
     int selectedObjectIndex = -1;
     std::string currentScenePath;
     BackgroundSettings background;
     float deltaTime = 0.0f;
+    RecordingState recording;
 };

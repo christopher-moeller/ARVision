@@ -15,7 +15,7 @@
         0.3,
         1.0
     ],
-    "maxFPS": 65,
+    "maxFPS": 24,
     "objects": [
         {
             "name": "ImageTextureRO 1",
