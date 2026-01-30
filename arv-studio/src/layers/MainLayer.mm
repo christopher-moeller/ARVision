@@ -268,109 +268,15 @@ void MainLayer::OnAttach()
         ARV_LOG_INFO("Started recording to: {}", recordingDir.string());
     });
 
-    // Stop Recording callback
+    // Stop Recording callback - triggers incremental save
     m_ControlSection->SetStopRecordingCallback([this]() {
         if (!m_State.recording.isRecording) return;
 
         m_State.recording.isRecording = false;
+        m_State.recording.isSaving = true;
+        m_State.recording.saveProgress = 0;
 
-        std::filesystem::path recordingDir(m_State.recording.recordingPath);
-
-        // Write all cached frames to disk
-        ARV_LOG_INFO("Writing {} cached frames to disk...", m_State.recording.frames.size());
-
-        for (size_t i = 0; i < m_State.recording.frames.size(); i++) {
-            const auto& frame = m_State.recording.frames[i];
-
-            // Write screenshot
-            std::string screenshotPath = (recordingDir / ("screenshot_" + std::to_string(i) + ".png")).string();
-            if (!frame.pixels.empty()) {
-                stbi_write_png(screenshotPath.c_str(),
-                               frame.width, frame.height, 4,
-                               frame.pixels.data(),
-                               static_cast<int>(frame.width * 4));
-            }
-
-            // Write MVP matrix
-            std::string mvpPath = (recordingDir / ("mvp_" + std::to_string(i) + ".csv")).string();
-            std::ofstream mvpFile(mvpPath);
-            if (mvpFile.is_open()) {
-                mvpFile << std::fixed << std::setprecision(6);
-                const float* data = glm::value_ptr(frame.mvpMatrix);
-                for (int row = 0; row < 4; row++) {
-                    for (int col = 0; col < 4; col++) {
-                        mvpFile << data[col * 4 + row];
-                        if (col < 3) mvpFile << ",";
-                    }
-                    mvpFile << "\n";
-                }
-                mvpFile.close();
-            }
-        }
-
-        // Clear cached frames to free memory
-        m_State.recording.frames.clear();
-        m_State.recording.frames.shrink_to_fit();
-
-        // Write 3d_scene.obj (only once, at the end)
-
-        // Export world-space vertices and indices for all scene objects
-        std::vector<glm::vec3> worldVertices;
-        std::vector<uint32_t> worldIndices;
-
-        for (const auto& obj : m_State.objects) {
-            const auto& localVertices = obj->GetMeshVertices();
-            const auto& localIndices = obj->GetMeshIndices();
-
-            if (localVertices.empty()) continue;
-
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, obj->GetPosition());
-            const glm::vec3& rot = obj->GetRotation();
-            model = glm::rotate(model, glm::radians(rot.y), glm::vec3(0, 1, 0));
-            model = glm::rotate(model, glm::radians(rot.x), glm::vec3(1, 0, 0));
-            model = glm::rotate(model, glm::radians(rot.z), glm::vec3(0, 0, 1));
-            model = glm::scale(model, obj->GetScale());
-
-            uint32_t vertexOffset = static_cast<uint32_t>(worldVertices.size());
-
-            for (const auto& localPos : localVertices) {
-                glm::vec4 worldPos = model * glm::vec4(localPos, 1.0f);
-                worldVertices.emplace_back(worldPos.x, worldPos.y, worldPos.z);
-            }
-
-            for (uint32_t idx : localIndices) {
-                worldIndices.push_back(vertexOffset + idx);
-            }
-        }
-
-        std::string objPath = (recordingDir / "3d_scene.obj").string();
-        std::ofstream objFile(objPath);
-        if (objFile.is_open()) {
-            objFile << "# ARVision Scene Export\n";
-            objFile << "# Vertices: " << worldVertices.size() << "\n";
-            objFile << "# Triangles: " << (worldIndices.size() / 3) << "\n\n";
-
-            objFile << std::fixed << std::setprecision(6);
-
-            for (const auto& v : worldVertices) {
-                objFile << "v " << v.x << " " << v.y << " " << v.z << "\n";
-            }
-
-            objFile << "\n";
-
-            for (size_t i = 0; i + 2 < worldIndices.size(); i += 3) {
-                objFile << "f " << (worldIndices[i] + 1) << " "
-                               << (worldIndices[i + 1] + 1) << " "
-                               << (worldIndices[i + 2] + 1) << "\n";
-            }
-
-            objFile.close();
-        }
-
-        ARV_LOG_INFO("Recording stopped: {} frames written to {}", m_State.recording.frameCount, m_State.recording.recordingPath);
-        m_State.recording.frameCount = 0;
-        m_State.recording.recordingPath.clear();
+        ARV_LOG_INFO("Saving {} recorded frames...", m_State.recording.frames.size());
     });
 
     m_StartTime = std::chrono::high_resolution_clock::now();
@@ -388,6 +294,11 @@ void MainLayer::OnUpdate(float deltaTime)
 {
     m_State.deltaTime = deltaTime;
     m_SceneDisplay->Update(deltaTime);
+
+    // Process incremental save if saving is in progress
+    if (m_State.recording.isSaving) {
+        ProcessRecordingSave();
+    }
 }
 
 void MainLayer::OnRender()
@@ -435,4 +346,118 @@ void MainLayer::OnRender()
     ImGui::End();
 
     m_ImGuiManager->EndFrame();
+}
+
+void MainLayer::ProcessRecordingSave()
+{
+    const uint32_t FRAMES_PER_UPDATE = 5;  // Save multiple frames per update for speed
+
+    std::filesystem::path recordingDir(m_State.recording.recordingPath);
+    uint32_t totalFrames = static_cast<uint32_t>(m_State.recording.frames.size());
+
+    for (uint32_t i = 0; i < FRAMES_PER_UPDATE && m_State.recording.saveProgress < totalFrames; i++) {
+        uint32_t frameIndex = m_State.recording.saveProgress;
+        const auto& frame = m_State.recording.frames[frameIndex];
+
+        // Write screenshot
+        std::string screenshotPath = (recordingDir / ("screenshot_" + std::to_string(frameIndex) + ".png")).string();
+        if (!frame.pixels.empty()) {
+            stbi_write_png(screenshotPath.c_str(),
+                           frame.width, frame.height, 4,
+                           frame.pixels.data(),
+                           static_cast<int>(frame.width * 4));
+        }
+
+        // Write MVP matrix
+        std::string mvpPath = (recordingDir / ("mvp_" + std::to_string(frameIndex) + ".csv")).string();
+        std::ofstream mvpFile(mvpPath);
+        if (mvpFile.is_open()) {
+            mvpFile << std::fixed << std::setprecision(6);
+            const float* data = glm::value_ptr(frame.mvpMatrix);
+            for (int row = 0; row < 4; row++) {
+                for (int col = 0; col < 4; col++) {
+                    mvpFile << data[col * 4 + row];
+                    if (col < 3) mvpFile << ",";
+                }
+                mvpFile << "\n";
+            }
+            mvpFile.close();
+        }
+
+        m_State.recording.saveProgress++;
+    }
+
+    // Check if save is complete
+    if (m_State.recording.saveProgress >= totalFrames) {
+        FinalizeSave();
+    }
+}
+
+void MainLayer::FinalizeSave()
+{
+    std::filesystem::path recordingDir(m_State.recording.recordingPath);
+
+    // Write 3d_scene.obj
+    std::vector<glm::vec3> worldVertices;
+    std::vector<uint32_t> worldIndices;
+
+    for (const auto& obj : m_State.objects) {
+        const auto& localVertices = obj->GetMeshVertices();
+        const auto& localIndices = obj->GetMeshIndices();
+
+        if (localVertices.empty()) continue;
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, obj->GetPosition());
+        const glm::vec3& rot = obj->GetRotation();
+        model = glm::rotate(model, glm::radians(rot.y), glm::vec3(0, 1, 0));
+        model = glm::rotate(model, glm::radians(rot.x), glm::vec3(1, 0, 0));
+        model = glm::rotate(model, glm::radians(rot.z), glm::vec3(0, 0, 1));
+        model = glm::scale(model, obj->GetScale());
+
+        uint32_t vertexOffset = static_cast<uint32_t>(worldVertices.size());
+
+        for (const auto& localPos : localVertices) {
+            glm::vec4 worldPos = model * glm::vec4(localPos, 1.0f);
+            worldVertices.emplace_back(worldPos.x, worldPos.y, worldPos.z);
+        }
+
+        for (uint32_t idx : localIndices) {
+            worldIndices.push_back(vertexOffset + idx);
+        }
+    }
+
+    std::string objPath = (recordingDir / "3d_scene.obj").string();
+    std::ofstream objFile(objPath);
+    if (objFile.is_open()) {
+        objFile << "# ARVision Scene Export\n";
+        objFile << "# Vertices: " << worldVertices.size() << "\n";
+        objFile << "# Triangles: " << (worldIndices.size() / 3) << "\n\n";
+
+        objFile << std::fixed << std::setprecision(6);
+
+        for (const auto& v : worldVertices) {
+            objFile << "v " << v.x << " " << v.y << " " << v.z << "\n";
+        }
+
+        objFile << "\n";
+
+        for (size_t i = 0; i + 2 < worldIndices.size(); i += 3) {
+            objFile << "f " << (worldIndices[i] + 1) << " "
+                           << (worldIndices[i + 1] + 1) << " "
+                           << (worldIndices[i + 2] + 1) << "\n";
+        }
+
+        objFile.close();
+    }
+
+    ARV_LOG_INFO("Recording saved: {} frames written to {}", m_State.recording.frameCount, m_State.recording.recordingPath);
+
+    // Clean up
+    m_State.recording.frames.clear();
+    m_State.recording.frames.shrink_to_fit();
+    m_State.recording.isSaving = false;
+    m_State.recording.saveProgress = 0;
+    m_State.recording.frameCount = 0;
+    m_State.recording.recordingPath.clear();
 }

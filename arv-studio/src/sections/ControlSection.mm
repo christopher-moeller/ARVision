@@ -51,9 +51,10 @@ void ControlSection::RenderImGuiPanel()
         ImGui::Text("ARVision Controls");
         ImGui::Separator();
 
-        // Disable all controls except recording controls when recording is active
+        // Disable all controls except recording controls when recording or saving is active
         bool isRecording = m_State->recording.isRecording;
-        if (isRecording) {
+        bool isSaving = m_State->recording.isSaving;
+        if (isRecording || isSaving) {
             ImGui::BeginDisabled();
         }
 
@@ -69,7 +70,7 @@ void ControlSection::RenderImGuiPanel()
         RenderPerformanceInfo();
         ImGui::Separator();
 
-        if (isRecording) {
+        if (isRecording || isSaving) {
             ImGui::EndDisabled();
         }
 
@@ -261,9 +262,10 @@ void ControlSection::RenderRecordingControls() {
     ImGui::Text("Recording Controls");
 
     bool isRecording = m_State->recording.isRecording;
+    bool isSaving = m_State->recording.isSaving;
 
-    // Disable screenshot/snapshot buttons during recording
-    if (isRecording) {
+    // Disable screenshot/snapshot buttons during recording or saving
+    if (isRecording || isSaving) {
         ImGui::BeginDisabled();
     }
 
@@ -281,7 +283,7 @@ void ControlSection::RenderRecordingControls() {
         }
     }
 
-    if (isRecording) {
+    if (isRecording || isSaving) {
         ImGui::EndDisabled();
     }
 
@@ -292,8 +294,18 @@ void ControlSection::RenderRecordingControls() {
         ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Recording: %u frames", m_State->recording.frameCount);
     }
 
-    // Disable Start Recording when already recording
-    if (isRecording) {
+    // Show progress bar during saving
+    if (isSaving) {
+        uint32_t totalFrames = static_cast<uint32_t>(m_State->recording.frames.size());
+        float progress = totalFrames > 0 ? static_cast<float>(m_State->recording.saveProgress) / static_cast<float>(totalFrames) : 0.0f;
+
+        ImGui::TextColored(ImVec4(0.3f, 0.7f, 1.0f, 1.0f), "Saving: %u / %u frames",
+                           m_State->recording.saveProgress, totalFrames);
+        ImGui::ProgressBar(progress, ImVec2(-FLT_MIN, 0.0f));
+    }
+
+    // Disable Start Recording when already recording or saving
+    if (isRecording || isSaving) {
         ImGui::BeginDisabled();
     }
     if (ImGui::Button("Start Recording")) {
@@ -301,14 +313,14 @@ void ControlSection::RenderRecordingControls() {
             m_StartRecordingCallback();
         }
     }
-    if (isRecording) {
+    if (isRecording || isSaving) {
         ImGui::EndDisabled();
     }
 
     ImGui::SameLine();
 
-    // Disable Stop Recording when not recording
-    if (!isRecording) {
+    // Disable Stop Recording when not recording or when saving
+    if (!isRecording || isSaving) {
         ImGui::BeginDisabled();
     }
     if (ImGui::Button("Stop Recording")) {
@@ -316,7 +328,7 @@ void ControlSection::RenderRecordingControls() {
             m_StopRecordingCallback();
         }
     }
-    if (!isRecording) {
+    if (!isRecording || isSaving) {
         ImGui::EndDisabled();
     }
 }

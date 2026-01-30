@@ -27,7 +27,9 @@ struct RecordedFrame {
 
 struct RecordingState {
     bool isRecording = false;
+    bool isSaving = false;
     uint32_t frameCount = 0;
+    uint32_t saveProgress = 0;  // Current frame being saved
     std::string recordingPath;  // Path to the current recording folder
     std::vector<RecordedFrame> frames;  // Cached frames during recording
 };
