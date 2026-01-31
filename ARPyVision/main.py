@@ -5,7 +5,7 @@ import glob
 import numpy as np
 import cv2
 
-RAW_SERIES_DATA = "../simulator/arv-studio/recordings/series/main_scene_20260130_115021"
+RAW_SERIES_DATA = "../simulator/arv-studio/recordings/series"
 TRANSFORMER_EXECUTABLE = "/Users/cmoeller/dev/projects/ARVision/ARVTrainingDataTransformer/build/bin/Debug/ARVTrainingDataTransformer"
 OUTPUT_LINES_DIR = "/Users/cmoeller/dev/projects/ARVision/ARPyVision/input/lines"
 INPUT_DIR = "/Users/cmoeller/dev/projects/ARVision/ARPyVision/input"
@@ -36,11 +36,42 @@ def render_input(frame_number):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-def transform_series_data():
-    print(f"Transform series data {RAW_SERIES_DATA}")
+def select_series_folder():
+    series_base_path = os.path.abspath(RAW_SERIES_DATA)
 
-    # Resolve the RAW_SERIES_DATA path to absolute path
-    raw_data_path = os.path.abspath(RAW_SERIES_DATA)
+    # Get all subfolders
+    subfolders = [f for f in os.listdir(series_base_path)
+                  if os.path.isdir(os.path.join(series_base_path, f)) and not f.startswith('.')]
+    subfolders.sort()
+
+    if not subfolders:
+        print(f"No series folders found in {series_base_path}")
+        return None
+
+    # Display options
+    print("Available series folders:")
+    for i, folder in enumerate(subfolders, 1):
+        print(f"  {i}. {folder}")
+
+    # Ask user to select
+    while True:
+        try:
+            choice = input(f"Select folder (1-{len(subfolders)}): ")
+            index = int(choice) - 1
+            if 0 <= index < len(subfolders):
+                return os.path.join(series_base_path, subfolders[index])
+            else:
+                print(f"Please enter a number between 1 and {len(subfolders)}")
+        except ValueError:
+            print("Please enter a valid number")
+
+
+def transform_series_data():
+    raw_data_path = select_series_folder()
+    if raw_data_path is None:
+        return
+
+    print(f"Transform series data {raw_data_path}")
 
     # Clean input folder before transformation
     if os.path.exists(INPUT_DIR):
