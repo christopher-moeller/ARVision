@@ -15,7 +15,7 @@
         0.2,
         1.0
     ],
-    "maxFPS": 60,
+    "maxFPS": 24,
     "objects": [
         {
             "name": "Cube",

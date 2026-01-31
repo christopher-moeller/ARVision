@@ -32,6 +32,8 @@ struct RecordingState {
     uint32_t saveProgress = 0;  // Current frame being saved
     std::string recordingPath;  // Path to the current recording folder
     std::vector<RecordedFrame> frames;  // Cached frames during recording
+    glm::mat4 lastRecordedMvp{0.0f};  // Track last recorded MVP to skip duplicates
+    bool hasLastMvp = false;  // Whether we have a previous MVP to compare against
 };
 
 struct EditorState {

@@ -6,6 +6,7 @@
 #include <sstream>
 #include <iomanip>
 #include <ctime>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
@@ -264,6 +265,7 @@ void MainLayer::OnAttach()
         m_State.recording.isRecording = true;
         m_State.recording.frameCount = 0;
         m_State.recording.recordingPath = recordingDir.string();
+        m_State.recording.hasLastMvp = false;  // Reset MVP tracking for new recording
 
         ARV_LOG_INFO("Started recording to: {}", recordingDir.string());
     });
@@ -308,14 +310,33 @@ void MainLayer::OnRender()
     m_SceneDisplay->RenderSceneToFramebuffer();
 
     // Cache frame data in memory during recording (no disk I/O for performance)
+    // Only record if MVP has changed to avoid duplicate frames
     if (m_State.recording.isRecording) {
-        RecordedFrame frame;
-        frame.pixels = m_SceneDisplay->CaptureFramebuffer(frame.width, frame.height);
-        frame.mvpMatrix = m_SceneDisplay->GetViewProjectionMatrix();
+        glm::mat4 currentMvp = m_SceneDisplay->GetViewProjectionMatrix();
 
-        if (!frame.pixels.empty()) {
-            m_State.recording.frames.push_back(std::move(frame));
-            m_State.recording.frameCount++;
+        // Check if MVP has changed (compare matrices with tolerance)
+        bool mvpChanged = !m_State.recording.hasLastMvp;
+        if (!mvpChanged) {
+            const float* curr = glm::value_ptr(currentMvp);
+            const float* last = glm::value_ptr(m_State.recording.lastRecordedMvp);
+            for (int i = 0; i < 16 && !mvpChanged; i++) {
+                if (std::abs(curr[i] - last[i]) > 1e-6f) {
+                    mvpChanged = true;
+                }
+            }
+        }
+
+        if (mvpChanged) {
+            RecordedFrame frame;
+            frame.pixels = m_SceneDisplay->CaptureFramebuffer(frame.width, frame.height);
+            frame.mvpMatrix = currentMvp;
+
+            if (!frame.pixels.empty()) {
+                m_State.recording.frames.push_back(std::move(frame));
+                m_State.recording.frameCount++;
+                m_State.recording.lastRecordedMvp = currentMvp;
+                m_State.recording.hasLastMvp = true;
+            }
         }
     }
 
@@ -460,4 +481,5 @@ void MainLayer::FinalizeSave()
     m_State.recording.saveProgress = 0;
     m_State.recording.frameCount = 0;
     m_State.recording.recordingPath.clear();
+    m_State.recording.hasLastMvp = false;
 }
