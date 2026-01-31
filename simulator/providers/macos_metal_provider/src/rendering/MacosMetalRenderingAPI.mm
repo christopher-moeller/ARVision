@@ -610,4 +610,26 @@ namespace arv
         }
         m_boundFramebuffer = nullptr;
     }
+
+    void MacosMetalRenderingAPI::FlushAndWait()
+    {
+        if (!m_currentCommandBuffer)
+        {
+            return;
+        }
+
+        // End any active render encoder
+        if (m_currentRenderEncoder)
+        {
+            [m_currentRenderEncoder endEncoding];
+            m_currentRenderEncoder = nil;
+        }
+
+        // Commit current command buffer and wait for GPU to finish
+        [m_currentCommandBuffer commit];
+        [m_currentCommandBuffer waitUntilCompleted];
+
+        // Create a new command buffer for subsequent operations
+        m_currentCommandBuffer = [m_commandQueue commandBuffer];
+    }
 }

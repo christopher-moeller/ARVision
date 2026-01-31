@@ -58,6 +58,7 @@ namespace arv
         void SetMetalLayer(CAMetalLayer* layer);
         void BindFramebuffer(const std::shared_ptr<Framebuffer>& framebuffer);
         void UnbindFramebuffer();
+        void FlushAndWait();
 
 #ifdef __OBJC__
         id<MTLDevice> GetDevice() const { return m_device; }

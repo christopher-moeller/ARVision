@@ -51,4 +51,7 @@ private:
     std::unique_ptr<arv::SkyboxRO> m_Skybox;
     std::shared_ptr<arv::Texture2D> m_SkyboxTexture;
     glm::vec2 m_ViewportSize{0.0f, 0.0f};
+
+    // Cached VP matrix from the last render (ensures recording matches rendered frame)
+    glm::mat4 m_LastRenderedVP{1.0f};
 };

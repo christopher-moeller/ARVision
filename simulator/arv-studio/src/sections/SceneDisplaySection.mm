@@ -125,6 +125,9 @@ void SceneDisplaySection::RenderSelectionCube()
 
 void SceneDisplaySection::RenderSceneToFramebuffer()
 {
+    // Cache the VP matrix BEFORE rendering to ensure recording matches the rendered frame
+    m_LastRenderedVP = m_Camera->GetProjectionMatrix() * m_Camera->GetViewMatrix();
+
 #ifdef __APPLE__
     if (m_RenderingAPI->GetBackendType() == arv::RenderingBackend::Metal) {
         arv::MacosMetalRenderingAPI* metalAPI = static_cast<arv::MacosMetalRenderingAPI*>(m_RenderingAPI);
@@ -209,6 +212,9 @@ std::vector<unsigned char> SceneDisplaySection::CaptureFramebuffer(uint32_t& out
         arv::MacosMetalRenderingAPI* metalAPI = static_cast<arv::MacosMetalRenderingAPI*>(m_RenderingAPI);
         arv::MetalFramebuffer* metalFB = static_cast<arv::MetalFramebuffer*>(m_SceneFramebuffer.get());
 
+        // Ensure all rendering commands are complete before capturing
+        metalAPI->FlushAndWait();
+
         id<MTLDevice> device = metalAPI->GetDevice();
         id<MTLCommandQueue> commandQueue = metalAPI->GetCommandQueue();
         id<MTLTexture> texture = metalFB->GetColorTexture();
@@ -289,5 +295,7 @@ bool SceneDisplaySection::TakeScreenshot(const std::string& filepath)
 
 glm::mat4 SceneDisplaySection::GetViewProjectionMatrix() const
 {
-    return m_Camera->GetProjectionMatrix() * m_Camera->GetViewMatrix();
+    // Return the cached VP matrix that was used for the last render
+    // This ensures the recorded MVP matches the actual rendered frame
+    return m_LastRenderedVP;
 }
