@@ -27,10 +27,16 @@ def render_frame(frame_number):
     screenshot_file = os.path.join("input", f"screenshot_{frame_number}.png")
 
     # Load the screenshot image
-    image = cv2.imread(screenshot_file)
-    if image is None:
+    original = cv2.imread(screenshot_file)
+    if original is None:
         print(f"Error: Could not load image {screenshot_file}")
         return None
+
+    # Create a copy for drawing lines on screenshot
+    with_lines = original.copy()
+
+    # Create black background for lines only
+    lines_only = np.zeros_like(original)
 
     # Read lines from CSV and draw them
     if os.path.exists(frame_lines_file):
@@ -38,9 +44,13 @@ def render_frame(frame_number):
         if lines.size > 0:
             for line in lines:
                 x1, y1, x2, y2 = int(line[0]), int(line[1]), int(line[2]), int(line[3])
-                cv2.line(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.line(with_lines, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.line(lines_only, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-    return image
+    # Concatenate: lines overlay | lines only | original
+    combined = np.hstack((with_lines, lines_only, original))
+
+    return combined
 
 
 def render_input():
@@ -158,6 +168,6 @@ def transform_series_data(remove_diagonal_rectangle_lines):
     print(f"Transformation complete. Copied {len(screenshot_files)} screenshots.")
 
 if __name__ == '__main__':
-    transform_series_data(True)
+    #transform_series_data(True)
     render_input()
 
