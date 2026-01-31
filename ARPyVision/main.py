@@ -34,13 +34,11 @@ def render_frame(frame_number):
 
     # Read lines from CSV and draw them
     if os.path.exists(frame_lines_file):
-        lines = np.loadtxt(frame_lines_file, delimiter=',')
-        if lines.ndim == 1:
-            lines = lines.reshape(1, -1)
-
-        for line in lines:
-            x1, y1, x2, y2 = int(line[0]), int(line[1]), int(line[2]), int(line[3])
-            cv2.line(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        lines = np.loadtxt(frame_lines_file, delimiter=',', ndmin=2)
+        if lines.size > 0:
+            for line in lines:
+                x1, y1, x2, y2 = int(line[0]), int(line[1]), int(line[2]), int(line[3])
+                cv2.line(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
     return image
 
@@ -160,6 +158,6 @@ def transform_series_data():
     print(f"Transformation complete. Copied {len(screenshot_files)} screenshots.")
 
 if __name__ == '__main__':
-    transform_series_data()
+    #transform_series_data()
     render_input()
 
