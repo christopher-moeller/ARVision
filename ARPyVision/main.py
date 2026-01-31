@@ -108,7 +108,7 @@ def select_series_folder():
             print("Please enter a valid number")
 
 
-def transform_series_data():
+def transform_series_data(remove_diagonal_rectangle_lines):
     raw_data_path = select_series_folder()
     if raw_data_path is None:
         return
@@ -130,7 +130,7 @@ def transform_series_data():
     print(f"  Output: {OUTPUT_LINES_DIR}")
 
     process = subprocess.Popen(
-        [TRANSFORMER_EXECUTABLE, raw_data_path, OUTPUT_LINES_DIR],
+        [TRANSFORMER_EXECUTABLE, raw_data_path, OUTPUT_LINES_DIR, str(remove_diagonal_rectangle_lines).lower()],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -158,6 +158,6 @@ def transform_series_data():
     print(f"Transformation complete. Copied {len(screenshot_files)} screenshots.")
 
 if __name__ == '__main__':
-    #transform_series_data()
+    transform_series_data(True)
     render_input()
 

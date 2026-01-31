@@ -1,6 +1,7 @@
 #include "Renderer.h"
 #include <iostream>
 #include <cmath>
+#include <unordered_map>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
@@ -98,8 +99,40 @@ std::vector<int> Renderer::getVisibleTriangleIndices(const std::vector<Vec3>& nd
     return visibleIndices;
 }
 
+std::vector<Edge> Renderer::filterDiagonalEdges(const std::vector<Edge>& edges,
+                                                 const std::vector<int>& triangleIndices) const {
+    // Build a map of edge -> count of triangles containing it
+    std::unordered_map<Edge, int> edgeTriangleCount;
+
+    for (int triIdx : triangleIndices) {
+        const auto& tri = m_mesh.triangles[triIdx];
+        Edge e0(tri.v0, tri.v1);
+        Edge e1(tri.v1, tri.v2);
+        Edge e2(tri.v2, tri.v0);
+
+        edgeTriangleCount[e0]++;
+        edgeTriangleCount[e1]++;
+        edgeTriangleCount[e2]++;
+    }
+
+    // Filter out edges that are shared by exactly 2 triangles (diagonal edges)
+    std::vector<Edge> filteredEdges;
+    filteredEdges.reserve(edges.size());
+
+    for (const auto& edge : edges) {
+        auto it = edgeTriangleCount.find(edge);
+        // Keep edge if it's NOT shared by exactly 2 triangles
+        // (boundary edges have count 1, diagonal edges have count 2)
+        if (it == edgeTriangleCount.end() || it->second != 2) {
+            filteredEdges.push_back(edge);
+        }
+    }
+
+    return filteredEdges;
+}
+
 bool Renderer::processFrame(const std::string& mvpPath, const std::string& screenshotPath,
-                            const std::string& outputPath) {
+                            const std::string& outputPath, bool removeDiagonalLines) {
     // Load MVP matrix
     Mat4 mvp;
     if (!CsvMatrixLoader::load(mvpPath, mvp)) {
@@ -149,6 +182,14 @@ bool Renderer::processFrame(const std::string& mvpPath, const std::string& scree
         visibleEdgeSet.insert(Edge(tri.v2, tri.v0));
     }
     std::vector<Edge> visibleEdges(visibleEdgeSet.begin(), visibleEdgeSet.end());
+
+    // Step 6b: Optionally filter out diagonal edges (edges shared by 2 triangles)
+    if (removeDiagonalLines) {
+        size_t beforeCount = visibleEdges.size();
+        visibleEdges = filterDiagonalEdges(visibleEdges, visibleTriIndices);
+        std::cout << "Removed diagonal edges: " << (beforeCount - visibleEdges.size())
+                  << " (remaining: " << visibleEdges.size() << ")" << std::endl;
+    }
 
     // Step 7: Filter edges by visibility
     Visibility visibility(rasterizer);

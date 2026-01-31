@@ -51,11 +51,12 @@ std::vector<FrameInfo> discoverFrames(const std::string& inputDir) {
 }
 
 void printUsage(const char* programName) {
-    std::cout << "Usage: " << programName << " <input_directory> [output_directory]" << std::endl;
+    std::cout << "Usage: " << programName << " <input_directory> [output_directory] [REMOVE_DIAGONAL_LINE]" << std::endl;
     std::cout << std::endl;
     std::cout << "Arguments:" << std::endl;
-    std::cout << "  input_directory   Directory containing 3d_scene.obj, mvp_*.csv, and screenshot_*.png files" << std::endl;
-    std::cout << "  output_directory  Directory for output files (default: input_directory/output)" << std::endl;
+    std::cout << "  input_directory        Directory containing 3d_scene.obj, mvp_*.csv, and screenshot_*.png files" << std::endl;
+    std::cout << "  output_directory       Directory for output files (default: input_directory/output)" << std::endl;
+    std::cout << "  REMOVE_DIAGONAL_LINE   Remove diagonal lines from rectangles: true/false (default: false)" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -66,6 +67,14 @@ int main(int argc, char* argv[]) {
 
     std::string inputDir = argv[1];
     std::string outputDir = (argc > 2) ? argv[2] : (inputDir + "/output");
+
+    // Parse REMOVE_DIAGONAL_LINE flag (default: false)
+    bool removeDiagonalLine = false;
+    if (argc > 3) {
+        std::string flagStr = argv[3];
+        std::transform(flagStr.begin(), flagStr.end(), flagStr.begin(), ::tolower);
+        removeDiagonalLine = (flagStr == "true" || flagStr == "1" || flagStr == "yes");
+    }
 
     // Validate input directory
     if (!fs::exists(inputDir) || !fs::is_directory(inputDir)) {
@@ -93,6 +102,7 @@ int main(int argc, char* argv[]) {
     }
 
     std::cout << "Found " << frames.size() << " frames" << std::endl;
+    std::cout << "Remove diagonal lines: " << (removeDiagonalLine ? "true" : "false") << std::endl;
 
     // Create renderer and load mesh
     Renderer renderer;
@@ -111,7 +121,7 @@ int main(int argc, char* argv[]) {
 
         std::cout << "\n--- Frame " << frame.frameNumber << " ---" << std::endl;
 
-        if (renderer.processFrame(frame.mvpPath, frame.screenshotPath, outputPath.str())) {
+        if (renderer.processFrame(frame.mvpPath, frame.screenshotPath, outputPath.str(), removeDiagonalLine)) {
             processedCount++;
         } else {
             std::cerr << "Error processing frame " << frame.frameNumber << std::endl;

@@ -16,7 +16,7 @@ public:
 
     bool loadMesh(const std::string& objPath);
     bool processFrame(const std::string& mvpPath, const std::string& screenshotPath,
-                      const std::string& outputPath);
+                      const std::string& outputPath, bool removeDiagonalLines = false);
 
 private:
     Mesh m_mesh;
@@ -38,4 +38,8 @@ private:
 
     // Get triangles that are potentially visible
     std::vector<int> getVisibleTriangleIndices(const std::vector<Vec3>& ndcVertices) const;
+
+    // Filter out diagonal edges (edges shared by exactly 2 triangles forming a quad)
+    std::vector<Edge> filterDiagonalEdges(const std::vector<Edge>& edges,
+                                          const std::vector<int>& triangleIndices) const;
 };
