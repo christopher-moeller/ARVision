@@ -22,6 +22,8 @@ namespace arv
 
     MacosMetalRenderingAPI::~MacosMetalRenderingAPI()
     {
+        m_defaultTexture = nil;
+        m_defaultSamplerState = nil;
         m_depthTexture = nil;
         m_depthStencilState = nil;
         m_commandQueue = nil;
@@ -66,7 +68,49 @@ namespace arv
         depthDescriptor.depthWriteEnabled = YES;
         m_depthStencilState = [m_device newDepthStencilStateWithDescriptor:depthDescriptor];
 
+        // Create default 1x1 white texture for objects without textures
+        CreateDefaultTexture();
+
         ARV_LOG_INFO("MacosMetalRenderingAPI::Init() - Metal initialized successfully");
+    }
+
+    void MacosMetalRenderingAPI::CreateDefaultTexture()
+    {
+        // Create a 1x1 white texture
+        MTLTextureDescriptor* textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
+                                                                                                     width:1
+                                                                                                    height:1
+                                                                                                 mipmapped:NO];
+        textureDescriptor.usage = MTLTextureUsageShaderRead;
+
+        m_defaultTexture = [m_device newTextureWithDescriptor:textureDescriptor];
+
+        if (m_defaultTexture)
+        {
+            // Fill with white (255, 255, 255, 255)
+            uint8_t whitePixel[4] = {255, 255, 255, 255};
+            MTLRegion region = MTLRegionMake2D(0, 0, 1, 1);
+            [m_defaultTexture replaceRegion:region
+                                mipmapLevel:0
+                                  withBytes:whitePixel
+                                bytesPerRow:4];
+
+            ARV_LOG_INFO("MacosMetalRenderingAPI::CreateDefaultTexture() - Created default white texture");
+        }
+
+        // Create default sampler state
+        MTLSamplerDescriptor* samplerDescriptor = [[MTLSamplerDescriptor alloc] init];
+        samplerDescriptor.minFilter = MTLSamplerMinMagFilterLinear;
+        samplerDescriptor.magFilter = MTLSamplerMinMagFilterLinear;
+        samplerDescriptor.sAddressMode = MTLSamplerAddressModeClampToEdge;
+        samplerDescriptor.tAddressMode = MTLSamplerAddressModeClampToEdge;
+
+        m_defaultSamplerState = [m_device newSamplerStateWithDescriptor:samplerDescriptor];
+
+        if (m_defaultSamplerState)
+        {
+            ARV_LOG_INFO("MacosMetalRenderingAPI::CreateDefaultTexture() - Created default sampler state");
+        }
     }
 
     void MacosMetalRenderingAPI::DrawExample()
@@ -356,7 +400,8 @@ namespace arv
             }
         }
 
-        // Bind texture if provided
+        // Bind texture - use provided texture or fall back to default white texture
+        bool textureSet = false;
         if (texture)
         {
             MetalTexture2D* metalTex = static_cast<MetalTexture2D*>(texture.get());
@@ -364,7 +409,15 @@ namespace arv
             {
                 [m_currentRenderEncoder setFragmentTexture:metalTex->GetMetalTexture() atIndex:0];
                 [m_currentRenderEncoder setFragmentSamplerState:metalTex->GetSamplerState() atIndex:0];
+                textureSet = true;
             }
+        }
+
+        // If no valid texture was set, use the default white texture
+        if (!textureSet && m_defaultTexture && m_defaultSamplerState)
+        {
+            [m_currentRenderEncoder setFragmentTexture:m_defaultTexture atIndex:0];
+            [m_currentRenderEncoder setFragmentSamplerState:m_defaultSamplerState atIndex:0];
         }
 
         // Get index buffer

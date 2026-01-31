@@ -8,6 +8,7 @@
 @protocol MTLRenderCommandEncoder;
 @protocol MTLDepthStencilState;
 @protocol MTLTexture;
+@protocol MTLSamplerState;
 @protocol CAMetalDrawable;
 @class CAMetalLayer;
 @class MTLRenderPassDescriptor;
@@ -18,6 +19,7 @@ typedef void MTLCommandBuffer;
 typedef void MTLRenderCommandEncoder;
 typedef void MTLDepthStencilState;
 typedef void MTLTexture;
+typedef void MTLSamplerState;
 typedef void CAMetalDrawable;
 typedef void CAMetalLayer;
 typedef void MTLRenderPassDescriptor;
@@ -85,6 +87,7 @@ namespace arv
     private:
         void DrawInternal(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray, const std::shared_ptr<Texture2D>& texture);
         void CreateDepthTextureIfNeeded(size_t width, size_t height);
+        void CreateDefaultTexture();
 
 #ifdef __OBJC__
         id<MTLDevice> m_device = nullptr;
@@ -94,6 +97,8 @@ namespace arv
         id<CAMetalDrawable> m_currentDrawable = nullptr;
         id<MTLDepthStencilState> m_depthStencilState = nullptr;
         id<MTLTexture> m_depthTexture = nullptr;
+        id<MTLTexture> m_defaultTexture = nullptr;
+        id<MTLSamplerState> m_defaultSamplerState = nullptr;
 #else
         void* m_device = nullptr;
         void* m_commandQueue = nullptr;
@@ -102,6 +107,8 @@ namespace arv
         void* m_currentDrawable = nullptr;
         void* m_depthStencilState = nullptr;
         void* m_depthTexture = nullptr;
+        void* m_defaultTexture = nullptr;
+        void* m_defaultSamplerState = nullptr;
 #endif
         CAMetalLayer* m_metalLayer = nullptr;
         glm::vec4 m_clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);

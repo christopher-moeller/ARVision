@@ -1,0 +1,41 @@
+{
+    "background": {
+        "color": [
+            0.41089963912963867,
+            0.8407540917396545,
+            0.8823529481887817,
+            1.0
+        ],
+        "mode": "color",
+        "skyboxPath": "backgrounds/autumn_hilly_field_4k.exr"
+    },
+    "backgroundColor": [
+        0.2,
+        0.2,
+        0.2,
+        1.0
+    ],
+    "maxFPS": 60,
+    "objects": [
+        {
+            "name": "Cube",
+            "pathFragment": "Cube",
+            "position": [
+                0.10000000149011612,
+                0.0,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "ObjAssetRO"
+        }
+    ]
+}
