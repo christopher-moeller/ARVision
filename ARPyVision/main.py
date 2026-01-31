@@ -10,9 +10,19 @@ TRANSFORMER_EXECUTABLE = "/Users/cmoeller/dev/projects/ARVision/ARVTrainingDataT
 OUTPUT_LINES_DIR = "/Users/cmoeller/dev/projects/ARVision/ARPyVision/input/lines"
 INPUT_DIR = "/Users/cmoeller/dev/projects/ARVision/ARPyVision/input"
 
-def render_input(frame_number):
-    print(f"Render frame {frame_number}")
+def get_available_frames():
+    screenshot_files = glob.glob(os.path.join(INPUT_DIR, "screenshot_*.png"))
+    frames = []
+    for f in screenshot_files:
+        basename = os.path.basename(f)
+        # Extract frame number from screenshot_X.png
+        num = int(basename.replace("screenshot_", "").replace(".png", ""))
+        frames.append(num)
+    frames.sort()
+    return frames
 
+
+def render_frame(frame_number):
     frame_lines_file = os.path.join("input", "lines", f"frame_{frame_number}_lines.csv")
     screenshot_file = os.path.join("input", f"screenshot_{frame_number}.png")
 
@@ -20,20 +30,54 @@ def render_input(frame_number):
     image = cv2.imread(screenshot_file)
     if image is None:
         print(f"Error: Could not load image {screenshot_file}")
-        return
+        return None
 
     # Read lines from CSV and draw them
-    lines = np.loadtxt(frame_lines_file, delimiter=',')
-    if lines.ndim == 1:
-        lines = lines.reshape(1, -1)
+    if os.path.exists(frame_lines_file):
+        lines = np.loadtxt(frame_lines_file, delimiter=',')
+        if lines.ndim == 1:
+            lines = lines.reshape(1, -1)
 
-    for line in lines:
-        x1, y1, x2, y2 = int(line[0]), int(line[1]), int(line[2]), int(line[3])
-        cv2.line(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        for line in lines:
+            x1, y1, x2, y2 = int(line[0]), int(line[1]), int(line[2]), int(line[3])
+            cv2.line(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-    # Display the result
-    cv2.imshow("Lines Overlay", image)
-    cv2.waitKey(0)
+    return image
+
+
+def render_input():
+    frames = get_available_frames()
+    if not frames:
+        print("No frames available in input folder")
+        return
+
+    current_index = 0
+    window_name = "Lines Overlay"
+
+    print(f"Found {len(frames)} frames. Use LEFT/RIGHT arrow keys to navigate, ESC or 'q' to quit.")
+
+    while True:
+        frame_number = frames[current_index]
+        image = render_frame(frame_number)
+
+        if image is None:
+            break
+
+        # Add frame info overlay
+        cv2.putText(image, f"Frame {frame_number} ({current_index + 1}/{len(frames)})",
+                    (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+        cv2.imshow(window_name, image)
+
+        key = cv2.waitKey(0) & 0xFF
+
+        if key == 27 or key == ord('q'):  # ESC or 'q'
+            break
+        elif key == 81 or key == 2 or key == ord('a'):  # Left arrow or 'a'
+            current_index = max(0, current_index - 1)
+        elif key == 83 or key == 3 or key == ord('d'):  # Right arrow or 'd'
+            current_index = min(len(frames) - 1, current_index + 1)
+
     cv2.destroyAllWindows()
 
 def select_series_folder():
@@ -117,5 +161,5 @@ def transform_series_data():
 
 if __name__ == '__main__':
     transform_series_data()
-    render_input(1)
+    render_input()
 
