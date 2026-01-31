@@ -42,6 +42,11 @@ def transform_series_data():
     # Resolve the RAW_SERIES_DATA path to absolute path
     raw_data_path = os.path.abspath(RAW_SERIES_DATA)
 
+    # Clean input folder before transformation
+    if os.path.exists(INPUT_DIR):
+        print(f"Cleaning input folder: {INPUT_DIR}")
+        shutil.rmtree(INPUT_DIR)
+
     # Ensure output directories exist
     os.makedirs(OUTPUT_LINES_DIR, exist_ok=True)
     os.makedirs(INPUT_DIR, exist_ok=True)
@@ -51,18 +56,22 @@ def transform_series_data():
     print(f"  Input: {raw_data_path}")
     print(f"  Output: {OUTPUT_LINES_DIR}")
 
-    result = subprocess.run(
+    process = subprocess.Popen(
         [TRANSFORMER_EXECUTABLE, raw_data_path, OUTPUT_LINES_DIR],
-        capture_output=True,
-        text=True
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1
     )
 
-    if result.returncode != 0:
-        print(f"Transformer failed with return code {result.returncode}")
-        print(f"stderr: {result.stderr}")
-        return
+    for line in process.stdout:
+        print(line, end='')
 
-    print(f"Transformer output: {result.stdout}")
+    process.wait()
+
+    if process.returncode != 0:
+        print(f"Transformer failed with return code {process.returncode}")
+        return
 
     # Copy screenshots from RAW_SERIES_DATA to input folder
     print(f"Copying screenshots from {raw_data_path} to {INPUT_DIR}")
