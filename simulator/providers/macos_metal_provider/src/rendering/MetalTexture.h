@@ -30,6 +30,7 @@ namespace arv {
         unsigned int GetWidth() const override { return m_Width; }
         unsigned int GetHeight() const override { return m_Height; }
         unsigned int GetChannels() const override { return m_Channels; }
+        bool IsValid() const override { return m_Texture != nullptr; }
 
 #ifdef __OBJC__
         id<MTLTexture> GetMetalTexture() const { return m_Texture; }

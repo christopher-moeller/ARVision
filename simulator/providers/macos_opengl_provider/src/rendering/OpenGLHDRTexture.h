@@ -16,6 +16,7 @@ namespace arv {
         unsigned int GetWidth() const override { return m_Width; }
         unsigned int GetHeight() const override { return m_Height; }
         unsigned int GetChannels() const override { return m_Channels; }
+        bool IsValid() const override { return m_RendererID != 0; }
 
     private:
         unsigned int m_RendererID = 0;

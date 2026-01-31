@@ -43,7 +43,10 @@ namespace arv
         std::shared_ptr<Framebuffer> CreateFramebuffer(const FramebufferSpecification& spec) override;
 
     private:
+        void CreateDefaultTexture();
+
         std::vector<OpenGLDrawCommand> m_drawCommands;
         bool m_frameInProgress = false;
+        unsigned int m_defaultTextureID = 0;
     };
 }

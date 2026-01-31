@@ -14,6 +14,7 @@ namespace arv {
         virtual unsigned int GetWidth() const = 0;
         virtual unsigned int GetHeight() const = 0;
         virtual unsigned int GetChannels() const = 0;
+        virtual bool IsValid() const = 0;
     };
 
 }
