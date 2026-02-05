@@ -3,135 +3,130 @@ import glob
 import numpy as np
 import cv2
 from abc import ABC, abstractmethod
+from typing import Optional, List, Tuple
 
 TRAINING_DATA_DIR = "/Users/cmoeller/dev/projects/ARVision/ARPyVision/training_data"
 
 
-class ImageProcessingStep(ABC):
-    """Base class for image processing steps in the pipeline."""
+class LineDetectionExperiment(ABC):
+    """Base class for line detection experiments."""
 
     @property
     @abstractmethod
     def name(self) -> str:
-        """Name of the processing step (displayed as label)."""
+        """Name of the experiment (displayed as label)."""
         pass
 
     @abstractmethod
-    def process(self, image: np.ndarray) -> np.ndarray:
+    def detect_lines(self, image: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Process the input image and return the result.
+        Detect lines in the input image.
 
         Args:
-            image: Input image (BGR format from OpenCV)
+            image: Original input image (BGR format from OpenCV)
 
         Returns:
-            Processed image (BGR format)
+            Tuple of (visualization_image, predicted_lines)
+            - visualization_image: BGR image showing the detection result
+            - predicted_lines: numpy array of lines [[x1, y1, x2, y2], ...]
         """
         pass
 
 
-class GrayscaleStep(ImageProcessingStep):
-    """Convert image to grayscale."""
+class Experiment1(LineDetectionExperiment):
+    """Detect lines using Canny edge detection followed by Hough transform."""
 
-    @property
-    def name(self) -> str:
-        return "Grayscale"
-
-    def process(self, image: np.ndarray) -> np.ndarray:
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        # Convert back to BGR for consistent display
-        return cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-
-
-class CannyEdgeStep(ImageProcessingStep):
-    """Apply Canny edge detection."""
-
-    def __init__(self, low_threshold=50, high_threshold=150):
-        self.low_threshold = low_threshold
-        self.high_threshold = high_threshold
-
-    @property
-    def name(self) -> str:
-        return "Canny Edges"
-
-    def process(self, image: np.ndarray) -> np.ndarray:
-        # Convert to grayscale if needed
-        if len(image.shape) == 3:
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        else:
-            gray = image
-        edges = cv2.Canny(gray, self.low_threshold, self.high_threshold)
-        # Convert back to BGR for consistent display
-        return cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
-
-
-class HoughLinesStep(ImageProcessingStep):
-    """Detect lines using Hough Line Transform."""
-
-    def __init__(self, rho=1, theta=np.pi/180, threshold=50, min_line_length=50, max_line_gap=10):
-        self.rho = rho
-        self.theta = theta
-        self.threshold = threshold
+    def __init__(self, canny_low=50, canny_high=150, hough_threshold=50,
+                 min_line_length=50, max_line_gap=10):
+        self.canny_low = canny_low
+        self.canny_high = canny_high
+        self.hough_threshold = hough_threshold
         self.min_line_length = min_line_length
         self.max_line_gap = max_line_gap
 
     @property
     def name(self) -> str:
-        return "Hough Lines"
+        return "Experiment 1"
 
-    def process(self, image: np.ndarray) -> np.ndarray:
-        # Convert to grayscale if needed
-        if len(image.shape) == 3:
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        else:
-            gray = image
+    def detect_lines(self, image: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        # Convert to grayscale
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        # Create output image (black background with green lines)
-        output = np.zeros((image.shape[0], image.shape[1], 3), dtype=np.uint8)
+        # Apply Canny edge detection
+        edges = cv2.Canny(gray, self.canny_low, self.canny_high)
 
-        # Detect lines
+        # Detect lines using Hough transform
         lines = cv2.HoughLinesP(
-            gray,
-            self.rho,
-            self.theta,
-            self.threshold,
+            edges,
+            rho=1,
+            theta=np.pi / 180,
+            threshold=self.hough_threshold,
             minLineLength=self.min_line_length,
             maxLineGap=self.max_line_gap
         )
 
+        # Create visualization (black background with green lines)
+        output = np.zeros_like(image)
+
+        predicted_lines = np.array([])
         if lines is not None:
+            predicted_lines = np.array([line[0] for line in lines])
             for line in lines:
                 x1, y1, x2, y2 = line[0]
                 cv2.line(output, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-        return output
+        return output, predicted_lines
 
 
-class ImageProcessingPipeline:
-    """Pipeline that chains multiple image processing steps."""
+class Experiment2(LineDetectionExperiment):
+    """Detect lines using Sobel edge detection followed by Hough transform."""
 
-    def __init__(self):
-        self.steps: list[ImageProcessingStep] = []
+    def __init__(self, sobel_ksize=3, threshold_value=50, hough_threshold=50,
+                 min_line_length=50, max_line_gap=10):
+        self.sobel_ksize = sobel_ksize
+        self.threshold_value = threshold_value
+        self.hough_threshold = hough_threshold
+        self.min_line_length = min_line_length
+        self.max_line_gap = max_line_gap
 
-    def add_step(self, step: ImageProcessingStep):
-        """Add a processing step to the pipeline."""
-        self.steps.append(step)
+    @property
+    def name(self) -> str:
+        return "Experiment 2"
 
-    def process(self, image: np.ndarray) -> list[tuple[str, np.ndarray]]:
-        """
-        Run the pipeline and return all intermediate results.
+    def detect_lines(self, image: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        # Convert to grayscale
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        Returns:
-            List of tuples (step_name, result_image)
-        """
-        results = []
-        current_image = image.copy()
+        # Apply Sobel edge detection
+        sobel_x = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=self.sobel_ksize)
+        sobel_y = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=self.sobel_ksize)
+        sobel_mag = np.sqrt(sobel_x ** 2 + sobel_y ** 2)
+        sobel_mag = np.uint8(sobel_mag / sobel_mag.max() * 255)
 
-        for step in self.steps:
-            current_image = step.process(current_image)
-            results.append((step.name, current_image.copy()))
+        # Threshold to get binary edge image
+        _, edges = cv2.threshold(sobel_mag, self.threshold_value, 255, cv2.THRESH_BINARY)
 
-        return results
+        # Detect lines using Hough transform
+        lines = cv2.HoughLinesP(
+            edges,
+            rho=1,
+            theta=np.pi / 180,
+            threshold=self.hough_threshold,
+            minLineLength=self.min_line_length,
+            maxLineGap=self.max_line_gap
+        )
+
+        # Create visualization (black background with green lines)
+        output = np.zeros_like(image)
+
+        predicted_lines = np.array([])
+        if lines is not None:
+            predicted_lines = np.array([line[0] for line in lines])
+            for line in lines:
+                x1, y1, x2, y2 = line[0]
+                cv2.line(output, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+        return output, predicted_lines
 
 
 def select_training_data_folder():
@@ -181,7 +176,7 @@ def get_available_frames(training_folder):
     return frames
 
 
-IMAGES_PER_ROW = 4
+IMAGES_PER_ROW = 2
 BORDER_THICKNESS = 10
 
 
@@ -190,6 +185,31 @@ def add_label(image, label):
     labeled = image.copy()
     cv2.putText(labeled, label, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
     return labeled
+
+
+def add_metrics_to_image(image, num_predicted, num_validation):
+    """Add metrics text at the bottom of an image."""
+    result = image.copy()
+    h = result.shape[0]
+
+    diff = num_predicted - num_validation
+    diff_str = f"+{diff}" if diff > 0 else str(diff)
+    diff_color = (0, 255, 0) if diff == 0 else (0, 165, 255)
+
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 0.6
+    thickness = 2
+
+    # Draw background rectangle for better readability
+    cv2.rectangle(result, (0, h - 50), (result.shape[1], h), (0, 0, 0), -1)
+
+    # Draw metrics text
+    cv2.putText(result, f"Predicted: {num_predicted}", (10, h - 30),
+                font, font_scale, (0, 255, 0), thickness)
+    cv2.putText(result, f"Diff: {diff_str}", (10, h - 10),
+                font, font_scale, diff_color, thickness)
+
+    return result
 
 
 def add_border(image, color, thickness=BORDER_THICKNESS):
@@ -205,8 +225,8 @@ def create_black_image(height, width):
     return np.zeros((height, width, 3), dtype=np.uint8)
 
 
-def render_frame(training_folder, frame_number, pipeline):
-    """Render a frame with dynamic rows of images (max 4 per row)."""
+def render_frame(training_folder, frame_number, experiments):
+    """Render a frame with images and metrics for all experiments."""
     images_folder = os.path.join(training_folder, "images")
     lines_folder = os.path.join(training_folder, "validation_lines_2d")
 
@@ -221,33 +241,47 @@ def render_frame(training_folder, frame_number, pipeline):
 
     img_height, img_width = original.shape[:2]
 
+    # Load validation lines
+    validation_lines = None
+    if os.path.exists(lines_file):
+        validation_lines = np.loadtxt(lines_file, delimiter=',', ndmin=2)
+        if validation_lines.size == 0:
+            validation_lines = None
+
+    num_validation = len(validation_lines) if validation_lines is not None and len(validation_lines) > 0 else 0
+
     # Create validation image (original with lines drawn)
     validation_image = original.copy()
-    if os.path.exists(lines_file):
-        lines = np.loadtxt(lines_file, delimiter=',', ndmin=2)
-        if lines.size > 0:
-            for line in lines:
-                x1, y1, x2, y2 = int(line[0]), int(line[1]), int(line[2]), int(line[3])
-                cv2.line(validation_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    if validation_lines is not None and validation_lines.size > 0:
+        for line in validation_lines:
+            x1, y1, x2, y2 = int(line[0]), int(line[1]), int(line[2]), int(line[3])
+            cv2.line(validation_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
     # Build list of all images to display
     all_images = []
 
     # First: Original with red border
     original_labeled = add_label(original, "Original")
-    original_bordered = add_border(original_labeled, (0, 0, 255))  # Red in BGR
+    original_bordered = add_border(original_labeled, (0, 0, 255))
     all_images.append(original_bordered)
 
-    # Second: Validation with red border
+    # Second: Validation with red border and line count
     validation_labeled = add_label(validation_image, "Validation")
-    validation_bordered = add_border(validation_labeled, (0, 0, 255))  # Red in BGR
+    validation_bordered = add_border(validation_labeled, (0, 0, 255))
+    # Add validation line count at bottom
+    cv2.rectangle(validation_bordered, (0, img_height - 30), (img_width, img_height), (0, 0, 0), -1)
+    cv2.putText(validation_bordered, f"Lines: {num_validation}", (10, img_height - 10),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
     all_images.append(validation_bordered)
 
-    # Add pipeline images
-    pipeline_results = pipeline.process(original)
-    for step_name, result_image in pipeline_results:
-        labeled = add_label(result_image, step_name)
-        all_images.append(labeled)
+    # Run experiments and add metrics to each image
+    for experiment in experiments:
+        visualization, predicted_lines = experiment.detect_lines(original)
+        num_predicted = len(predicted_lines) if predicted_lines is not None and len(predicted_lines) > 0 else 0
+
+        labeled = add_label(visualization, experiment.name)
+        labeled_with_metrics = add_metrics_to_image(labeled, num_predicted, num_validation)
+        all_images.append(labeled_with_metrics)
 
     # Create rows with max IMAGES_PER_ROW images each
     rows = []
@@ -267,13 +301,14 @@ def render_frame(training_folder, frame_number, pipeline):
     return combined
 
 
-def create_default_pipeline():
-    """Create a default pipeline with example processing steps."""
-    pipeline = ImageProcessingPipeline()
-    pipeline.add_step(GrayscaleStep())
-    pipeline.add_step(CannyEdgeStep(low_threshold=50, high_threshold=150))
-    pipeline.add_step(HoughLinesStep(threshold=50, min_line_length=50, max_line_gap=10))
-    return pipeline
+def create_experiments():
+    """Create the list of experiments to run."""
+    return [
+        Experiment1(canny_low=50, canny_high=150, hough_threshold=50,
+                    min_line_length=50, max_line_gap=10),
+        Experiment2(sobel_ksize=3, threshold_value=50, hough_threshold=50,
+                    min_line_length=50, max_line_gap=10),
+    ]
 
 
 def run_viewer():
@@ -287,8 +322,8 @@ def run_viewer():
         print("No frames available in selected training data folder")
         return
 
-    # Create the processing pipeline
-    pipeline = create_default_pipeline()
+    # Create experiments
+    experiments = create_experiments()
 
     current_index = 0
     window_name = "Line Detector 2D"
@@ -297,7 +332,7 @@ def run_viewer():
 
     while True:
         frame_number = frames[current_index]
-        image = render_frame(training_folder, frame_number, pipeline)
+        image = render_frame(training_folder, frame_number, experiments)
 
         if image is None:
             break
