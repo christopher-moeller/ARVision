@@ -181,6 +181,10 @@ def get_available_frames(training_folder):
     return frames
 
 
+IMAGES_PER_ROW = 4
+BORDER_THICKNESS = 10
+
+
 def add_label(image, label):
     """Add a label to the top-left corner of an image."""
     labeled = image.copy()
@@ -188,8 +192,21 @@ def add_label(image, label):
     return labeled
 
 
+def add_border(image, color, thickness=BORDER_THICKNESS):
+    """Add a colored border around an image."""
+    bordered = image.copy()
+    h, w = bordered.shape[:2]
+    cv2.rectangle(bordered, (0, 0), (w - 1, h - 1), color, thickness)
+    return bordered
+
+
+def create_black_image(height, width):
+    """Create a black image of the specified size."""
+    return np.zeros((height, width, 3), dtype=np.uint8)
+
+
 def render_frame(training_folder, frame_number, pipeline):
-    """Render a frame with validation row and pipeline row."""
+    """Render a frame with dynamic rows of images (max 4 per row)."""
     images_folder = os.path.join(training_folder, "images")
     lines_folder = os.path.join(training_folder, "validation_lines_2d")
 
@@ -202,6 +219,8 @@ def render_frame(training_folder, frame_number, pipeline):
         print(f"Error: Could not load image {screenshot_file}")
         return None
 
+    img_height, img_width = original.shape[:2]
+
     # Create validation image (original with lines drawn)
     validation_image = original.copy()
     if os.path.exists(lines_file):
@@ -211,45 +230,39 @@ def render_frame(training_folder, frame_number, pipeline):
                 x1, y1, x2, y2 = int(line[0]), int(line[1]), int(line[2]), int(line[3])
                 cv2.line(validation_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-    # Row 1: Original | Validation
+    # Build list of all images to display
+    all_images = []
+
+    # First: Original with red border
     original_labeled = add_label(original, "Original")
+    original_bordered = add_border(original_labeled, (0, 0, 255))  # Red in BGR
+    all_images.append(original_bordered)
+
+    # Second: Validation with red border
     validation_labeled = add_label(validation_image, "Validation")
-    row1 = np.hstack((original_labeled, validation_labeled))
+    validation_bordered = add_border(validation_labeled, (0, 0, 255))  # Red in BGR
+    all_images.append(validation_bordered)
 
-    # Row 2: Pipeline steps
+    # Add pipeline images
     pipeline_results = pipeline.process(original)
+    for step_name, result_image in pipeline_results:
+        labeled = add_label(result_image, step_name)
+        all_images.append(labeled)
 
-    if pipeline_results:
-        # Start with original as first image in pipeline row
-        pipeline_images = [add_label(original, "Input")]
-        for step_name, result_image in pipeline_results:
-            pipeline_images.append(add_label(result_image, step_name))
+    # Create rows with max IMAGES_PER_ROW images each
+    rows = []
+    for i in range(0, len(all_images), IMAGES_PER_ROW):
+        row_images = all_images[i:i + IMAGES_PER_ROW]
 
-        # Make sure all pipeline images match the width of row1
-        row1_width = row1.shape[1]
-        num_pipeline_images = len(pipeline_images)
-        target_width_per_image = row1_width // num_pipeline_images
+        # Fill with black images if row has less than IMAGES_PER_ROW
+        while len(row_images) < IMAGES_PER_ROW:
+            row_images.append(create_black_image(img_height, img_width))
 
-        # Resize pipeline images to fit
-        resized_pipeline_images = []
-        for img in pipeline_images:
-            height = original.shape[0]
-            width = target_width_per_image
-            resized = cv2.resize(img, (width, height))
-            resized_pipeline_images.append(resized)
+        row = np.hstack(row_images)
+        rows.append(row)
 
-        row2 = np.hstack(resized_pipeline_images)
-
-        # Pad row2 if needed to match row1 width
-        if row2.shape[1] < row1_width:
-            padding = np.zeros((row2.shape[0], row1_width - row2.shape[1], 3), dtype=np.uint8)
-            row2 = np.hstack((row2, padding))
-        elif row2.shape[1] > row1_width:
-            row2 = row2[:, :row1_width]
-
-        combined = np.vstack((row1, row2))
-    else:
-        combined = row1
+    # Stack all rows vertically
+    combined = np.vstack(rows)
 
     return combined
 
