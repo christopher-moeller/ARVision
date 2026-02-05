@@ -4,7 +4,7 @@ import edge_transforms as et
 
 
 if __name__ == "__main__":
-    original = cv2.imread("assets/arv-test.png", cv2.IMREAD_UNCHANGED)
+    original = cv2.imread("assets/screenshot_0.png", cv2.IMREAD_UNCHANGED)
     im = original
     im = et.do_edge_detection(im)
     im = et.do_grey_edge_transformation(im)

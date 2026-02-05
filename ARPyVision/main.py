@@ -47,8 +47,7 @@ def render_frame(frame_number):
                 cv2.line(with_lines, (x1, y1), (x2, y2), (0, 255, 0), 2)
                 cv2.line(lines_only, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-    # Concatenate: lines overlay | lines only | original
-    combined = np.hstack((with_lines, lines_only, original))
+    combined = np.hstack((original, lines_only, with_lines))
 
     return combined
 
@@ -167,7 +166,75 @@ def transform_series_data(remove_diagonal_rectangle_lines):
 
     print(f"Transformation complete. Copied {len(screenshot_files)} screenshots.")
 
+
+def clear_input_folder():
+    """Clear all contents of the input folder."""
+    if os.path.exists(INPUT_DIR):
+        shutil.rmtree(INPUT_DIR)
+        os.makedirs(INPUT_DIR, exist_ok=True)
+        os.makedirs(OUTPUT_LINES_DIR, exist_ok=True)
+        print("Input folder cleared.")
+
+
+def post_process_training_data():
+    training_data_dir = os.path.join(os.path.dirname(INPUT_DIR), "training_data")
+
+    # Ask user if they want to use this as training data
+    while True:
+        choice = input("Do you want to use this series as training data? (y/n): ").strip().lower()
+        if choice == "y":
+            break
+        if choice == "n":
+            clear_input_folder()
+            return
+
+    # Ask for folder name and validate it doesn't exist
+    while True:
+        folder_name = input("Enter a name for the new training data folder: ").strip()
+        if not folder_name:
+            print("Folder name cannot be empty.")
+            continue
+
+        new_folder_path = os.path.join(training_data_dir, folder_name)
+        if os.path.exists(new_folder_path):
+            print(f"Folder '{folder_name}' already exists. Please choose a different name.")
+            continue
+        break
+
+    # Create the folder structure
+    images_folder = os.path.join(new_folder_path, "images")
+    validation_lines_folder = os.path.join(new_folder_path, "validation_lines_2d")
+
+    os.makedirs(images_folder, exist_ok=True)
+    os.makedirs(validation_lines_folder, exist_ok=True)
+    print(f"Created training data folder: {new_folder_path}")
+
+    # Copy screenshots to images folder
+    screenshot_files = glob.glob(os.path.join(INPUT_DIR, "screenshot_*.png"))
+    for screenshot in screenshot_files:
+        dest_path = os.path.join(images_folder, os.path.basename(screenshot))
+        shutil.copy2(screenshot, dest_path)
+    print(f"Copied {len(screenshot_files)} screenshots to images folder.")
+
+    # Copy lines folder content to validation_lines_2d folder
+    lines_folder = os.path.join(INPUT_DIR, "lines")
+    if os.path.exists(lines_folder):
+        lines_files = os.listdir(lines_folder)
+        for f in lines_files:
+            src_path = os.path.join(lines_folder, f)
+            dest_path = os.path.join(validation_lines_folder, f)
+            if os.path.isfile(src_path):
+                shutil.copy2(src_path, dest_path)
+        print(f"Copied {len(lines_files)} files to validation_lines_2d folder.")
+    else:
+        print("Warning: No lines folder found in input.")
+
+    # Clear the input folder
+    clear_input_folder()
+    print(f"Training data '{folder_name}' created successfully.")
+
 if __name__ == '__main__':
-    #transform_series_data(True)
+    transform_series_data(True)
     render_input()
+    post_process_training_data()
 
