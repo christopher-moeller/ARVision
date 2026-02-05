@@ -1,5 +1,7 @@
 import os
 import glob
+import json
+import argparse
 import numpy as np
 import cv2
 from abc import ABC, abstractmethod
@@ -311,7 +313,49 @@ def create_experiments():
     ]
 
 
-def run_viewer():
+def generate_and_save_predictions(training_folder, frames, experiments):
+    """Generate predictions for all frames and save to predictions.json."""
+    images_folder = os.path.join(training_folder, "images")
+
+    # Build predictions structure
+    predictions_data = {"experiments": []}
+
+    for experiment in experiments:
+        experiment_data = {
+            "name": experiment.name,
+            "predictions": []
+        }
+
+        for frame_number in frames:
+            screenshot_file = os.path.join(images_folder, f"screenshot_{frame_number}.png")
+            image = cv2.imread(screenshot_file)
+
+            if image is None:
+                continue
+
+            _, predicted_lines = experiment.detect_lines(image)
+
+            # Convert lines to list format for JSON
+            lines_list = []
+            if predicted_lines is not None and len(predicted_lines) > 0:
+                lines_list = predicted_lines.tolist()
+
+            experiment_data["predictions"].append({
+                "image": f"screenshot_{frame_number}.png",
+                "lines2d": lines_list
+            })
+
+        predictions_data["experiments"].append(experiment_data)
+
+    # Save to JSON file
+    predictions_file = os.path.join(training_folder, "predictions.json")
+    with open(predictions_file, 'w') as f:
+        json.dump(predictions_data, f, indent=2)
+
+    print(f"Predictions saved to {predictions_file}")
+
+
+def run_viewer(silent=False):
     """Main viewer loop for browsing training data."""
     training_folder = select_training_data_folder()
     if training_folder is None:
@@ -324,6 +368,13 @@ def run_viewer():
 
     # Create experiments
     experiments = create_experiments()
+
+    # Generate and save predictions for all frames
+    generate_and_save_predictions(training_folder, frames, experiments)
+
+    # If silent mode, exit after generating predictions
+    if silent:
+        return
 
     current_index = 0
     window_name = "Line Detector 2D"
@@ -356,4 +407,9 @@ def run_viewer():
 
 
 if __name__ == '__main__':
-    run_viewer()
+    parser = argparse.ArgumentParser(description='Line Detector 2D - Experiment viewer and prediction generator')
+    parser.add_argument('--silent', action='store_true', default=False,
+                        help='Only generate predictions.json without opening the viewer')
+    args = parser.parse_args()
+
+    run_viewer(silent=args.silent)
