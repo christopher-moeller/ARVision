@@ -81,15 +81,10 @@ class Experiment1(LineDetectionExperiment):
 
 
 class Experiment2(LineDetectionExperiment):
-    """Detect lines using Sobel edge detection followed by Hough transform."""
+    """Detect lines using optimized Sobel edge detection and Hough transform."""
 
-    def __init__(self, sobel_ksize=3, threshold_value=50, hough_threshold=50,
-                 min_line_length=50, max_line_gap=10):
-        self.sobel_ksize = sobel_ksize
-        self.threshold_value = threshold_value
-        self.hough_threshold = hough_threshold
-        self.min_line_length = min_line_length
-        self.max_line_gap = max_line_gap
+    def __init__(self):
+        pass
 
     @property
     def name(self) -> str:
@@ -100,22 +95,22 @@ class Experiment2(LineDetectionExperiment):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # Apply Sobel edge detection
-        sobel_x = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=self.sobel_ksize)
-        sobel_y = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=self.sobel_ksize)
+        sobel_x = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
+        sobel_y = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
         sobel_mag = np.sqrt(sobel_x ** 2 + sobel_y ** 2)
         sobel_mag = np.uint8(sobel_mag / sobel_mag.max() * 255)
 
-        # Threshold to get binary edge image
-        _, edges = cv2.threshold(sobel_mag, self.threshold_value, 255, cv2.THRESH_BINARY)
+        # Lower threshold to detect more edges
+        _, edges = cv2.threshold(sobel_mag, 30, 255, cv2.THRESH_BINARY)
 
-        # Detect lines using Hough transform
+        # Detect lines with optimized Hough parameters
         lines = cv2.HoughLinesP(
             edges,
             rho=1,
             theta=np.pi / 180,
-            threshold=self.hough_threshold,
-            minLineLength=self.min_line_length,
-            maxLineGap=self.max_line_gap
+            threshold=30,
+            minLineLength=40,
+            maxLineGap=15
         )
 
         # Create visualization (black background with green lines)
@@ -308,8 +303,7 @@ def create_experiments():
     return [
         Experiment1(canny_low=50, canny_high=150, hough_threshold=50,
                     min_line_length=50, max_line_gap=10),
-        Experiment2(sobel_ksize=3, threshold_value=50, hough_threshold=50,
-                    min_line_length=50, max_line_gap=10),
+        Experiment2(),
     ]
 
 
