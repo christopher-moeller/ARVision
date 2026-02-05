@@ -316,6 +316,7 @@ def create_experiments():
 def generate_and_save_predictions(training_folder, frames, experiments):
     """Generate predictions for all frames and save to predictions.json."""
     images_folder = os.path.join(training_folder, "images")
+    lines_folder = os.path.join(training_folder, "validation_lines_2d")
 
     # Build predictions structure
     predictions_data = {"experiments": []}
@@ -328,6 +329,7 @@ def generate_and_save_predictions(training_folder, frames, experiments):
 
         for frame_number in frames:
             screenshot_file = os.path.join(images_folder, f"screenshot_{frame_number}.png")
+            lines_file = os.path.join(lines_folder, f"frame_{frame_number}_lines.csv")
             image = cv2.imread(screenshot_file)
 
             if image is None:
@@ -335,14 +337,32 @@ def generate_and_save_predictions(training_folder, frames, experiments):
 
             _, predicted_lines = experiment.detect_lines(image)
 
-            # Convert lines to list format for JSON
-            lines_list = []
+            # Convert predicted lines to list format for JSON
+            predicted_list = []
             if predicted_lines is not None and len(predicted_lines) > 0:
-                lines_list = predicted_lines.tolist()
+                predicted_list = predicted_lines.tolist()
+
+            # Load validation/actual lines
+            actual_list = []
+            if os.path.exists(lines_file):
+                actual_lines = np.loadtxt(lines_file, delimiter=',', ndmin=2)
+                if actual_lines.size > 0:
+                    actual_list = actual_lines.tolist()
+
+            # Calculate metrics
+            num_predicted = len(predicted_list)
+            num_actual = len(actual_list)
+            diff = num_predicted - num_actual
 
             experiment_data["predictions"].append({
                 "image": f"screenshot_{frame_number}.png",
-                "lines2d": lines_list
+                "lines2d_predicted": predicted_list,
+                "lines2d_actual": actual_list,
+                "metrics": {
+                    "num_predicted": num_predicted,
+                    "num_actual": num_actual,
+                    "diff": diff
+                }
             })
 
         predictions_data["experiments"].append(experiment_data)
